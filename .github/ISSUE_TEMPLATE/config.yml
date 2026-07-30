@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Especificação do produto
+    url: https://github.com/tobiasfkk/wedding_platform/blob/main/docs/ESPECIFICACAO_DO_PROJETO.md
+    about: Consulte requisitos, regras de negócio e escopo antes de abrir uma Issue.

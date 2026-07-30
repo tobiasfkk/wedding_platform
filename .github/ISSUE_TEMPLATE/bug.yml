@@ -1,0 +1,53 @@
+name: Relato de defeito
+description: Registre um comportamento incorreto e reproduzível
+title: "[BUG] "
+labels:
+  - bug
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Problema
+      description: O que ocorreu e qual é o impacto?
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Como reproduzir
+      placeholder: |
+        1. Acesse...
+        2. Informe...
+        3. Observe...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Comportamento esperado
+    validations:
+      required: true
+
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidências e ambiente
+      description: Inclua versão, navegador, logs sanitizados ou capturas sem dados pessoais.
+    validations:
+      required: true
+
+  - type: input
+    id: references
+    attributes:
+      label: Requisitos ou regras afetadas
+      placeholder: RF-000; RN-DOM-000; RNF-SEC-000
+
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Segurança dos dados
+      options:
+        - label: Confirmei que as evidências não contêm senhas, tokens ou dados pessoais reais.
+          required: true

@@ -1,0 +1,59 @@
+name: Item de trabalho
+description: Planeje uma funcionalidade, melhoria, tarefa técnica ou documentação
+title: "[TYPE] "
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Descreva um resultado verificável e mantenha rastreabilidade com a especificação.
+
+  - type: textarea
+    id: objective
+    attributes:
+      label: Objetivo
+      description: Qual resultado deve ser alcançado e por que ele importa?
+      placeholder: Permitir que...
+    validations:
+      required: true
+
+  - type: textarea
+    id: scope
+    attributes:
+      label: Escopo
+      description: Liste o que faz parte desta entrega.
+      placeholder: |
+        - Item incluído
+        - Outro item incluído
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Critérios de aceite
+      description: Use comportamentos objetivos e testáveis.
+      placeholder: |
+        - [ ] Cenário esperado
+        - [ ] Cenário de erro
+        - [ ] Testes e documentação atualizados
+    validations:
+      required: true
+
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependências
+      description: Quais Issues, decisões ou serviços bloqueiam este trabalho?
+      placeholder: Nenhuma ou #123
+    validations:
+      required: true
+
+  - type: input
+    id: references
+    attributes:
+      label: Requisitos e regras relacionadas
+      description: Cite RFs, RNs e RNFs aplicáveis.
+      placeholder: RF-000; RN-DOM-000; RNF-SEC-000
+    validations:
+      required: true
