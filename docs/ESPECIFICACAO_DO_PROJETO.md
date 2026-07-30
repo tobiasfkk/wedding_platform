@@ -1,9 +1,9 @@
 # Wedding Platform — Especificação do Produto e Plano de Engenharia
 
-> Status: rascunho inicial  
-> Versão: 0.1.0  
-> Última atualização: 29/07/2026  
-> Responsável: a definir
+> Status: aprovado como baseline inicial<br>
+> Versão: 1.0.0<br>
+> Última atualização: 29/07/2026<br>
+> Responsável: Tobias Felipe Kiefer
 
 ## 1. Propósito deste documento
 
@@ -624,4 +624,4 @@ Estas decisões devem ser resolvidas durante a Fase 0:
 | Versão | Data | Alteração |
 |---|---|---|
 | 0.1.0 | 29/07/2026 | Criação da visão, escopo, regras, requisitos, arquitetura, qualidade e cronograma inicial |
-
+| 1.0.0 | 29/07/2026 | Aprovação da especificação como baseline inicial do projeto |
