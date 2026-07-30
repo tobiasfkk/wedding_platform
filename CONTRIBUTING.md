@@ -122,4 +122,3 @@ Consulte também a seção 13.4 da [especificação do produto](docs/ESPECIFICAC
 - Não registre senhas, códigos de convite, restrições alimentares ou tokens em logs.
 - Dependências novas devem ter propósito claro e origem confiável.
 - Vulnerabilidades devem ser comunicadas de forma privada ao responsável.
-

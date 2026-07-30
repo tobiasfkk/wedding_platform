@@ -15,4 +15,3 @@ A aplicação ainda não foi gerada. A estrutura inicial em Java 21 e Spring Boo
 - JUnit, Testcontainers e testes arquiteturais quando aplicável.
 
 Os comandos de build, teste e execução serão adicionados aqui junto com o projeto executável.
-

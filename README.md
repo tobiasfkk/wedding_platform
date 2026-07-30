@@ -72,4 +72,3 @@ Não mantenha um backlog paralelo em arquivos locais. A especificação registra
 ## Segurança
 
 Nunca versione senhas, tokens, chaves, certificados privados, dados reais de convidados ou arquivos `.env`. Use valores fictícios em exemplos e reporte vulnerabilidades diretamente ao responsável pelo repositório, sem abrir uma Issue pública com detalhes exploráveis.
-

@@ -27,4 +27,3 @@ Liste os comandos e cenários usados para verificar a alteração.
 ## Issue relacionada
 
 Refs #
-

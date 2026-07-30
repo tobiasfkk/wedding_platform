@@ -15,4 +15,3 @@ A aplicação ainda não foi gerada. A estrutura inicial Angular será criada na
 - dashboard de confirmações.
 
 Os comandos de instalação, teste, build e execução serão adicionados aqui junto com o projeto executável.
-

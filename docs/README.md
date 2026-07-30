@@ -15,4 +15,3 @@
 - `testing/`: estratégias e resultados de verificações não funcionais.
 
 Não duplique o backlog neste diretório. O trabalho executável é mantido nas Issues e no GitHub Project.
-

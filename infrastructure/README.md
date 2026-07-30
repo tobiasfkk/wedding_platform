@@ -16,4 +16,3 @@ O ambiente ainda não foi criado. PostgreSQL e Docker Compose serão introduzido
 - procedimentos de backup e restauração.
 
 Dados persistentes, credenciais e arquivos `.env` locais não devem ser versionados.
-
