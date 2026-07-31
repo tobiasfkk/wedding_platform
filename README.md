@@ -6,7 +6,7 @@ O projeto também é um estudo prático de engenharia de software: requisitos ra
 
 ## Status
 
-O produto está na **Fase 0 — Descoberta e fundação**. A especificação e os fluxos foram definidos, e a fundação executável do backend já está disponível. Frontend e infraestrutura serão gerados nas próximas Issues.
+O produto está na **Fase 0 — Descoberta e fundação**. A especificação e os fluxos foram definidos, e as fundações executáveis do backend e do frontend já estão disponíveis. Banco local e demais itens de infraestrutura serão adicionados nas próximas Issues.
 
 ## Documentação
 
@@ -35,14 +35,15 @@ Cada diretório possui um README com seu propósito e o estado atual.
 
 ## Primeiros passos
 
-Neste estágio, não existe aplicação executável. Para acompanhar ou contribuir:
+Para executar ou contribuir com o projeto:
 
 1. Clone o repositório.
 2. Leia a [especificação do produto](docs/ESPECIFICACAO_DO_PROJETO.md).
-3. Consulte o [GitHub Project](https://github.com/users/tobiasfkk/projects/6) e escolha uma Issue em `Ready` sem dependências pendentes.
-4. Siga as orientações de [contribuição](CONTRIBUTING.md).
+3. Consulte os comandos específicos em [backend/README.md](backend/README.md) e [frontend/README.md](frontend/README.md).
+4. Consulte o [GitHub Project](https://github.com/users/tobiasfkk/projects/6) e escolha uma Issue em `Ready` sem dependências pendentes.
+5. Siga as orientações de [contribuição](CONTRIBUTING.md).
 
-Os comandos de execução do backend, frontend e ambiente Docker serão adicionados aos respectivos READMEs quando essas aplicações forem criadas.
+Os comandos do ambiente Docker serão adicionados ao README de infraestrutura quando o PostgreSQL local for configurado na Issue `#7`.
 
 ## Arquitetura planejada
 
