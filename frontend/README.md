@@ -1,17 +1,65 @@
 # Frontend
 
-Aplicação web pública e administrativa da Wedding Platform.
+Aplicação Angular da Wedding Platform para o site público, o fluxo de RSVP e a área
+administrativa.
 
-## Estado atual
+## Requisitos
 
-A aplicação ainda não foi gerada. A estrutura inicial Angular será criada na Issue `#6`.
+- Node.js 24.15 ou uma versão compatível da linha 24;
+- npm 11 ou 12.
 
-## Áreas planejadas
+## Instalação
 
-- site público;
-- fluxo móvel de RSVP;
-- autenticação e área administrativa;
-- gestão de convidados e convites;
-- dashboard de confirmações.
+```bash
+npm ci
+```
 
-Os comandos de instalação, teste, build e execução serão adicionados aqui junto com o projeto executável.
+## Desenvolvimento
+
+```bash
+npm start
+```
+
+A aplicação estará disponível em `http://localhost:4200/`.
+
+Rotas iniciais:
+
+- `/`: site público e página de verificação;
+- `/rsvp`: confirmação de presença;
+- `/admin`: área administrativa.
+
+As três áreas usam carregamento lazy e componentes standalone. Nesta fundação elas exibem apenas
+o estado inicial; as funcionalidades serão implementadas verticalmente nas issues correspondentes.
+
+## Qualidade
+
+```bash
+npm test -- --watch=false
+npm run build
+npm run format:check
+```
+
+Para aplicar a formatação configurada pelo projeto:
+
+```bash
+npm run format
+```
+
+Os testes unitários usam Vitest, conforme o padrão de novos projetos Angular 22. A ferramenta E2E
+será definida na Issue `#10`, antes dos fluxos ponta a ponta do MVP.
+
+## Estrutura
+
+```text
+src/app/
+├── features/
+│   ├── admin/
+│   ├── public-site/
+│   └── rsvp/
+├── app.config.ts
+├── app.routes.ts
+└── app.ts
+```
+
+Código compartilhado deve entrar em `shared` somente quando existir reutilização concreta; serviços
+globais e integrações transversais poderão entrar em `core` quando forem necessários.
