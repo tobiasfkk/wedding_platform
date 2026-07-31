@@ -1,6 +1,11 @@
-# A persistência será ativada quando o PostgreSQL local for configurado na Issue #7.
 spring:
-  autoconfigure:
-    exclude:
-      - org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration
-      - org.springframework.boot.hibernate.autoconfigure.HibernateJpaAutoConfiguration
+  datasource:
+    url: "jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5433}/${POSTGRES_DB:wedding}"
+    username: "${POSTGRES_USER:wedding}"
+    password: "${POSTGRES_PASSWORD:wedding_local}"
+    hikari:
+      connection-timeout: 5000
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: none

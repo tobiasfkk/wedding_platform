@@ -6,7 +6,7 @@ O projeto também é um estudo prático de engenharia de software: requisitos ra
 
 ## Status
 
-O produto está na **Fase 0 — Descoberta e fundação**. A especificação e os fluxos foram definidos, e as fundações executáveis do backend e do frontend já estão disponíveis. Banco local e demais itens de infraestrutura serão adicionados nas próximas Issues.
+O produto está na **Fase 0 — Descoberta e fundação**. A especificação e os fluxos foram definidos, e as fundações executáveis do backend, frontend e PostgreSQL local já estão disponíveis. Migrações e demais itens de infraestrutura serão adicionados nas próximas Issues.
 
 ## Documentação
 
@@ -39,11 +39,11 @@ Para executar ou contribuir com o projeto:
 
 1. Clone o repositório.
 2. Leia a [especificação do produto](docs/ESPECIFICACAO_DO_PROJETO.md).
-3. Consulte os comandos específicos em [backend/README.md](backend/README.md) e [frontend/README.md](frontend/README.md).
+3. Consulte os comandos específicos em [backend/README.md](backend/README.md), [frontend/README.md](frontend/README.md) e [infrastructure/README.md](infrastructure/README.md).
 4. Consulte o [GitHub Project](https://github.com/users/tobiasfkk/projects/6) e escolha uma Issue em `Ready` sem dependências pendentes.
 5. Siga as orientações de [contribuição](CONTRIBUTING.md).
 
-Os comandos do ambiente Docker serão adicionados ao README de infraestrutura quando o PostgreSQL local for configurado na Issue `#7`.
+O ambiente local usa Docker Compose para disponibilizar o PostgreSQL sem instalação manual do banco na máquina.
 
 ## Arquitetura planejada
 
