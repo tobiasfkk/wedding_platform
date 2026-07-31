@@ -6,7 +6,7 @@ O projeto também é um estudo prático de engenharia de software: requisitos ra
 
 ## Status
 
-O produto está na **Fase 0 — Descoberta e fundação**. A especificação e os fluxos foram definidos; backend, frontend e infraestrutura ainda serão gerados nas próximas Issues.
+O produto está na **Fase 0 — Descoberta e fundação**. A especificação e os fluxos foram definidos, e a fundação executável do backend já está disponível. Frontend e infraestrutura serão gerados nas próximas Issues.
 
 ## Documentação
 
