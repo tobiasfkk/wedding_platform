@@ -7,6 +7,7 @@ import com.tobias.wedding.guest.GuestSelectionException;
 import com.tobias.wedding.invitation.InvitationFilterException;
 import com.tobias.wedding.invitation.InvitationGuestConflictException;
 import com.tobias.wedding.invitation.InvitationNotFoundException;
+import com.tobias.wedding.invitation.InvitationStateException;
 import com.tobias.wedding.wedding.WeddingNotConfiguredException;
 import com.tobias.wedding.wedding.WeddingSettingsValidationException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -157,6 +158,16 @@ public class ApiExceptionHandler {
                 "Convite não encontrado",
                 exception.getMessage(),
                 "INVITATION_NOT_FOUND"));
+    }
+
+    @ExceptionHandler(InvitationStateException.class)
+    ResponseEntity<ProblemDetail> handleInvitationState(InvitationStateException exception) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(problem(
+                HttpStatus.CONFLICT,
+                CONFLICT_TYPE,
+                "Estado do convite incompatível",
+                exception.getMessage(),
+                "INVITATION_STATE_CONFLICT"));
     }
 
     @ExceptionHandler({InvitationGuestConflictException.class, GuestSelectionException.class})

@@ -127,6 +127,24 @@ import {
         </section>
       }
 
+      @if (generatedLink()) {
+        <section class="link-panel" aria-labelledby="generated-link-title">
+          <div>
+            <p class="eyebrow">Link individual</p>
+            <h2 id="generated-link-title">Link de {{ generatedInvitationName() }}</h2>
+            <p>
+              Copie este link agora. Por segurança, ele não poderá ser consultado novamente; se for
+              perdido, será necessário regenerá-lo.
+            </p>
+          </div>
+          <div class="link-copy">
+            <input aria-label="Link individual do convite" readonly [value]="generatedLink()" />
+            <button mat-flat-button type="button" (click)="copyGeneratedLink()">Copiar link</button>
+          </div>
+          <button mat-button type="button" (click)="dismissGeneratedLink()">Fechar</button>
+        </section>
+      }
+
       <form class="filters" [formGroup]="filterForm" (ngSubmit)="search()">
         <mat-form-field appearance="outline">
           <mat-label>Buscar convite</mat-label>
@@ -193,7 +211,38 @@ import {
                     <span class="status">{{ statusLabel(invitation.status) }}</span>
                   </td>
                   <td>
-                    <button mat-button type="button" (click)="startEdit(invitation)">Editar</button>
+                    <div class="row-actions">
+                      <button mat-button type="button" (click)="startEdit(invitation)">
+                        Editar
+                      </button>
+                      @if (invitation.status === 'ACTIVE') {
+                        <button
+                          mat-button
+                          type="button"
+                          (click)="regenerateLink(invitation)"
+                          [disabled]="actingOnId() === invitation.id"
+                        >
+                          Regenerar link
+                        </button>
+                        <button
+                          mat-button
+                          type="button"
+                          (click)="inactivate(invitation)"
+                          [disabled]="actingOnId() === invitation.id"
+                        >
+                          Inativar
+                        </button>
+                      } @else {
+                        <button
+                          mat-flat-button
+                          type="button"
+                          (click)="activate(invitation)"
+                          [disabled]="actingOnId() === invitation.id"
+                        >
+                          Ativar e gerar link
+                        </button>
+                      }
+                    </div>
                   </td>
                 </tr>
               }
@@ -239,6 +288,7 @@ import {
       font-size: clamp(2.6rem, 7vw, 4.75rem);
     }
     .editor,
+    .link-panel,
     .filters,
     .empty-state,
     .table-scroll {
@@ -249,6 +299,29 @@ import {
     .editor {
       margin-block: 2rem;
       padding: clamp(1.25rem, 4vw, 2rem);
+    }
+    .link-panel {
+      display: grid;
+      gap: 1rem;
+      margin-block: 2rem;
+      padding: clamp(1.25rem, 4vw, 2rem);
+    }
+    .link-panel h2 {
+      margin-block: 0.25rem;
+      font-family: Georgia, 'Times New Roman', serif;
+      font-weight: 500;
+    }
+    .link-copy {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 0.75rem;
+    }
+    .link-copy input {
+      min-width: 0;
+      padding: 0.85rem;
+      border: 1px solid var(--color-border);
+      border-radius: 0.55rem;
+      background: var(--color-surface-subtle);
     }
     .editor h2,
     .empty-state h2 {
@@ -317,6 +390,12 @@ import {
     .actions {
       justify-content: flex-end;
     }
+    .row-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.25rem;
+      min-width: 15rem;
+    }
     .muted,
     .guest-names {
       color: var(--color-muted);
@@ -383,7 +462,8 @@ import {
         flex-direction: column;
       }
       .filters,
-      .guest-search {
+      .guest-search,
+      .link-copy {
         grid-template-columns: 1fr;
       }
       .pagination {
@@ -408,6 +488,9 @@ export class InvitationManagement {
   readonly listError = signal<string | null>(null);
   readonly formError = signal<string | null>(null);
   readonly successMessage = signal<string | null>(null);
+  readonly generatedLink = signal<string | null>(null);
+  readonly generatedInvitationName = signal('');
+  readonly actingOnId = signal<string | null>(null);
   readonly page = signal(0);
   readonly totalPages = signal(0);
   readonly totalElements = signal(0);
@@ -538,6 +621,86 @@ export class InvitationManagement {
               : 'Não foi possível salvar o convite. Revise os dados e tente novamente.',
           ),
       });
+  }
+
+  activate(invitation: Invitation): void {
+    if (
+      !window.confirm(
+        `Ativar o convite de ${invitation.name} e gerar um link individual? O link será exibido somente uma vez.`,
+      )
+    ) {
+      return;
+    }
+    this.runLinkAction(invitation, false);
+  }
+
+  regenerateLink(invitation: Invitation): void {
+    if (
+      !window.confirm(
+        `Regenerar o link de ${invitation.name}? O link anterior deixará de funcionar imediatamente.`,
+      )
+    ) {
+      return;
+    }
+    this.runLinkAction(invitation, true);
+  }
+
+  inactivate(invitation: Invitation): void {
+    if (
+      !window.confirm(
+        `Inativar o convite de ${invitation.name}? O link atual deixará de funcionar imediatamente.`,
+      )
+    ) {
+      return;
+    }
+    this.actingOnId.set(invitation.id);
+    this.service
+      .inactivate(invitation.id)
+      .pipe(finalize(() => this.actingOnId.set(null)))
+      .subscribe({
+        next: () => {
+          this.dismissGeneratedLink();
+          this.successMessage.set('Convite inativado e link revogado com sucesso.');
+          this.load();
+        },
+        error: () => this.listError.set('Não foi possível inativar o convite.'),
+      });
+  }
+
+  async copyGeneratedLink(): Promise<void> {
+    const link = this.generatedLink();
+    if (!link) return;
+    try {
+      await navigator.clipboard.writeText(link);
+      this.successMessage.set('Link copiado.');
+    } catch {
+      this.listError.set('Não foi possível copiar automaticamente. Selecione e copie o link.');
+    }
+  }
+
+  dismissGeneratedLink(): void {
+    this.generatedLink.set(null);
+    this.generatedInvitationName.set('');
+  }
+
+  private runLinkAction(invitation: Invitation, regenerate: boolean): void {
+    this.actingOnId.set(invitation.id);
+    const action = regenerate
+      ? this.service.regenerateLink(invitation.id)
+      : this.service.activate(invitation.id);
+    action.pipe(finalize(() => this.actingOnId.set(null))).subscribe({
+      next: (result) => {
+        this.generatedLink.set(result.link);
+        this.generatedInvitationName.set(result.invitation.name);
+        this.successMessage.set(
+          regenerate
+            ? 'Novo link gerado; o anterior foi invalidado.'
+            : 'Convite ativado e link gerado.',
+        );
+        this.load();
+      },
+      error: () => this.listError.set('Não foi possível atualizar o link do convite.'),
+    });
   }
 
   hasFilters(): boolean {

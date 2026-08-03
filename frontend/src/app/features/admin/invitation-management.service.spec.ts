@@ -44,4 +44,21 @@ describe('InvitationManagementService', () => {
     expect(create.request.body).toEqual(payload);
     create.flush({ id: 'invitation-id', ...payload, status: 'DRAFT', guests: [], version: 0 });
   });
+
+  it('activates, regenerates and inactivates an invitation', () => {
+    service.activate('invitation-id').subscribe();
+    const activate = http.expectOne('/api/admin/invitations/invitation-id/activate');
+    expect(activate.request.method).toBe('POST');
+    activate.flush({ invitation: {}, link: 'http://localhost:4200/rsvp#code=token' });
+
+    service.regenerateLink('invitation-id').subscribe();
+    const regenerate = http.expectOne('/api/admin/invitations/invitation-id/regenerate-link');
+    expect(regenerate.request.method).toBe('POST');
+    regenerate.flush({ invitation: {}, link: 'http://localhost:4200/rsvp#code=new-token' });
+
+    service.inactivate('invitation-id').subscribe();
+    const inactivate = http.expectOne('/api/admin/invitations/invitation-id/inactivate');
+    expect(inactivate.request.method).toBe('POST');
+    inactivate.flush({});
+  });
 });

@@ -61,6 +61,14 @@ class Invitation {
         this.companionLimit = companionLimit;
     }
 
+    void activate() {
+        status = InvitationStatus.ACTIVE;
+    }
+
+    void inactivate() {
+        status = InvitationStatus.INACTIVE;
+    }
+
     UUID id() {
         return id;
     }
