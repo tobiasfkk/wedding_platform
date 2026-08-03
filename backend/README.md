@@ -50,11 +50,44 @@ O perfil `local` é usado por padrão e conecta ao PostgreSQL com os seguintes v
 | `POSTGRES_USER` | `wedding` |
 | `POSTGRES_PASSWORD` | `wedding_local` |
 
-O Hibernate não cria nem altera tabelas automaticamente. O schema e as migrações Flyway serão
-introduzidos na Issue `#8`.
+O Hibernate não cria nem altera tabelas automaticamente. O Flyway executa e valida as migrações de
+`src/main/resources/db/migration` durante a inicialização. Uma migração inválida interrompe o startup
+e identifica o script que precisa ser corrigido.
 
-O perfil `test` mantém temporariamente DataSource e JPA desativados para os testes de fundação. Ele
-será substituído por PostgreSQL real via Testcontainers junto das migrações.
+O perfil `test` mantém DataSource, JPA e Flyway desativados nos testes de contexto que não dependem de
+banco. Os testes de migração usam PostgreSQL real via Testcontainers e são ignorados automaticamente
+quando não existe um Docker acessível.
+
+Para produção, ative o perfil `production` e forneça as credenciais fora do artefato:
+
+| Variável obrigatória | Descrição |
+|---|---|
+| `DATABASE_URL` | URL JDBC do PostgreSQL |
+| `DATABASE_USERNAME` | Usuário do banco |
+| `DATABASE_PASSWORD` | Senha do banco |
+
+`DATABASE_CONNECTION_TIMEOUT_MS` é opcional e usa `5000` por padrão.
+
+## Formato de erros
+
+A API responde erros como `application/problem+json`. Erros de validação seguem este contrato:
+
+```json
+{
+  "type": "urn:wedding:error:validation",
+  "title": "Dados inválidos",
+  "status": 400,
+  "detail": "Um ou mais campos são inválidos.",
+  "code": "VALIDATION_ERROR",
+  "timestamp": "2026-08-03T12:00:00Z",
+  "errors": [
+    { "field": "name", "message": "deve ser informado" }
+  ]
+}
+```
+
+Erros inesperados retornam o código `INTERNAL_ERROR` e uma mensagem genérica. Exceções, stack traces,
+credenciais e outros detalhes internos nunca fazem parte da resposta pública.
 
 ## Organização modular
 
@@ -81,6 +114,8 @@ de negócio.
 - Spring Data JPA;
 - Spring Boot Actuator;
 - PostgreSQL Driver;
+- Flyway e suporte a PostgreSQL;
+- Testcontainers;
 - starters de teste correspondentes do Spring Boot.
 
-Flyway, Testcontainers e documentação OpenAPI serão adicionados nas Issues correspondentes.
+A documentação OpenAPI será adicionada na Issue correspondente.

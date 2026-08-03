@@ -3,6 +3,21 @@ spring:
     name: wedding-backend
   profiles:
     default: local
+  flyway:
+    clean-disabled: true
+    locations: classpath:db/migration
+    validate-on-migrate: true
+  jpa:
+    properties:
+      hibernate:
+        default_schema: wedding
+
+server:
+  error:
+    include-binding-errors: never
+    include-exception: false
+    include-message: never
+    include-stacktrace: never
 
 management:
   endpoints:
