@@ -3,8 +3,8 @@
 Aplicação Angular da Wedding Platform para o site público, o fluxo de RSVP e a área
 administrativa.
 
-A área protegida oferece a configuração do casamento em `/admin` e o cadastro, busca, edição e
-inativação lógica de convidados em `/admin/guests`.
+A área protegida oferece a configuração do casamento em `/admin`, a gestão de convidados em
+`/admin/guests` e a criação e edição de grupos em `/admin/invitations`.
 
 ## Requisitos
 

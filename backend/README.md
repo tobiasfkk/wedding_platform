@@ -91,6 +91,19 @@ Todas as rotas exigem uma sessão administrativa; operações de escrita também
 A listagem aceita `query`, `status` (`ALL`, `ACTIVE` ou `INACTIVE`), `page` baseado em zero e
 `size` entre 1 e 100. Dados pessoais não são escritos nos logs da aplicação.
 
+## API de convites
+
+| Método e rota | Resultado |
+|---|---|
+| `GET /api/admin/invitations` | Lista convites com busca, estado e paginação |
+| `GET /api/admin/invitations/eligible-guests` | Busca convidados ativos disponíveis para vínculo |
+| `POST /api/admin/invitations` | Cria um convite em rascunho |
+| `PUT /api/admin/invitations/{id}` | Atualiza grupo, limite e vínculos atomicamente |
+
+O convite exige nome, limite de acompanhantes entre 0 e 100 e ao menos um convidado ativo. Cada
+convidado possui somente um vínculo corrente; remoções encerram o vínculo sem apagar seu histórico.
+Convites permanecem como `DRAFT` até receberem um código seguro na entrega do RF-007.
+
 ## Perfis e banco local
 
 O perfil `local` é usado por padrão e conecta ao PostgreSQL com os seguintes valores locais:
