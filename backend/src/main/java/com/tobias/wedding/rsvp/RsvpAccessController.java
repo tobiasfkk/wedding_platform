@@ -14,16 +14,18 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/rsvp")
 class RsvpAccessController {
 
-    private final RsvpAccessService service;
+    private final RsvpAccessService accessService;
+    private final RsvpResponseService responseService;
 
-    RsvpAccessController(RsvpAccessService service) {
-        this.service = service;
+    RsvpAccessController(RsvpAccessService accessService, RsvpResponseService responseService) {
+        this.accessService = accessService;
+        this.responseService = responseService;
     }
 
     @GetMapping("/session")
     RsvpSessionResponse session(HttpSession session, CsrfToken csrfToken) {
-        return service.current(session)
-                .map(access -> new RsvpSessionResponse(true, RsvpInvitationResponse.from(access), csrfToken.getToken()))
+        return accessService.current(session)
+                .map(access -> new RsvpSessionResponse(true, responseService.view(access), csrfToken.getToken()))
                 .orElseGet(() -> new RsvpSessionResponse(false, null, csrfToken.getToken()));
     }
 
@@ -31,6 +33,13 @@ class RsvpAccessController {
     RsvpInvitationResponse access(
             @Valid @RequestBody RsvpAccessRequest access,
             HttpServletRequest request) {
-        return RsvpInvitationResponse.from(service.exchange(access.code(), request));
+        return responseService.view(accessService.exchange(access.code(), request));
+    }
+
+    @PostMapping("/responses")
+    RsvpSubmissionResponse respond(
+            @Valid @RequestBody RsvpSubmissionRequest response,
+            HttpSession session) {
+        return responseService.submit(response, session);
     }
 }

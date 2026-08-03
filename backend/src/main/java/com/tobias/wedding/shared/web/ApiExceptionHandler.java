@@ -9,6 +9,7 @@ import com.tobias.wedding.invitation.InvitationGuestConflictException;
 import com.tobias.wedding.invitation.InvitationNotFoundException;
 import com.tobias.wedding.invitation.InvitationStateException;
 import com.tobias.wedding.rsvp.RsvpAccessException;
+import com.tobias.wedding.rsvp.RsvpSubmissionException;
 import com.tobias.wedding.wedding.WeddingNotConfiguredException;
 import com.tobias.wedding.wedding.WeddingSettingsValidationException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -180,6 +181,16 @@ public class ApiExceptionHandler {
                 "Acesso indisponível",
                 "Não foi possível abrir este convite. Confira o link recebido ou fale com os responsáveis pelo evento.",
                 exception.rateLimited() ? "RSVP_ACCESS_RATE_LIMITED" : "RSVP_ACCESS_INVALID"));
+    }
+
+    @ExceptionHandler(RsvpSubmissionException.class)
+    ResponseEntity<ProblemDetail> handleRsvpSubmission(RsvpSubmissionException exception) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(problem(
+                HttpStatus.CONFLICT,
+                CONFLICT_TYPE,
+                "Respostas não salvas",
+                exception.getMessage(),
+                "RSVP_SUBMISSION_CONFLICT"));
     }
 
     @ExceptionHandler({InvitationGuestConflictException.class, GuestSelectionException.class})

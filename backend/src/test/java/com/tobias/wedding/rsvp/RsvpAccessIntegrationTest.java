@@ -46,9 +46,15 @@ class RsvpAccessIntegrationTest {
     private UUID weddingId;
     private UUID invitationId;
     private UUID otherInvitationId;
+    private UUID firstGuestId;
+    private UUID secondGuestId;
+    private UUID otherGuestId;
 
     @BeforeEach
     void prepareData() {
+        jdbcClient.sql("DELETE FROM wedding.rsvp_change").update();
+        jdbcClient.sql("DELETE FROM wedding.rsvp_response").update();
+        jdbcClient.sql("DELETE FROM wedding.rsvp_submission").update();
         jdbcClient.sql("DELETE FROM wedding.invitation_access_code").update();
         jdbcClient.sql("DELETE FROM wedding.invitation_guest").update();
         jdbcClient.sql("DELETE FROM wedding.invitation").update();
@@ -59,9 +65,12 @@ class RsvpAccessIntegrationTest {
         createWedding(now);
         invitationId = createInvitation("Família Exemplo", 2, now);
         otherInvitationId = createInvitation("Outro grupo secreto", 0, now);
-        linkGuest(invitationId, createGuest("Ana Exemplo", now), now);
-        linkGuest(invitationId, createGuest("Bruno Exemplo", now), now);
-        linkGuest(otherInvitationId, createGuest("Pessoa de outro convite", now), now);
+        firstGuestId = createGuest("Ana Exemplo", now);
+        secondGuestId = createGuest("Bruno Exemplo", now);
+        otherGuestId = createGuest("Pessoa de outro convite", now);
+        linkGuest(invitationId, firstGuestId, now);
+        linkGuest(invitationId, secondGuestId, now);
+        linkGuest(otherInvitationId, otherGuestId, now);
     }
 
     @Test
@@ -77,8 +86,9 @@ class RsvpAccessIntegrationTest {
                 .andExpect(jsonPath("$.groupName").value("Família Exemplo"))
                 .andExpect(jsonPath("$.companionLimit").value(2))
                 .andExpect(jsonPath("$.participants.length()").value(2))
-                .andExpect(jsonPath("$.participants[?(@ == 'Ana Exemplo')]").isNotEmpty())
-                .andExpect(jsonPath("$.participants[?(@ == 'Pessoa de outro convite')]").isEmpty())
+                .andExpect(jsonPath("$.participants[?(@.name == 'Ana Exemplo')]").isNotEmpty())
+                .andExpect(jsonPath("$.participants[?(@.status == 'PENDING')].length()").value(2))
+                .andExpect(jsonPath("$.participants[?(@.name == 'Pessoa de outro convite')]").isEmpty())
                 .andReturn();
         Cookie sessionCookie = accessResult.getResponse().getCookie("SESSION");
         assertThat(sessionCookie).isNotNull();
@@ -87,6 +97,7 @@ class RsvpAccessIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.identified").value(true))
                 .andExpect(jsonPath("$.invitation.groupName").value("Família Exemplo"))
+                .andExpect(jsonPath("$.invitation.participants[0].id").isNotEmpty())
                 .andExpect(jsonPath("$.csrfToken").isNotEmpty());
 
         regenerateAndReadToken(invitationId);
@@ -94,6 +105,72 @@ class RsvpAccessIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.identified").value(false))
                 .andExpect(jsonPath("$.invitation").doesNotExist());
+    }
+
+    @Test
+    void savesTheWholeInvitationAtomicallyAndReplaysTheSameOperationWithoutDuplicates() throws Exception {
+        Cookie sessionCookie = accessSession(activateAndReadToken(invitationId), "198.51.100.50");
+        UUID operationId = UUID.randomUUID();
+        String request = submission(operationId, firstGuestId, "CONFIRMED", secondGuestId, "DECLINED");
+
+        mockMvc.perform(post("/api/rsvp/responses")
+                        .cookie(sessionCookie)
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(request))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.replayed").value(false))
+                .andExpect(jsonPath("$.savedAt").isNotEmpty())
+                .andExpect(jsonPath("$.invitation.participants[0].id").value(firstGuestId.toString()))
+                .andExpect(jsonPath("$.invitation.participants[0].status").value("CONFIRMED"))
+                .andExpect(jsonPath("$.invitation.participants[1].id").value(secondGuestId.toString()))
+                .andExpect(jsonPath("$.invitation.participants[1].status").value("DECLINED"));
+
+        assertThat(count("wedding.rsvp_submission")).isEqualTo(1);
+        assertThat(count("wedding.rsvp_response")).isEqualTo(2);
+        assertThat(count("wedding.rsvp_change")).isEqualTo(2);
+        assertThat(jdbcClient.sql("SELECT DISTINCT origin FROM wedding.rsvp_change")
+                        .query(String.class)
+                        .list())
+                .containsExactly("PUBLIC_LINK");
+
+        mockMvc.perform(post("/api/rsvp/responses")
+                        .cookie(sessionCookie)
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(request))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.replayed").value(true));
+
+        assertThat(count("wedding.rsvp_submission")).isEqualTo(1);
+        assertThat(count("wedding.rsvp_response")).isEqualTo(2);
+        assertThat(count("wedding.rsvp_change")).isEqualTo(2);
+
+        mockMvc.perform(post("/api/rsvp/responses")
+                        .cookie(sessionCookie)
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(submission(operationId, firstGuestId, "DECLINED", secondGuestId, "DECLINED")))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("RSVP_SUBMISSION_CONFLICT"));
+    }
+
+    @Test
+    void rejectsAParticipantFromAnotherInvitationWithoutSavingAnyPartOfTheGroup() throws Exception {
+        Cookie sessionCookie = accessSession(activateAndReadToken(invitationId), "198.51.100.51");
+
+        mockMvc.perform(post("/api/rsvp/responses")
+                        .cookie(sessionCookie)
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(submission(
+                                UUID.randomUUID(), firstGuestId, "CONFIRMED", otherGuestId, "CONFIRMED")))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("RSVP_SUBMISSION_CONFLICT"));
+
+        assertThat(count("wedding.rsvp_submission")).isZero();
+        assertThat(count("wedding.rsvp_response")).isZero();
+        assertThat(count("wedding.rsvp_change")).isZero();
     }
 
     @Test
@@ -138,6 +215,40 @@ class RsvpAccessIntegrationTest {
                 .andExpect(jsonPath("$.detail").value(
                         "Não foi possível abrir este convite. Confira o link recebido ou fale com os responsáveis pelo evento."))
                 .andExpect(jsonPath("$.groupName").doesNotExist());
+    }
+
+    private Cookie accessSession(String token, String origin) throws Exception {
+        var result = mockMvc.perform(post("/api/rsvp/access")
+                        .with(csrf())
+                        .with(remoteOrigin(origin))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"code\":\"" + token + "\"}"))
+                .andExpect(status().isOk())
+                .andReturn();
+        Cookie cookie = result.getResponse().getCookie("SESSION");
+        assertThat(cookie).isNotNull();
+        return cookie;
+    }
+
+    private String submission(
+            UUID operationId,
+            UUID firstId,
+            String firstStatus,
+            UUID secondId,
+            String secondStatus) {
+        return """
+                {
+                  "operationId": "%s",
+                  "participants": [
+                    {"participantId": "%s", "status": "%s"},
+                    {"participantId": "%s", "status": "%s"}
+                  ]
+                }
+                """.formatted(operationId, firstId, firstStatus, secondId, secondStatus);
+    }
+
+    private long count(String table) {
+        return jdbcClient.sql("SELECT COUNT(*) FROM " + table).query(Long.class).single();
     }
 
     private String activateAndReadToken(UUID id) throws Exception {

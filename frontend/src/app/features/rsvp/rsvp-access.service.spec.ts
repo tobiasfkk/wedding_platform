@@ -38,6 +38,34 @@ describe('RsvpAccessService', () => {
 
     expect(request.request.method).toBe('POST');
     expect(request.request.body).toEqual({ code: 'secret-code' });
-    request.flush({ groupName: 'Família', companionLimit: 1, participants: ['Ana'] });
+    request.flush({
+      groupName: 'Família',
+      companionLimit: 1,
+      participants: [{ id: 'guest-1', name: 'Ana', status: 'PENDING' }],
+    });
+  });
+
+  it('submits every participant with a stable operation identifier', () => {
+    service
+      .respond('operation-1', [
+        { id: 'guest-1', status: 'CONFIRMED' },
+        { id: 'guest-2', status: 'DECLINED' },
+      ])
+      .subscribe();
+    const request = http.expectOne('/api/rsvp/responses');
+
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body).toEqual({
+      operationId: 'operation-1',
+      participants: [
+        { participantId: 'guest-1', status: 'CONFIRMED' },
+        { participantId: 'guest-2', status: 'DECLINED' },
+      ],
+    });
+    request.flush({
+      savedAt: '2027-01-01T00:00:00Z',
+      replayed: false,
+      invitation: { groupName: 'Família', companionLimit: 0, participants: [] },
+    });
   });
 });

@@ -4,9 +4,10 @@ import { MatButtonModule } from '@angular/material/button';
 import { RouterLink } from '@angular/router';
 import { switchMap } from 'rxjs';
 
-import { RsvpAccessService, RsvpInvitation } from './rsvp-access.service';
+import { RsvpAccessService, RsvpInvitation, RsvpStatus } from './rsvp-access.service';
 
 type AccessState = 'loading' | 'success' | 'error' | 'rate-limited';
+type SubmissionState = 'idle' | 'saving' | 'saved' | 'error';
 
 @Component({
   selector: 'app-rsvp-home',
@@ -24,20 +25,87 @@ type AccessState = 'loading' | 'success' | 'error' | 'rate-limited';
         <div class="rsvp-card">
           <p class="eyebrow">Seu convite</p>
           <h1 id="rsvp-state-title" tabindex="-1">{{ currentInvitation.groupName }}</h1>
-          <p class="lead">Encontramos o convite do seu grupo.</p>
+          <p class="lead">Informe a presença de cada pessoa do grupo.</p>
 
           <section class="invitation-summary" aria-labelledby="participants-title">
-            <h2 id="participants-title">Participantes</h2>
-            <ul>
-              @for (participant of currentInvitation.participants; track participant) {
-                <li>{{ participant }}</li>
+            <h2 id="participants-title">Quem vai participar?</h2>
+            <p class="response-guidance">Escolha uma resposta para cada pessoa do convite.</p>
+            <div class="participant-list">
+              @for (participant of currentInvitation.participants; track participant.id) {
+                <fieldset class="participant-card">
+                  <legend>{{ participant.name }}</legend>
+                  <div
+                    class="response-options"
+                    [attr.aria-label]="'Resposta de ' + participant.name"
+                  >
+                    <button
+                      mat-stroked-button
+                      type="button"
+                      [class.is-selected]="statusOf(participant.id) === 'CONFIRMED'"
+                      [attr.aria-pressed]="statusOf(participant.id) === 'CONFIRMED'"
+                      [disabled]="submissionState() === 'saving'"
+                      (click)="setStatus(participant.id, 'CONFIRMED')"
+                    >
+                      Vou participar
+                    </button>
+                    <button
+                      mat-stroked-button
+                      type="button"
+                      [class.is-selected]="statusOf(participant.id) === 'DECLINED'"
+                      [attr.aria-pressed]="statusOf(participant.id) === 'DECLINED'"
+                      [disabled]="submissionState() === 'saving'"
+                      (click)="setStatus(participant.id, 'DECLINED')"
+                    >
+                      Não vou participar
+                    </button>
+                    <button
+                      mat-button
+                      type="button"
+                      [class.is-selected]="statusOf(participant.id) === 'PENDING'"
+                      [attr.aria-pressed]="statusOf(participant.id) === 'PENDING'"
+                      [disabled]="submissionState() === 'saving'"
+                      (click)="setStatus(participant.id, 'PENDING')"
+                    >
+                      Decidir depois
+                    </button>
+                  </div>
+                  <p class="current-response">{{ statusLabel(statusOf(participant.id)) }}</p>
+                </fieldset>
               }
-            </ul>
+            </div>
             <p class="companion-rule">{{ companionRule(currentInvitation.companionLimit) }}</p>
           </section>
 
-          <button mat-flat-button type="button" disabled>Responder convite</button>
-          <p class="next-step">A confirmação de presença será habilitada na próxima etapa.</p>
+          <button
+            class="save-button"
+            mat-flat-button
+            type="button"
+            [disabled]="submissionState() === 'saving'"
+            (click)="saveResponses()"
+          >
+            {{ submissionState() === 'saving' ? 'Salvando…' : 'Salvar respostas' }}
+          </button>
+          @if (submissionState() === 'saved') {
+            <div
+              id="rsvp-save-result"
+              class="save-result save-result--success"
+              role="status"
+              tabindex="-1"
+            >
+              <strong>Respostas salvas.</strong>
+              <span>Você pode revisá-las nesta tela.</span>
+            </div>
+          } @else if (submissionState() === 'error') {
+            <div
+              id="rsvp-save-result"
+              class="save-result save-result--error"
+              role="alert"
+              tabindex="-1"
+            >
+              <strong>Não foi possível salvar.</strong>
+              <span>Nenhuma resposta foi alterada. Tente novamente.</span>
+            </div>
+          }
         </div>
       } @else {
         <div class="rsvp-card rsvp-card--centered">
@@ -97,19 +165,46 @@ type AccessState = 'loading' | 'success' | 'error' | 'rate-limited';
       font-family: Georgia, 'Times New Roman', serif;
       font-weight: 500;
     }
-    .invitation-summary ul {
-      display: grid;
-      gap: 0.6rem;
-      margin: 0;
-      padding: 0;
-      list-style: none;
+    .response-guidance {
+      margin-block: 0 1rem;
+      color: var(--color-muted);
     }
-    .invitation-summary li {
-      padding-block-end: 0.6rem;
-      border-block-end: 1px solid var(--color-border);
+    .participant-list {
+      display: grid;
+      gap: 1rem;
+    }
+    .participant-card {
+      min-width: 0;
+      margin: 0;
+      padding: 1rem;
+      border: 1px solid var(--color-border);
+      border-radius: 0.75rem;
+      background: var(--color-surface);
+    }
+    .participant-card legend {
+      padding-inline: 0.25rem;
+      font-weight: 800;
+    }
+    .response-options {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.5rem;
+    }
+    .response-options button:last-child {
+      grid-column: 1 / -1;
+    }
+    .response-options .is-selected {
+      border-color: var(--color-accent-strong);
+      background: var(--color-accent-soft);
+      color: var(--color-text);
+    }
+    .current-response {
+      margin: 0.75rem 0 0;
+      color: var(--color-muted);
+      font-size: 0.9rem;
+      font-weight: 700;
     }
     .companion-rule,
-    .next-step,
     .supporting-message {
       color: var(--color-muted);
     }
@@ -117,9 +212,24 @@ type AccessState = 'loading' | 'success' | 'error' | 'rate-limited';
       margin-block-end: 0;
       font-weight: 700;
     }
-    .next-step {
-      margin-block-end: 0;
-      font-size: 0.9rem;
+    .save-button {
+      width: 100%;
+      min-height: 3rem;
+    }
+    .save-result {
+      display: grid;
+      gap: 0.25rem;
+      margin-block-start: 1rem;
+      padding: 1rem;
+      border-radius: 0.75rem;
+    }
+    .save-result--success {
+      background: color-mix(in srgb, #2e7d32 12%, var(--color-surface));
+      color: #1b5e20;
+    }
+    .save-result--error {
+      background: color-mix(in srgb, #b3261e 10%, var(--color-surface));
+      color: #8c1d18;
     }
     .loading-indicator {
       display: inline-block;
@@ -153,6 +263,12 @@ type AccessState = 'loading' | 'success' | 'error' | 'rate-limited';
         width: 100%;
         min-height: 3rem;
       }
+      .response-options {
+        grid-template-columns: 1fr;
+      }
+      .response-options button:last-child {
+        grid-column: auto;
+      }
     }
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -162,6 +278,9 @@ export class RsvpHome {
   private readonly document = inject(DOCUMENT);
   readonly state = signal<AccessState>('loading');
   readonly invitation = signal<RsvpInvitation | null>(null);
+  readonly submissionState = signal<SubmissionState>('idle');
+  readonly draft = signal<Record<string, RsvpStatus>>({});
+  private pendingOperationId: string | null = null;
 
   constructor() {
     const code = this.readAndRemoveCode();
@@ -176,7 +295,7 @@ export class RsvpHome {
       )
       .subscribe({
         next: (invitation) => {
-          this.invitation.set(invitation);
+          this.applyInvitation(invitation);
           this.state.set('success');
           this.focusState();
         },
@@ -193,6 +312,46 @@ export class RsvpHome {
     return `Este convite permite adicionar até ${limit} acompanhantes.`;
   }
 
+  statusOf(participantId: string): RsvpStatus {
+    return this.draft()[participantId] ?? 'PENDING';
+  }
+
+  statusLabel(status: RsvpStatus): string {
+    if (status === 'CONFIRMED') return 'Resposta atual: vai participar';
+    if (status === 'DECLINED') return 'Resposta atual: não vai participar';
+    return 'Resposta atual: pendente';
+  }
+
+  setStatus(participantId: string, status: RsvpStatus): void {
+    this.draft.update((current) => ({ ...current, [participantId]: status }));
+    this.pendingOperationId = null;
+    this.submissionState.set('idle');
+  }
+
+  saveResponses(): void {
+    const invitation = this.invitation();
+    if (!invitation || this.submissionState() === 'saving') return;
+    this.pendingOperationId ??= globalThis.crypto.randomUUID();
+    const operationId = this.pendingOperationId;
+    const participants = invitation.participants.map((participant) => ({
+      id: participant.id,
+      status: this.statusOf(participant.id),
+    }));
+    this.submissionState.set('saving');
+    this.service.respond(operationId, participants).subscribe({
+      next: (response) => {
+        this.applyInvitation(response.invitation);
+        this.pendingOperationId = null;
+        this.submissionState.set('saved');
+        this.focusSaveResult();
+      },
+      error: () => {
+        this.submissionState.set('error');
+        this.focusSaveResult();
+      },
+    });
+  }
+
   private readAndRemoveCode(): string | null {
     const fragment = this.document.defaultView?.location.hash ?? '';
     const parameters = new URLSearchParams(fragment.startsWith('#') ? fragment.slice(1) : fragment);
@@ -207,7 +366,20 @@ export class RsvpHome {
     return code;
   }
 
+  private applyInvitation(invitation: RsvpInvitation): void {
+    this.invitation.set(invitation);
+    this.draft.set(
+      Object.fromEntries(
+        invitation.participants.map((participant) => [participant.id, participant.status]),
+      ),
+    );
+  }
+
   private focusState(): void {
     queueMicrotask(() => this.document.getElementById('rsvp-state-title')?.focus());
+  }
+
+  private focusSaveResult(): void {
+    queueMicrotask(() => this.document.getElementById('rsvp-save-result')?.focus());
   }
 }
