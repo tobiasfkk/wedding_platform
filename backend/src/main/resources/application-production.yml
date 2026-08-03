@@ -13,6 +13,12 @@ spring:
 wedding:
   auth:
     allowed-origins: "${AUTH_ALLOWED_ORIGINS}"
+  invitation-code:
+    pepper: "${INVITATION_CODE_PEPPER}"
+    pepper-version: "${INVITATION_CODE_PEPPER_VERSION:1}"
+    previous-pepper: "${INVITATION_CODE_PREVIOUS_PEPPER:}"
+    previous-pepper-version: "${INVITATION_CODE_PREVIOUS_PEPPER_VERSION:}"
+    public-base-url: "${PUBLIC_SITE_URL}"
 
 server:
   servlet:

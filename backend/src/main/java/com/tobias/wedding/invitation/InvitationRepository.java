@@ -1,10 +1,12 @@
 package com.tobias.wedding.invitation;
 
+import jakarta.persistence.LockModeType;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 
 interface InvitationRepository extends JpaRepository<Invitation, UUID> {
 
@@ -14,5 +16,6 @@ interface InvitationRepository extends JpaRepository<Invitation, UUID> {
     Page<Invitation> findByWeddingEventIdAndNameContainingIgnoreCaseAndStatus(
             UUID weddingEventId, String name, InvitationStatus status, Pageable pageable);
 
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
     Optional<Invitation> findByIdAndWeddingEventId(UUID id, UUID weddingEventId);
 }

@@ -31,6 +31,11 @@ export interface InvitationUpdate {
   guestIds: string[];
 }
 
+export interface InvitationLinkResult {
+  invitation: Invitation;
+  link: string;
+}
+
 export interface EligibleGuest {
   id: string;
   name: string;
@@ -63,5 +68,17 @@ export class InvitationManagementService {
 
   update(id: string, invitation: InvitationUpdate): Observable<Invitation> {
     return this.http.put<Invitation>(`/api/admin/invitations/${id}`, invitation);
+  }
+
+  activate(id: string): Observable<InvitationLinkResult> {
+    return this.http.post<InvitationLinkResult>(`/api/admin/invitations/${id}/activate`, {});
+  }
+
+  regenerateLink(id: string): Observable<InvitationLinkResult> {
+    return this.http.post<InvitationLinkResult>(`/api/admin/invitations/${id}/regenerate-link`, {});
+  }
+
+  inactivate(id: string): Observable<Invitation> {
+    return this.http.post<Invitation>(`/api/admin/invitations/${id}/inactivate`, {});
   }
 }

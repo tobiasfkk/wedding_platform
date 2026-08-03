@@ -99,10 +99,16 @@ A listagem aceita `query`, `status` (`ALL`, `ACTIVE` ou `INACTIVE`), `page` base
 | `GET /api/admin/invitations/eligible-guests` | Busca convidados ativos disponíveis para vínculo |
 | `POST /api/admin/invitations` | Cria um convite em rascunho |
 | `PUT /api/admin/invitations/{id}` | Atualiza grupo, limite e vínculos atomicamente |
+| `POST /api/admin/invitations/{id}/activate` | Ativa o convite e retorna o link uma única vez |
+| `POST /api/admin/invitations/{id}/regenerate-link` | Revoga o código atual e retorna um novo link |
+| `POST /api/admin/invitations/{id}/inactivate` | Inativa o convite e revoga imediatamente o código |
 
 O convite exige nome, limite de acompanhantes entre 0 e 100 e ao menos um convidado ativo. Cada
 convidado possui somente um vínculo corrente; remoções encerram o vínculo sem apagar seu histórico.
-Convites permanecem como `DRAFT` até receberem um código seguro na entrega do RF-007.
+Convites permanecem como `DRAFT` até a ativação. Cada código possui 256 bits de entropia e somente
+seu HMAC-SHA-256 é armazenado. O link original aparece apenas na resposta de ativação ou regeneração;
+se for perdido, deve ser regenerado. A rotação preserva o resumo anterior para auditoria, mas o
+revoga atomicamente. Tokens e links nunca são escritos nos logs.
 
 ## Perfis e banco local
 
@@ -115,6 +121,9 @@ O perfil `local` é usado por padrão e conecta ao PostgreSQL com os seguintes v
 | `POSTGRES_DB` | `wedding` |
 | `POSTGRES_USER` | `wedding` |
 | `POSTGRES_PASSWORD` | `wedding_local` |
+| `INVITATION_CODE_PEPPER` | segredo local de desenvolvimento |
+| `INVITATION_CODE_PEPPER_VERSION` | `1` |
+| `PUBLIC_SITE_URL` | `http://localhost:4200` |
 
 O Hibernate não cria nem altera tabelas automaticamente. O Flyway executa e valida as migrações de
 `src/main/resources/db/migration` durante a inicialização. Uma migração inválida interrompe o startup
@@ -131,8 +140,13 @@ Para produção, ative o perfil `production` e forneça as credenciais fora do a
 | `DATABASE_URL` | URL JDBC do PostgreSQL |
 | `DATABASE_USERNAME` | Usuário do banco |
 | `DATABASE_PASSWORD` | Senha do banco |
+| `INVITATION_CODE_PEPPER` | Segredo aleatório com pelo menos 32 caracteres, externo ao banco |
+| `PUBLIC_SITE_URL` | Origem HTTPS do frontend público, sem barra final |
 
-`DATABASE_CONNECTION_TIMEOUT_MS` é opcional e usa `5000` por padrão.
+`DATABASE_CONNECTION_TIMEOUT_MS` e `INVITATION_CODE_PEPPER_VERSION` são opcionais e usam `5000` e
+`1`, respectivamente. Durante a rotação planejada do segredo, também podem ser informados
+`INVITATION_CODE_PREVIOUS_PEPPER` e `INVITATION_CODE_PREVIOUS_PEPPER_VERSION` até todos os links da
+versão anterior serem regenerados.
 
 ## Formato de erros
 

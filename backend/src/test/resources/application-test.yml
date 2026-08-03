@@ -11,3 +11,9 @@ spring:
     open-in-view: false
     hibernate:
       ddl-auto: none
+
+wedding:
+  invitation-code:
+    pepper: "test-only-invitation-code-pepper-with-32-characters"
+    pepper-version: 1
+    public-base-url: "http://localhost:4200"

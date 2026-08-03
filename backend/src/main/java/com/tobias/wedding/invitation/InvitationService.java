@@ -27,18 +27,24 @@ class InvitationService {
 
     private final ObjectProvider<InvitationRepository> invitationRepositories;
     private final ObjectProvider<InvitationGuestRepository> membershipRepositories;
+    private final ObjectProvider<InvitationAccessCodeRepository> accessCodeRepositories;
     private final CurrentWedding currentWedding;
     private final GuestDirectory guests;
+    private final InvitationCodeCodec codeCodec;
 
     InvitationService(
             ObjectProvider<InvitationRepository> invitationRepositories,
             ObjectProvider<InvitationGuestRepository> membershipRepositories,
+            ObjectProvider<InvitationAccessCodeRepository> accessCodeRepositories,
             CurrentWedding currentWedding,
-            GuestDirectory guests) {
+            GuestDirectory guests,
+            InvitationCodeCodec codeCodec) {
         this.invitationRepositories = invitationRepositories;
         this.membershipRepositories = membershipRepositories;
+        this.accessCodeRepositories = accessCodeRepositories;
         this.currentWedding = currentWedding;
         this.guests = guests;
+        this.codeCodec = codeCodec;
     }
 
     @Transactional(readOnly = true)
@@ -111,6 +117,67 @@ class InvitationService {
         return response(invitationRepository().saveAndFlush(invitation));
     }
 
+    @Transactional
+    InvitationLinkResponse activate(UUID id, String actor) {
+        Invitation invitation = findForUpdate(id);
+        if (invitation.status() == InvitationStatus.ACTIVE) {
+            throw new InvitationStateException("O convite já está ativo.");
+        }
+        revokeCurrentCodes(invitation.id(), actor, false);
+        InvitationCodeCodec.GeneratedCode generated = generateUniqueCode();
+        accessCodeRepository().saveAndFlush(InvitationAccessCode.create(invitation.id(), generated, actor));
+        invitation.activate();
+        Invitation saved = invitationRepository().saveAndFlush(invitation);
+        return new InvitationLinkResponse(response(saved), codeCodec.publicLink(generated.token()));
+    }
+
+    @Transactional
+    InvitationLinkResponse regenerateLink(UUID id, String actor) {
+        Invitation invitation = findForUpdate(id);
+        if (invitation.status() != InvitationStatus.ACTIVE) {
+            throw new InvitationStateException("Somente convites ativos podem ter o link regenerado.");
+        }
+        revokeCurrentCodes(invitation.id(), actor, true);
+        InvitationCodeCodec.GeneratedCode generated = generateUniqueCode();
+        accessCodeRepository().saveAndFlush(InvitationAccessCode.create(invitation.id(), generated, actor));
+        return new InvitationLinkResponse(response(invitation), codeCodec.publicLink(generated.token()));
+    }
+
+    @Transactional
+    InvitationResponse inactivate(UUID id, String actor) {
+        Invitation invitation = findForUpdate(id);
+        if (invitation.status() != InvitationStatus.ACTIVE) {
+            throw new InvitationStateException("Somente convites ativos podem ser inativados.");
+        }
+        revokeCurrentCodes(invitation.id(), actor, true);
+        invitation.inactivate();
+        return response(invitationRepository().saveAndFlush(invitation));
+    }
+
+    private Invitation findForUpdate(UUID id) {
+        return invitationRepository()
+                .findByIdAndWeddingEventId(id, currentWedding.requireId())
+                .orElseThrow(InvitationNotFoundException::new);
+    }
+
+    private InvitationCodeCodec.GeneratedCode generateUniqueCode() {
+        InvitationCodeCodec.GeneratedCode generated;
+        do {
+            generated = codeCodec.generate();
+        } while (accessCodeRepository().existsByTokenDigest(generated.digest()));
+        return generated;
+    }
+
+    private void revokeCurrentCodes(UUID invitationId, String actor, boolean required) {
+        List<InvitationAccessCode> currentCodes =
+                accessCodeRepository().findAllByInvitationIdAndRevokedAtIsNull(invitationId);
+        if (required && currentCodes.size() != 1) {
+            throw new InvitationStateException("O convite ativo não possui um código válido para rotação.");
+        }
+        currentCodes.forEach(code -> code.revoke(actor));
+        accessCodeRepository().saveAllAndFlush(currentCodes);
+    }
+
     private void synchronizeMembers(UUID invitationId, Set<UUID> desiredIds) {
         List<InvitationGuest> current = membershipRepository()
                 .findAllByInvitationIdAndUnlinkedAtIsNull(invitationId);
@@ -176,5 +243,9 @@ class InvitationService {
 
     private InvitationGuestRepository membershipRepository() {
         return membershipRepositories.getObject();
+    }
+
+    private InvitationAccessCodeRepository accessCodeRepository() {
+        return accessCodeRepositories.getObject();
     }
 }
