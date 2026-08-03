@@ -25,7 +25,6 @@ describe('Application routes', () => {
 
   it.each([
     ['/', 'Frontend operacional'],
-    ['/rsvp', 'Área de RSVP'],
     ['/admin/login', 'Acessar administração'],
   ])('loads %s', async (url, expectedHeading) => {
     const harness = await RouterTestingHarness.create();
@@ -33,6 +32,22 @@ describe('Application routes', () => {
     await harness.navigateByUrl(url);
 
     expect(harness.routeNativeElement?.querySelector('h1')?.textContent).toContain(expectedHeading);
+  });
+
+  it('loads the public RSVP access route', async () => {
+    const harness = await RouterTestingHarness.create();
+
+    await harness.navigateByUrl('/rsvp');
+    http.expectOne('/api/rsvp/session').flush({
+      identified: false,
+      invitation: null,
+      csrfToken: 'rsvp-csrf',
+    });
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(harness.routeNativeElement?.querySelector('h1')?.textContent).toContain(
+      'Acesso indisponível',
+    );
   });
 
   it('redirects an unauthenticated visitor to the administrative login', async () => {

@@ -67,4 +67,8 @@ class InvitationAccessCode {
     UUID invitationId() {
         return invitationId;
     }
+
+    UUID id() {
+        return id;
+    }
 }

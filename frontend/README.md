@@ -28,12 +28,14 @@ A aplicação estará disponível em `http://localhost:4200/`.
 Rotas iniciais:
 
 - `/`: site público e página de verificação;
-- `/rsvp`: confirmação de presença;
+- `/rsvp#code=...`: validação segura do convite e entrada na confirmação de presença;
 - `/admin/login`: autenticação administrativa;
 - `/admin`: área administrativa protegida.
 
 As áreas usam carregamento lazy e componentes standalone. O comando `npm start` encaminha chamadas
 de `/api` para `http://localhost:8080`, preservando cookies e a proteção CSRF durante o desenvolvimento.
+No acesso ao RSVP, o código é removido do fragmento antes da troca por uma sessão pública limitada;
+links inválidos, antigos e inativos usam o mesmo estado de erro e não expõem participantes.
 
 ## Qualidade
 
