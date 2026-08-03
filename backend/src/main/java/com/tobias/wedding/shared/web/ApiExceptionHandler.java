@@ -1,6 +1,7 @@
 package com.tobias.wedding.shared.web;
 
 import com.tobias.wedding.auth.AuthenticationRejectedException;
+import com.tobias.wedding.wedding.WeddingSettingsValidationException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import java.net.URI;
@@ -81,6 +82,18 @@ public class ApiExceptionHandler {
                 "Autenticação não realizada",
                 "Não foi possível autenticar com as credenciais informadas.",
                 "AUTHENTICATION_FAILED"));
+    }
+
+    @ExceptionHandler(WeddingSettingsValidationException.class)
+    ResponseEntity<ProblemDetail> handleWeddingSettingsValidation(WeddingSettingsValidationException exception) {
+        ProblemDetail problem = problem(
+                HttpStatus.BAD_REQUEST,
+                VALIDATION_TYPE,
+                "Dados inválidos",
+                "Um ou mais campos são inválidos.",
+                "VALIDATION_ERROR");
+        problem.setProperty("errors", List.of(new ApiFieldError(exception.field(), exception.getMessage())));
+        return ResponseEntity.badRequest().body(problem);
     }
 
     @ExceptionHandler(Exception.class)

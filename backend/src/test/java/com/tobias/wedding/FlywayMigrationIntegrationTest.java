@@ -29,7 +29,7 @@ class FlywayMigrationIntegrationTest {
                 .validateOnMigrate(true)
                 .load();
 
-        assertThat(flyway.migrate().migrationsExecuted).isEqualTo(2);
+        assertThat(flyway.migrate().migrationsExecuted).isEqualTo(3);
 
         try (Connection connection = POSTGRES.createConnection("");
                 Statement statement = connection.createStatement();
@@ -44,9 +44,10 @@ class FlywayMigrationIntegrationTest {
                 ResultSet result = statement.executeQuery(
                         "SELECT COUNT(*) FROM information_schema.tables "
                                 + "WHERE table_schema = 'wedding' "
-                                + "AND table_name IN ('administrator', 'spring_session', 'spring_session_attributes')")) {
+                                + "AND table_name IN ('administrator', 'spring_session', "
+                                + "'spring_session_attributes', 'wedding_event')")) {
             assertThat(result.next()).isTrue();
-            assertThat(result.getInt(1)).isEqualTo(3);
+            assertThat(result.getInt(1)).isEqualTo(4);
         }
     }
 

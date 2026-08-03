@@ -63,6 +63,17 @@ describe('Application routes', () => {
       csrfToken: 'csrf-token',
     });
     await navigation;
+    http.expectOne('/api/admin/wedding').flush({
+      configured: false,
+      displayName: '',
+      eventDate: null,
+      eventTime: null,
+      location: '',
+      rsvpDeadlineDate: null,
+      rsvpDeadlineTime: null,
+      timeZone: 'America/Sao_Paulo',
+      version: 0,
+    });
 
     expect(harness.routeNativeElement?.querySelector('h1')?.textContent).toContain('Administração');
   });
