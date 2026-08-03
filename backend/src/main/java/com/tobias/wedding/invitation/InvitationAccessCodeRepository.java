@@ -13,4 +13,6 @@ interface InvitationAccessCodeRepository extends JpaRepository<InvitationAccessC
             String tokenDigest, int pepperVersion);
 
     boolean existsByTokenDigest(String tokenDigest);
+
+    boolean existsByIdAndInvitationIdAndRevokedAtIsNull(UUID id, UUID invitationId);
 }

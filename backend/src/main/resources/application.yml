@@ -27,6 +27,11 @@ wedding:
     login-attempts:
       maximum: 5
       window: 15m
+  rsvp:
+    access-attempts:
+      maximum: 10
+      window: 15m
+      maximum-tracked-origins: 10000
 
 server:
   servlet:
