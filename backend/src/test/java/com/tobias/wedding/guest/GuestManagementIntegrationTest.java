@@ -8,7 +8,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -47,7 +48,7 @@ class GuestManagementIntegrationTest {
         jdbcClient.sql("DELETE FROM wedding.guest").update();
         jdbcClient.sql("DELETE FROM wedding.wedding_event").update();
         weddingId = UUID.randomUUID();
-        Instant now = Instant.now();
+        OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
         jdbcClient.sql("""
                         INSERT INTO wedding.wedding_event (
                             id, display_name, starts_at, rsvp_deadline, time_zone, location,
@@ -58,8 +59,8 @@ class GuestManagementIntegrationTest {
                         )
                         """)
                 .param("id", weddingId)
-                .param("startsAt", Instant.parse("2027-05-08T19:00:00Z"))
-                .param("deadline", Instant.parse("2027-04-08T02:59:00Z"))
+                .param("startsAt", OffsetDateTime.parse("2027-05-08T19:00:00Z"))
+                .param("deadline", OffsetDateTime.parse("2027-04-08T02:59:00Z"))
                 .param("now", now)
                 .update();
     }
@@ -150,7 +151,7 @@ class GuestManagementIntegrationTest {
     }
 
     private void createGuestDirectly(String name) {
-        Instant now = Instant.now();
+        OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
         jdbcClient.sql("""
                         INSERT INTO wedding.guest (
                             id, wedding_event_id, name, contact, active, version,
