@@ -26,10 +26,11 @@ Rotas iniciais:
 
 - `/`: site público e página de verificação;
 - `/rsvp`: confirmação de presença;
-- `/admin`: área administrativa.
+- `/admin/login`: autenticação administrativa;
+- `/admin`: área administrativa protegida.
 
-As três áreas usam carregamento lazy e componentes standalone. Nesta fundação elas exibem apenas
-o estado inicial; as funcionalidades serão implementadas verticalmente nas issues correspondentes.
+As áreas usam carregamento lazy e componentes standalone. O comando `npm start` encaminha chamadas
+de `/api` para `http://localhost:8080`, preservando cookies e a proteção CSRF durante o desenvolvimento.
 
 ## Qualidade
 

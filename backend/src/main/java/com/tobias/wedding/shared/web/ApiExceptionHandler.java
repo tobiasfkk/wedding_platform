@@ -1,5 +1,6 @@
 package com.tobias.wedding.shared.web;
 
+import com.tobias.wedding.auth.AuthenticationRejectedException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import java.net.URI;
@@ -24,6 +25,7 @@ public class ApiExceptionHandler {
     private static final URI VALIDATION_TYPE = URI.create("urn:wedding:error:validation");
     private static final URI MALFORMED_REQUEST_TYPE = URI.create("urn:wedding:error:malformed-request");
     private static final URI INTERNAL_ERROR_TYPE = URI.create("urn:wedding:error:internal");
+    private static final URI AUTHENTICATION_TYPE = URI.create("urn:wedding:error:authentication");
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     ResponseEntity<ProblemDetail> handleMethodArgumentNotValid(MethodArgumentNotValidException exception) {
@@ -68,6 +70,17 @@ public class ApiExceptionHandler {
                 "Requisição inválida",
                 "O corpo da requisição não pôde ser interpretado.",
                 "MALFORMED_REQUEST"));
+    }
+
+    @ExceptionHandler(AuthenticationRejectedException.class)
+    ResponseEntity<ProblemDetail> handleAuthenticationRejected(AuthenticationRejectedException exception) {
+        HttpStatus status = exception.rateLimited() ? HttpStatus.TOO_MANY_REQUESTS : HttpStatus.UNAUTHORIZED;
+        return ResponseEntity.status(status).body(problem(
+                status,
+                AUTHENTICATION_TYPE,
+                "Autenticação não realizada",
+                "Não foi possível autenticar com as credenciais informadas.",
+                "AUTHENTICATION_FAILED"));
     }
 
     @ExceptionHandler(Exception.class)
