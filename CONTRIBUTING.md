@@ -99,7 +99,21 @@ Antes de publicar uma alteração:
 4. Confirme migrações e compatibilidade quando houver banco de dados.
 5. Atualize API, README, ADR ou especificação quando aplicável.
 
-Os comandos concretos serão incluídos aqui quando backend e frontend forem gerados.
+Execute as mesmas verificações usadas pela integração contínua antes de publicar:
+
+```powershell
+# backend/
+.\mvnw.cmd --batch-mode --no-transfer-progress verify
+
+# frontend/
+npm ci
+npm run check
+npm test -- --watch=false
+npm run build
+```
+
+No Linux ou macOS, use `./mvnw` no lugar de `.\mvnw.cmd`. O `verify` do backend também executa o
+SpotBugs; o `check` do frontend valida os tipos TypeScript e a formatação.
 
 ## 7. Definition of Done
 
