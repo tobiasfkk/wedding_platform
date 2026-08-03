@@ -1,6 +1,9 @@
 package com.tobias.wedding.shared.web;
 
 import com.tobias.wedding.auth.AuthenticationRejectedException;
+import com.tobias.wedding.guest.GuestFilterException;
+import com.tobias.wedding.guest.GuestNotFoundException;
+import com.tobias.wedding.wedding.WeddingNotConfiguredException;
 import com.tobias.wedding.wedding.WeddingSettingsValidationException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
@@ -27,6 +30,8 @@ public class ApiExceptionHandler {
     private static final URI MALFORMED_REQUEST_TYPE = URI.create("urn:wedding:error:malformed-request");
     private static final URI INTERNAL_ERROR_TYPE = URI.create("urn:wedding:error:internal");
     private static final URI AUTHENTICATION_TYPE = URI.create("urn:wedding:error:authentication");
+    private static final URI NOT_FOUND_TYPE = URI.create("urn:wedding:error:not-found");
+    private static final URI CONFLICT_TYPE = URI.create("urn:wedding:error:conflict");
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     ResponseEntity<ProblemDetail> handleMethodArgumentNotValid(MethodArgumentNotValidException exception) {
@@ -94,6 +99,38 @@ public class ApiExceptionHandler {
                 "VALIDATION_ERROR");
         problem.setProperty("errors", List.of(new ApiFieldError(exception.field(), exception.getMessage())));
         return ResponseEntity.badRequest().body(problem);
+    }
+
+    @ExceptionHandler(GuestFilterException.class)
+    ResponseEntity<ProblemDetail> handleGuestFilter(GuestFilterException exception) {
+        ProblemDetail problem = problem(
+                HttpStatus.BAD_REQUEST,
+                VALIDATION_TYPE,
+                "Filtro inválido",
+                exception.getMessage(),
+                "VALIDATION_ERROR");
+        problem.setProperty("errors", List.of(new ApiFieldError("status", exception.getMessage())));
+        return ResponseEntity.badRequest().body(problem);
+    }
+
+    @ExceptionHandler(GuestNotFoundException.class)
+    ResponseEntity<ProblemDetail> handleGuestNotFound(GuestNotFoundException exception) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(problem(
+                HttpStatus.NOT_FOUND,
+                NOT_FOUND_TYPE,
+                "Convidado não encontrado",
+                exception.getMessage(),
+                "GUEST_NOT_FOUND"));
+    }
+
+    @ExceptionHandler(WeddingNotConfiguredException.class)
+    ResponseEntity<ProblemDetail> handleWeddingNotConfigured(WeddingNotConfiguredException exception) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(problem(
+                HttpStatus.CONFLICT,
+                CONFLICT_TYPE,
+                "Casamento não configurado",
+                exception.getMessage(),
+                "WEDDING_NOT_CONFIGURED"));
     }
 
     @ExceptionHandler(Exception.class)
