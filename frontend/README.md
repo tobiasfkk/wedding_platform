@@ -3,6 +3,9 @@
 Aplicação Angular da Wedding Platform para o site público, o fluxo de RSVP e a área
 administrativa.
 
+A área protegida oferece a configuração do casamento em `/admin` e o cadastro, busca, edição e
+inativação lógica de convidados em `/admin/guests`.
+
 ## Requisitos
 
 - Node.js 24.15 ou uma versão compatível da linha 24;
