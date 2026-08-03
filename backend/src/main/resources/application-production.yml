@@ -9,3 +9,13 @@ spring:
     open-in-view: false
     hibernate:
       ddl-auto: none
+
+wedding:
+  auth:
+    allowed-origins: "${AUTH_ALLOWED_ORIGINS}"
+
+server:
+  servlet:
+    session:
+      cookie:
+        secure: true
