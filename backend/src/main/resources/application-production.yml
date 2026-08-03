@@ -21,6 +21,7 @@ wedding:
     public-base-url: "${PUBLIC_SITE_URL}"
 
 server:
+  forward-headers-strategy: framework
   servlet:
     session:
       cookie:

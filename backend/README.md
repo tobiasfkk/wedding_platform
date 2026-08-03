@@ -110,6 +110,24 @@ seu HMAC-SHA-256 é armazenado. O link original aparece apenas na resposta de at
 se for perdido, deve ser regenerado. A rotação preserva o resumo anterior para auditoria, mas o
 revoga atomicamente. Tokens e links nunca são escritos nos logs.
 
+## API pública de acesso ao RSVP
+
+| Método e rota | Resultado |
+|---|---|
+| `GET /api/rsvp/session` | Emite CSRF e consulta uma identificação pública ainda válida |
+| `POST /api/rsvp/access` | Troca o código enviado no corpo por uma sessão limitada ao convite |
+
+O frontend lê o código do fragmento `#code=`, remove-o imediatamente da URL e o envia uma única vez
+no corpo HTTPS. A sessão guarda somente os identificadores internos do convite e da versão do código;
+ela deixa de funcionar se o convite for inativado ou o link for regenerado. A resposta pública contém
+apenas nome do grupo, nomes dos participantes ativos e limite de acompanhantes, sem contatos ou dados
+administrativos. Código aleatório, antigo ou inativo recebe a mesma resposta genérica.
+
+Após dez tentativas inválidas pela mesma origem em quinze minutos, novas trocas recebem `429`. O
+limite é mantido em memória no MVP; em uma implantação com múltiplas instâncias ele deverá migrar para
+um armazenamento compartilhado. Em produção, cabe à infraestrutura encaminhar o endereço de origem
+confiável, processado por `server.forward-headers-strategy=framework`.
+
 ## Perfis e banco local
 
 O perfil `local` é usado por padrão e conecta ao PostgreSQL com os seguintes valores locais:
