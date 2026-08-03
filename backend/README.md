@@ -35,8 +35,36 @@ GET http://localhost:8080/actuator/health
 ```
 
 O resultado esperado é HTTP `200` com estado `UP`. O health check é público e não apresenta
-detalhes internos; os demais endpoints são protegidos por padrão. Ainda não existem usuários locais:
-a autenticação real será implementada na Issue `#11`.
+detalhes internos; os endpoints administrativos são protegidos por sessão.
+
+## Administrador local
+
+Antes da primeira inicialização, informe uma conta administrativa por variáveis de ambiente:
+
+```powershell
+$env:ADMIN_INITIAL_EMAIL = "admin@wedding.local"
+$env:ADMIN_INITIAL_PASSWORD = "uma-senha-local-com-12-ou-mais-caracteres"
+.\mvnw.cmd spring-boot:run
+```
+
+A conta é criada somente se o e-mail ainda não existir. A senha é transformada em hash Argon2id
+antes da persistência e não é registrada em logs. Depois da criação, remova as variáveis do terminal.
+Em produção, injete-as pelo gerenciador de segredos apenas na criação inicial.
+
+O frontend usa o proxy local para chamar a API. Abra `http://localhost:4200/admin`; visitantes sem
+sessão são direcionados para `/admin/login`.
+
+## API de autenticação
+
+| Método e rota | Acesso | Resultado |
+|---|---|---|
+| `GET /api/auth/session` | Público | Estado da sessão e token CSRF |
+| `POST /api/auth/login` | Público com CSRF | Cria e rotaciona a sessão administrativa |
+| `POST /api/auth/logout` | Administrador com CSRF | Invalida a sessão |
+| `GET /api/admin/me` | Administrador | Confirma a identidade da sessão protegida |
+
+Login inválido sempre devolve uma mensagem genérica. Após cinco falhas para a mesma combinação de
+conta e origem em quinze minutos, novas tentativas recebem `429` sem revelar se a conta existe.
 
 ## Perfis e banco local
 

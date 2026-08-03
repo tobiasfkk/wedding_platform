@@ -6,9 +6,8 @@ O projeto também é um estudo prático de engenharia de software: requisitos ra
 
 ## Status
 
-O produto está na **Fase 0 — Descoberta e fundação**. A especificação, os fluxos e as decisões
-arquiteturais iniciais foram definidos; backend, frontend, PostgreSQL local, migrações e pipeline de
-qualidade já estão disponíveis.
+O produto está na **Fase 1 — MVP de convites e RSVP**. A fundação técnica e arquitetural está
+concluída, e o primeiro fluxo vertical — autenticação administrativa por sessão — está disponível.
 
 ## Documentação
 
