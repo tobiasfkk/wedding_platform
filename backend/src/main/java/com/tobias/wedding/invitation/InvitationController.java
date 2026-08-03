@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import java.net.URI;
+import java.security.Principal;
 import java.util.List;
 import java.util.UUID;
 import org.slf4j.Logger;
@@ -59,6 +60,27 @@ class InvitationController {
     InvitationResponse update(@PathVariable UUID id, @Valid @RequestBody InvitationRequest request) {
         InvitationResponse response = service.update(id, request);
         LOGGER.info("Invitation updated with id {}", id);
+        return response;
+    }
+
+    @PostMapping("/{id}/activate")
+    InvitationLinkResponse activate(@PathVariable UUID id, Principal principal) {
+        InvitationLinkResponse response = service.activate(id, principal.getName());
+        LOGGER.info("Invitation activated with id {}", id);
+        return response;
+    }
+
+    @PostMapping("/{id}/regenerate-link")
+    InvitationLinkResponse regenerateLink(@PathVariable UUID id, Principal principal) {
+        InvitationLinkResponse response = service.regenerateLink(id, principal.getName());
+        LOGGER.info("Invitation link regenerated for id {}", id);
+        return response;
+    }
+
+    @PostMapping("/{id}/inactivate")
+    InvitationResponse inactivate(@PathVariable UUID id, Principal principal) {
+        InvitationResponse response = service.inactivate(id, principal.getName());
+        LOGGER.info("Invitation inactivated with id {}", id);
         return response;
     }
 }

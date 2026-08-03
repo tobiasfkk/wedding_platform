@@ -9,3 +9,9 @@ spring:
     open-in-view: false
     hibernate:
       ddl-auto: none
+
+wedding:
+  invitation-code:
+    pepper: "${INVITATION_CODE_PEPPER:local-development-pepper-change-before-production-2026}"
+    pepper-version: "${INVITATION_CODE_PEPPER_VERSION:1}"
+    public-base-url: "${PUBLIC_SITE_URL:http://localhost:4200}"
