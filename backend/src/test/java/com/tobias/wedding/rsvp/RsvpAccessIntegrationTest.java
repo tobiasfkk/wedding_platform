@@ -87,7 +87,8 @@ class RsvpAccessIntegrationTest {
                 .andExpect(jsonPath("$.companionLimit").value(2))
                 .andExpect(jsonPath("$.participants.length()").value(2))
                 .andExpect(jsonPath("$.participants[?(@.name == 'Ana Exemplo')]").isNotEmpty())
-                .andExpect(jsonPath("$.participants[?(@.status == 'PENDING')].length()").value(2))
+                .andExpect(jsonPath("$.participants[0].status").value("PENDING"))
+                .andExpect(jsonPath("$.participants[1].status").value("PENDING"))
                 .andExpect(jsonPath("$.participants[?(@.name == 'Pessoa de outro convite')]").isEmpty())
                 .andReturn();
         Cookie sessionCookie = accessResult.getResponse().getCookie("SESSION");
