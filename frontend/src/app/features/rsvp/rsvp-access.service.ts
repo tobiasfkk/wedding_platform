@@ -4,16 +4,30 @@ import { Observable, tap } from 'rxjs';
 
 import { CsrfTokenStore } from '../../core/auth/csrf-token.store';
 
+export type RsvpStatus = 'PENDING' | 'CONFIRMED' | 'DECLINED';
+
+export interface RsvpParticipant {
+  id: string;
+  name: string;
+  status: RsvpStatus;
+}
+
 export interface RsvpInvitation {
   groupName: string;
   companionLimit: number;
-  participants: string[];
+  participants: RsvpParticipant[];
 }
 
 export interface RsvpSession {
   identified: boolean;
   invitation: RsvpInvitation | null;
   csrfToken: string;
+}
+
+export interface RsvpSubmissionResponse {
+  savedAt: string;
+  replayed: boolean;
+  invitation: RsvpInvitation;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -29,5 +43,18 @@ export class RsvpAccessService {
 
   access(code: string): Observable<RsvpInvitation> {
     return this.http.post<RsvpInvitation>('/api/rsvp/access', { code });
+  }
+
+  respond(
+    operationId: string,
+    participants: Pick<RsvpParticipant, 'id' | 'status'>[],
+  ): Observable<RsvpSubmissionResponse> {
+    return this.http.post<RsvpSubmissionResponse>('/api/rsvp/responses', {
+      operationId,
+      participants: participants.map((participant) => ({
+        participantId: participant.id,
+        status: participant.status,
+      })),
+    });
   }
 }

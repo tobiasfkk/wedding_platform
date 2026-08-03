@@ -42,6 +42,14 @@ class RsvpAccessService {
     }
 
     Optional<InvitationAccessView> current(HttpSession session) {
+        return current(session, false);
+    }
+
+    Optional<InvitationAccessView> currentForUpdate(HttpSession session) {
+        return current(session, true);
+    }
+
+    private Optional<InvitationAccessView> current(HttpSession session, boolean forUpdate) {
         Object invitationValue = session.getAttribute(INVITATION_SESSION_ATTRIBUTE);
         Object accessCodeValue = session.getAttribute(ACCESS_CODE_SESSION_ATTRIBUTE);
         if (!(invitationValue instanceof String invitationId)
@@ -49,8 +57,11 @@ class RsvpAccessService {
             return Optional.empty();
         }
         try {
-            Optional<InvitationAccessView> access = verifier.findActiveAccess(
-                    UUID.fromString(invitationId), UUID.fromString(accessCodeId));
+            UUID parsedInvitationId = UUID.fromString(invitationId);
+            UUID parsedAccessCodeId = UUID.fromString(accessCodeId);
+            Optional<InvitationAccessView> access = forUpdate
+                    ? verifier.findActiveAccessForUpdate(parsedInvitationId, parsedAccessCodeId)
+                    : verifier.findActiveAccess(parsedInvitationId, parsedAccessCodeId);
             if (access.isEmpty()) {
                 clear(session);
             }

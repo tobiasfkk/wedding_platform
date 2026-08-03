@@ -84,18 +84,29 @@ public class InvitationCodeVerifier {
         return findActiveAccess(invitationId);
     }
 
+    @Transactional
+    public Optional<InvitationAccessView> findActiveAccessForUpdate(UUID invitationId, UUID accessCodeId) {
+        return invitationRepository()
+                .findByIdForRsvp(invitationId)
+                .filter(invitation -> invitation.status() == InvitationStatus.ACTIVE)
+                .filter(invitation -> accessCodeRepository()
+                        .existsByIdAndInvitationIdAndRevokedAtIsNull(accessCodeId, invitationId))
+                .map(this::accessView);
+    }
+
     private InvitationAccessView accessView(Invitation invitation) {
         Set<UUID> guestIds = membershipRepository()
                 .findAllByInvitationIdAndUnlinkedAtIsNull(invitation.id())
                 .stream()
                 .map(InvitationGuest::guestId)
                 .collect(Collectors.toSet());
-        List<String> participants = guests.find(invitation.weddingEventId(), guestIds).stream()
+        List<InvitationParticipantView> participants = guests.find(invitation.weddingEventId(), guestIds).stream()
                 .filter(GuestSummary::active)
                 .sorted(Comparator.comparing(GuestSummary::name))
-                .map(GuestSummary::name)
+                .map(guest -> new InvitationParticipantView(guest.id(), guest.name()))
                 .toList();
-        return new InvitationAccessView(invitation.name(), invitation.companionLimit(), participants);
+        return new InvitationAccessView(
+                invitation.id(), invitation.name(), invitation.companionLimit(), participants);
     }
 
     private InvitationAccessCodeRepository accessCodeRepository() {

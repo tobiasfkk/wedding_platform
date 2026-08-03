@@ -4,10 +4,20 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 
 import { apiSecurityInterceptor } from '../../core/auth/api-security.interceptor';
+import { RsvpInvitation } from './rsvp-access.service';
 import { RsvpHome } from './rsvp-home';
 
 describe('RsvpHome', () => {
   let http: HttpTestingController;
+
+  const invitation: RsvpInvitation = {
+    groupName: 'Família Exemplo',
+    companionLimit: 2,
+    participants: [
+      { id: '11111111-1111-1111-1111-111111111111', name: 'Ana Exemplo', status: 'PENDING' },
+      { id: '22222222-2222-2222-2222-222222222222', name: 'Bruno Exemplo', status: 'DECLINED' },
+    ],
+  };
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -26,7 +36,7 @@ describe('RsvpHome', () => {
     window.history.replaceState(null, '', '/');
   });
 
-  it('removes the code from the URL and displays only its invitation on a mobile viewport', () => {
+  it('removes the code and offers touch-friendly responses on a mobile viewport', () => {
     Object.defineProperty(window, 'innerWidth', { configurable: true, value: 320 });
     window.history.replaceState(null, '', '/rsvp#code=valid-secret-code');
     const fixture = TestBed.createComponent(RsvpHome);
@@ -41,17 +51,63 @@ describe('RsvpHome', () => {
     const access = http.expectOne('/api/rsvp/access');
     expect(access.request.body).toEqual({ code: 'valid-secret-code' });
     expect(access.request.headers.get('X-XSRF-TOKEN')).toBe('rsvp-csrf');
-    access.flush({
-      groupName: 'Família Exemplo',
-      companionLimit: 2,
-      participants: ['Ana Exemplo', 'Bruno Exemplo'],
-    });
+    access.flush(invitation);
     fixture.detectChanges();
 
     expect(fixture.nativeElement.querySelector('h1')?.textContent).toContain('Família Exemplo');
     expect(fixture.nativeElement.textContent).toContain('Ana Exemplo');
+    expect(fixture.nativeElement.textContent).toContain('Resposta atual: não vai participar');
     expect(fixture.nativeElement.textContent).not.toContain('Outro grupo');
-    expect(fixture.nativeElement.querySelector('.rsvp-card')).not.toBeNull();
+    expect(fixture.nativeElement.querySelectorAll('.participant-card').length).toBe(2);
+  });
+
+  it('retries a failed save with the same idempotency identifier and confirms success', () => {
+    window.history.replaceState(null, '', '/rsvp');
+    const fixture = TestBed.createComponent(RsvpHome);
+    fixture.detectChanges();
+    http.expectOne('/api/rsvp/session').flush({
+      identified: true,
+      invitation,
+      csrfToken: 'rsvp-csrf',
+    });
+    fixture.detectChanges();
+
+    const buttons = Array.from<HTMLButtonElement>(fixture.nativeElement.querySelectorAll('button'));
+    buttons.find((button) => button.textContent?.includes('Vou participar'))?.click();
+    fixture.detectChanges();
+    buttons.find((button) => button.textContent?.includes('Salvar respostas'))?.click();
+
+    const firstSave = http.expectOne('/api/rsvp/responses');
+    const operationId = firstSave.request.body.operationId;
+    expect(firstSave.request.headers.get('X-XSRF-TOKEN')).toBe('rsvp-csrf');
+    expect(firstSave.request.body.participants).toEqual([
+      { participantId: invitation.participants[0].id, status: 'CONFIRMED' },
+      { participantId: invitation.participants[1].id, status: 'DECLINED' },
+    ]);
+    firstSave.flush({}, { status: 500, statusText: 'Server error' });
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Nenhuma resposta foi alterada');
+
+    const saveButton = fixture.nativeElement.querySelector(
+      '.save-button',
+    ) as HTMLButtonElement | null;
+    saveButton?.click();
+    const retry = http.expectOne('/api/rsvp/responses');
+    expect(retry.request.body.operationId).toBe(operationId);
+    retry.flush({
+      savedAt: '2027-01-01T00:00:00Z',
+      replayed: false,
+      invitation: {
+        ...invitation,
+        participants: [
+          { ...invitation.participants[0], status: 'CONFIRMED' },
+          invitation.participants[1],
+        ],
+      },
+    });
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('Respostas salvas.');
   });
 
   it('uses the same safe error state when the exchange is rejected', () => {
