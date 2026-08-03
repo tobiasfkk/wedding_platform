@@ -66,6 +66,17 @@ sessão são direcionados para `/admin/login`.
 Login inválido sempre devolve uma mensagem genérica. Após cinco falhas para a mesma combinação de
 conta e origem em quinze minutos, novas tentativas recebem `429` sem revelar se a conta existe.
 
+## API de configuração do casamento
+
+| Método e rota | Acesso | Resultado |
+|---|---|---|
+| `GET /api/admin/wedding` | Administrador | Consulta a configuração atual ou um rascunho vazio |
+| `PUT /api/admin/wedding` | Administrador com CSRF | Cria ou atualiza os dados essenciais do casamento |
+
+Datas e horários são recebidos separadamente e convertidos para instantes usando o `timeZone`
+IANA do evento (por padrão, `America/Sao_Paulo`). A data-limite do RSVP deve ser igual ou anterior
+ao início do casamento.
+
 ## Perfis e banco local
 
 O perfil `local` é usado por padrão e conecta ao PostgreSQL com os seguintes valores locais:

@@ -4,22 +4,24 @@ import { Router } from '@angular/router';
 import { finalize } from 'rxjs';
 
 import { AuthService } from '../../core/auth/auth.service';
+import { WeddingSettingsComponent } from './wedding-settings';
 
 @Component({
   selector: 'app-admin-home',
-  imports: [MatButtonModule],
+  imports: [MatButtonModule, WeddingSettingsComponent],
   template: `
     <section class="page-intro" aria-labelledby="admin-title">
       <p class="eyebrow">Área restrita</p>
       <h1 id="admin-title">Administração</h1>
       <p class="lead">
         Sessão ativa para <strong>{{ auth.session()?.email }}</strong
-        >. A gestão do casamento será construída nas próximas entregas.
+        >.
       </p>
       <button mat-stroked-button type="button" (click)="logout()" [disabled]="loggingOut()">
         {{ loggingOut() ? 'Saindo…' : 'Encerrar sessão' }}
       </button>
     </section>
+    <app-wedding-settings />
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
