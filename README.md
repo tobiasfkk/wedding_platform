@@ -6,12 +6,15 @@ O projeto também é um estudo prático de engenharia de software: requisitos ra
 
 ## Status
 
-O produto está na **Fase 0 — Descoberta e fundação**. A especificação e os fluxos foram definidos, e as fundações executáveis do backend, frontend e PostgreSQL local já estão disponíveis. Migrações e demais itens de infraestrutura serão adicionados nas próximas Issues.
+O produto está na **Fase 0 — Descoberta e fundação**. A especificação, os fluxos e as decisões
+arquiteturais iniciais foram definidos; backend, frontend, PostgreSQL local, migrações e pipeline de
+qualidade já estão disponíveis.
 
 ## Documentação
 
 - [Especificação do produto](docs/ESPECIFICACAO_DO_PROJETO.md)
 - [Wireframes de baixa fidelidade](docs/WIREFRAMES_BAIXA_FIDELIDADE.md)
+- [Decisões arquiteturais](docs/adr/README.md)
 - [Índice da documentação](docs/README.md)
 - [Como contribuir](CONTRIBUTING.md)
 
