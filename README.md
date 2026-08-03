@@ -7,7 +7,8 @@ O projeto também é um estudo prático de engenharia de software: requisitos ra
 ## Status
 
 O produto está na **Fase 1 — MVP de convites e RSVP**. A fundação técnica e arquitetural está
-concluída, e o primeiro fluxo vertical — autenticação administrativa por sessão — está disponível.
+concluída. A autenticação administrativa por sessão e a configuração dos dados essenciais do
+casamento estão disponíveis.
 
 ## Documentação
 
