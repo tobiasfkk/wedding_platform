@@ -77,6 +77,20 @@ Datas e horários são recebidos separadamente e convertidos para instantes usan
 IANA do evento (por padrão, `America/Sao_Paulo`). A data-limite do RSVP deve ser igual ou anterior
 ao início do casamento.
 
+## API de convidados
+
+Todas as rotas exigem uma sessão administrativa; operações de escrita também exigem CSRF.
+
+| Método e rota | Resultado |
+|---|---|
+| `GET /api/admin/guests` | Lista convidados com busca, filtro de estado e paginação |
+| `POST /api/admin/guests` | Cadastra um convidado no casamento atual |
+| `PUT /api/admin/guests/{id}` | Atualiza nome, contato opcional e estado |
+| `PATCH /api/admin/guests/{id}/status` | Inativa ou reativa sem excluir o histórico |
+
+A listagem aceita `query`, `status` (`ALL`, `ACTIVE` ou `INACTIVE`), `page` baseado em zero e
+`size` entre 1 e 100. Dados pessoais não são escritos nos logs da aplicação.
+
 ## Perfis e banco local
 
 O perfil `local` é usado por padrão e conecta ao PostgreSQL com os seguintes valores locais:

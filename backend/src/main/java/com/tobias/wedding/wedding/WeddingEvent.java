@@ -102,6 +102,10 @@ class WeddingEvent {
         return version;
     }
 
+    UUID id() {
+        return id;
+    }
+
     @PreUpdate
     void markUpdated() {
         updatedAt = Instant.now();
