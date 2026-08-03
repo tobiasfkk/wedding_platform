@@ -7,9 +7,13 @@
 - [Especificação do produto e plano de engenharia](ESPECIFICACAO_DO_PROJETO.md)
 - [Wireframes de baixa fidelidade](WIREFRAMES_BAIXA_FIDELIDADE.md)
 
+## Arquitetura
+
+- [Architecture Decision Records](adr/README.md)
+- [Template de ADR](adr/0000-template.md)
+
 ## Artefatos planejados
 
-- `adr/`: decisões arquiteturais relevantes;
 - `api/`: contratos e orientações da API quando necessário;
 - `operations/`: deploy, rollback, backup, restauração e incidentes;
 - `testing/`: estratégias e resultados de verificações não funcionais.

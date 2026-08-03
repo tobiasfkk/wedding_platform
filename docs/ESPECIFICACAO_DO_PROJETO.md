@@ -385,10 +385,10 @@ Princípios:
 | Banco | PostgreSQL e Flyway |
 | Mapeamento/API | MapStruct e OpenAPI/Swagger |
 | Testes backend | JUnit 5, Mockito, Testcontainers e ArchUnit quando aplicável |
-| Frontend | Angular, TypeScript, Reactive Forms e biblioteca visual a decidir |
-| Testes frontend | Testes unitários do ecossistema Angular e Playwright/Cypress a decidir |
+| Frontend | Angular, TypeScript, Reactive Forms e Angular Material/CDK ([ADR 0005](adr/0005-interface-e-testes-e2e.md)) |
+| Testes frontend | Vitest para testes unitários e Playwright para E2E ([ADR 0005](adr/0005-interface-e-testes-e2e.md)) |
 | Ambiente local | Docker e Docker Compose |
-| Entrada em produção | Nginx como proxy reverso e terminação TLS, conforme ambiente escolhido |
+| Entrada em produção | Cloudflare Pages, AWS App Runner, RDS PostgreSQL e S3 ([ADR 0006](adr/0006-hospedagem-inicial.md)) |
 | CI/CD | GitHub Actions |
 | Observabilidade | Actuator, Prometheus, Grafana e solução de logs a decidir |
 | Mensageria futura | RabbitMQ, introduzido primeiro em um caso de uso não crítico |
@@ -401,6 +401,17 @@ Princípios:
 4. Implementar outbox, idempotência, retentativas e fila de mensagens mortas.
 5. Medir acoplamento e carga antes de considerar extração.
 6. Extrair um serviço somente se limites de domínio, operação e dados estiverem claros.
+
+### 12.4 Decisões arquiteturais
+
+| Tema | Decisão aplicável |
+|---|---|
+| Limites do backend | [ADR 0001 — Monólito modular](adr/0001-monolito-modular.md) |
+| Autenticação administrativa | [ADR 0002 — Sessão persistida no servidor](adr/0002-autenticacao-administrativa.md) |
+| Código de convite | [ADR 0003 — Token de alta entropia e HMAC](adr/0003-codigo-de-convite.md) |
+| Organização do código | [ADR 0004 — Monorepo](adr/0004-estrutura-do-repositorio.md) |
+| Interface e E2E | [ADR 0005 — Angular Material e Playwright](adr/0005-interface-e-testes-e2e.md) |
+| Hospedagem e evolução | [ADR 0006 — Cloudflare Pages e AWS](adr/0006-hospedagem-inicial.md) |
 
 ## 13. Estratégia de qualidade
 
@@ -597,19 +608,21 @@ O MVP estará pronto para lançamento quando todas as condições forem verdadei
 
 ## 18. Decisões em aberto
 
-Estas decisões devem ser resolvidas durante a Fase 0:
+Resolvidas durante a Fase 0:
+
+- Hospedagem e orçamento inicial: [ADR 0006](adr/0006-hospedagem-inicial.md).
+- Biblioteca visual e ferramenta E2E: [ADR 0005](adr/0005-interface-e-testes-e2e.md).
+- Autenticação administrativa, recuperação e papéis: [ADR 0002](adr/0002-autenticacao-administrativa.md).
+- Geração, armazenamento e rotação do código de convite: [ADR 0003](adr/0003-codigo-de-convite.md).
+
+Permanecem em aberto:
 
 - Nome público definitivo do produto.
-- Plataforma de hospedagem e orçamento mensal aceitável.
-- Biblioteca visual do frontend.
-- Estratégia de autenticação administrativa e recuperação de senha.
-- Forma segura de geração, armazenamento e rotação do código de convite.
-- Necessidade de múltiplos administradores e seus papéis.
 - Se cada pessoa do grupo responde individualmente ou o responsável responde por todos.
 - Quais informações do evento são públicas sem código.
 - Política definitiva de privacidade, retenção e exclusão.
 - Canal da primeira integração de notificações.
-- Ferramentas definitivas de teste E2E, logs e rastreamento de erros.
+- Ferramentas definitivas de logs e rastreamento de erros.
 
 ## 19. Governança do documento
 
@@ -625,3 +638,4 @@ Estas decisões devem ser resolvidas durante a Fase 0:
 |---|---|---|
 | 0.1.0 | 29/07/2026 | Criação da visão, escopo, regras, requisitos, arquitetura, qualidade e cronograma inicial |
 | 1.0.0 | 29/07/2026 | Aprovação da especificação como baseline inicial do projeto |
+| 1.1.0 | 03/08/2026 | Referência aos ADRs iniciais e resolução das decisões de autenticação, convite, interface, E2E e hospedagem |
