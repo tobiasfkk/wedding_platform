@@ -3,6 +3,10 @@ package com.tobias.wedding.shared.web;
 import com.tobias.wedding.auth.AuthenticationRejectedException;
 import com.tobias.wedding.guest.GuestFilterException;
 import com.tobias.wedding.guest.GuestNotFoundException;
+import com.tobias.wedding.guest.GuestSelectionException;
+import com.tobias.wedding.invitation.InvitationFilterException;
+import com.tobias.wedding.invitation.InvitationGuestConflictException;
+import com.tobias.wedding.invitation.InvitationNotFoundException;
 import com.tobias.wedding.wedding.WeddingNotConfiguredException;
 import com.tobias.wedding.wedding.WeddingSettingsValidationException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -131,6 +135,38 @@ public class ApiExceptionHandler {
                 "Casamento não configurado",
                 exception.getMessage(),
                 "WEDDING_NOT_CONFIGURED"));
+    }
+
+    @ExceptionHandler(InvitationFilterException.class)
+    ResponseEntity<ProblemDetail> handleInvitationFilter(InvitationFilterException exception) {
+        ProblemDetail problem = problem(
+                HttpStatus.BAD_REQUEST,
+                VALIDATION_TYPE,
+                "Filtro inválido",
+                exception.getMessage(),
+                "VALIDATION_ERROR");
+        problem.setProperty("errors", List.of(new ApiFieldError("status", exception.getMessage())));
+        return ResponseEntity.badRequest().body(problem);
+    }
+
+    @ExceptionHandler(InvitationNotFoundException.class)
+    ResponseEntity<ProblemDetail> handleInvitationNotFound(InvitationNotFoundException exception) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(problem(
+                HttpStatus.NOT_FOUND,
+                NOT_FOUND_TYPE,
+                "Convite não encontrado",
+                exception.getMessage(),
+                "INVITATION_NOT_FOUND"));
+    }
+
+    @ExceptionHandler({InvitationGuestConflictException.class, GuestSelectionException.class})
+    ResponseEntity<ProblemDetail> handleInvitationConflict(RuntimeException exception) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(problem(
+                HttpStatus.CONFLICT,
+                CONFLICT_TYPE,
+                "Convidado indisponível",
+                exception.getMessage(),
+                "INVITATION_GUEST_CONFLICT"));
     }
 
     @ExceptionHandler(Exception.class)

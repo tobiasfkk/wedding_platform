@@ -22,6 +22,15 @@ export const routes: Routes = [
       import('./features/admin/admin-login').then((component) => component.AdminLogin),
   },
   {
+    path: 'admin/invitations',
+    title: 'Convites | Wedding Platform',
+    canActivate: [adminGuard],
+    loadComponent: () =>
+      import('./features/admin/invitation-management').then(
+        (component) => component.InvitationManagement,
+      ),
+  },
+  {
     path: 'admin/guests',
     title: 'Convidados | Wedding Platform',
     canActivate: [adminGuard],

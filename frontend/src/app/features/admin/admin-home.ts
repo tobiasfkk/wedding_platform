@@ -21,6 +21,7 @@ import { WeddingSettingsComponent } from './wedding-settings';
         {{ loggingOut() ? 'Saindo…' : 'Encerrar sessão' }}
       </button>
       <a mat-flat-button routerLink="/admin/guests">Gerenciar convidados</a>
+      <a mat-flat-button routerLink="/admin/invitations">Gerenciar convites</a>
     </section>
     <app-wedding-settings />
   `,
