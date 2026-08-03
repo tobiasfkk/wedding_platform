@@ -45,8 +45,9 @@ Para aplicar a formatação configurada pelo projeto:
 npm run format
 ```
 
-Os testes unitários usam Vitest, conforme o padrão de novos projetos Angular 22. A ferramenta E2E
-será definida na Issue `#10`, antes dos fluxos ponta a ponta do MVP.
+Os testes unitários usam Vitest, conforme o padrão de novos projetos Angular 22. O
+[ADR 0005](../docs/adr/0005-interface-e-testes-e2e.md) define Angular Material/CDK como base visual
+e Playwright para os fluxos E2E, que serão introduzidos junto aos fluxos críticos do MVP.
 
 ## Estrutura
 
