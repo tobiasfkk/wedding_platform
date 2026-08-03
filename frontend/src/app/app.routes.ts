@@ -1,5 +1,7 @@
 import { Routes } from '@angular/router';
 
+import { adminGuard } from './core/auth/admin.guard';
+
 export const routes: Routes = [
   {
     path: '',
@@ -14,8 +16,15 @@ export const routes: Routes = [
       import('./features/rsvp/rsvp-home').then((component) => component.RsvpHome),
   },
   {
+    path: 'admin/login',
+    title: 'Login administrativo | Wedding Platform',
+    loadComponent: () =>
+      import('./features/admin/admin-login').then((component) => component.AdminLogin),
+  },
+  {
     path: 'admin',
     title: 'Administração | Wedding Platform',
+    canActivate: [adminGuard],
     loadComponent: () =>
       import('./features/admin/admin-home').then((component) => component.AdminHome),
   },

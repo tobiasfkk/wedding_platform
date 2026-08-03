@@ -5,14 +5,36 @@ spring:
     default: local
   flyway:
     clean-disabled: true
+    default-schema: public
     locations: classpath:db/migration
     validate-on-migrate: true
   jpa:
     properties:
       hibernate:
         default_schema: wedding
+  session:
+    timeout: 30m
+    jdbc:
+      initialize-schema: never
+      table-name: wedding.spring_session
+
+wedding:
+  auth:
+    allowed-origins: "${AUTH_ALLOWED_ORIGINS:http://localhost:4200}"
+    initial-admin:
+      email: "${ADMIN_INITIAL_EMAIL:}"
+      password: "${ADMIN_INITIAL_PASSWORD:}"
+    login-attempts:
+      maximum: 5
+      window: 15m
 
 server:
+  servlet:
+    session:
+      cookie:
+        http-only: true
+        same-site: lax
+        secure: "${SESSION_COOKIE_SECURE:false}"
   error:
     include-binding-errors: never
     include-exception: false
