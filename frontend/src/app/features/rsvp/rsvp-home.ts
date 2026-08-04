@@ -4,7 +4,12 @@ import { MatButtonModule } from '@angular/material/button';
 import { RouterLink } from '@angular/router';
 import { switchMap } from 'rxjs';
 
-import { RsvpAccessService, RsvpInvitation, RsvpStatus } from './rsvp-access.service';
+import {
+  RsvpAccessService,
+  RsvpCompanion,
+  RsvpInvitation,
+  RsvpStatus,
+} from './rsvp-access.service';
 
 type AccessState = 'loading' | 'success' | 'error' | 'rate-limited';
 type SubmissionState = 'idle' | 'saving' | 'saved' | 'error';
@@ -76,11 +81,71 @@ type SubmissionState = 'idle' | 'saving' | 'saved' | 'error';
             <p class="companion-rule">{{ companionRule(currentInvitation.companionLimit) }}</p>
           </section>
 
+          @if (currentInvitation.companionLimit > 0) {
+            <section class="companion-section" aria-labelledby="companions-title">
+              <div class="companion-heading">
+                <div>
+                  <h2 id="companions-title">Acompanhantes</h2>
+                  <p>{{ companionAvailability(currentInvitation.companionLimit) }}</p>
+                </div>
+                <button
+                  mat-stroked-button
+                  type="button"
+                  class="add-companion"
+                  [disabled]="
+                    companions().length >= currentInvitation.companionLimit ||
+                    submissionState() === 'saving'
+                  "
+                  (click)="addCompanion()"
+                >
+                  Adicionar
+                </button>
+              </div>
+              @if (companions().length === 0) {
+                <p class="empty-companions">Nenhum acompanhante adicionado.</p>
+              } @else {
+                <div class="companion-list">
+                  @for (companion of companions(); track companion.id; let index = $index) {
+                    <div class="companion-card">
+                      <label [for]="'companion-' + companion.id">
+                        Nome do acompanhante {{ index + 1 }}
+                      </label>
+                      <div class="companion-controls">
+                        <input
+                          [id]="'companion-' + companion.id"
+                          type="text"
+                          maxlength="160"
+                          autocomplete="name"
+                          [value]="companion.name"
+                          [disabled]="submissionState() === 'saving'"
+                          [attr.aria-invalid]="!companion.name.trim()"
+                          (input)="updateCompanion(companion.id, $any($event.target).value)"
+                        />
+                        <button
+                          mat-button
+                          type="button"
+                          [disabled]="submissionState() === 'saving'"
+                          [attr.aria-label]="'Remover acompanhante ' + (index + 1)"
+                          (click)="removeCompanion(companion.id)"
+                        >
+                          Remover
+                        </button>
+                      </div>
+                      @if (!companion.name.trim()) {
+                        <p class="field-error">Informe o nome do acompanhante.</p>
+                      }
+                    </div>
+                  }
+                </div>
+              }
+            </section>
+          }
+
           <button
             class="save-button"
             mat-flat-button
             type="button"
-            [disabled]="submissionState() === 'saving'"
+            [disabled]="submissionState() === 'saving' || hasInvalidCompanion()"
             (click)="saveResponses()"
           >
             {{ submissionState() === 'saving' ? 'Salvando…' : 'Salvar respostas' }}
@@ -212,6 +277,75 @@ type SubmissionState = 'idle' | 'saving' | 'saved' | 'error';
       margin-block-end: 0;
       font-weight: 700;
     }
+    .companion-section {
+      margin-block: 1.5rem;
+    }
+    .companion-section h2,
+    .companion-section p {
+      margin-block: 0;
+    }
+    .companion-section h2 {
+      font-family: Georgia, 'Times New Roman', serif;
+      font-weight: 500;
+    }
+    .companion-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+    .companion-heading p,
+    .empty-companions {
+      color: var(--color-muted);
+    }
+    .empty-companions {
+      margin-block-start: 1rem !important;
+    }
+    .companion-list {
+      display: grid;
+      gap: 0.75rem;
+      margin-block-start: 1rem;
+    }
+    .companion-card {
+      padding: 1rem;
+      border: 1px solid var(--color-border);
+      border-radius: 0.75rem;
+      background: var(--color-surface-subtle);
+    }
+    .companion-card label {
+      display: block;
+      margin-block-end: 0.4rem;
+      font-weight: 800;
+    }
+    .companion-controls {
+      display: flex;
+      align-items: stretch;
+      gap: 0.5rem;
+    }
+    .companion-controls input {
+      min-width: 0;
+      min-height: 3rem;
+      flex: 1;
+      padding-inline: 0.75rem;
+      border: 1px solid var(--color-border);
+      border-radius: 0.5rem;
+      background: var(--color-surface);
+      color: var(--color-text);
+      font: inherit;
+    }
+    .companion-controls input:focus-visible {
+      outline: 0.2rem solid var(--color-accent-soft);
+      border-color: var(--color-accent-strong);
+    }
+    .companion-controls input[aria-invalid='true'] {
+      border-color: #b3261e;
+    }
+    .field-error {
+      margin-block-start: 0.35rem !important;
+      color: #8c1d18;
+      font-size: 0.875rem;
+      font-weight: 700;
+    }
     .save-button {
       width: 100%;
       min-height: 3rem;
@@ -269,6 +403,11 @@ type SubmissionState = 'idle' | 'saving' | 'saved' | 'error';
       .response-options button:last-child {
         grid-column: auto;
       }
+      .companion-heading,
+      .companion-controls {
+        align-items: stretch;
+        flex-direction: column;
+      }
     }
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -280,6 +419,7 @@ export class RsvpHome {
   readonly invitation = signal<RsvpInvitation | null>(null);
   readonly submissionState = signal<SubmissionState>('idle');
   readonly draft = signal<Record<string, RsvpStatus>>({});
+  readonly companions = signal<RsvpCompanion[]>([]);
   private pendingOperationId: string | null = null;
 
   constructor() {
@@ -312,6 +452,36 @@ export class RsvpHome {
     return `Este convite permite adicionar até ${limit} acompanhantes.`;
   }
 
+  companionAvailability(limit: number): string {
+    const available = Math.max(0, limit - this.companions().length);
+    return available === 1 ? '1 vaga disponível.' : `${available} vagas disponíveis.`;
+  }
+
+  hasInvalidCompanion(): boolean {
+    return this.companions().some((companion) => !companion.name.trim());
+  }
+
+  addCompanion(): void {
+    const invitation = this.invitation();
+    if (!invitation || this.companions().length >= invitation.companionLimit) return;
+    const companion = { id: globalThis.crypto.randomUUID(), name: '' };
+    this.companions.update((current) => [...current, companion]);
+    this.markDraftChanged();
+    queueMicrotask(() => this.document.getElementById(`companion-${companion.id}`)?.focus());
+  }
+
+  updateCompanion(id: string, name: string): void {
+    this.companions.update((current) =>
+      current.map((companion) => (companion.id === id ? { ...companion, name } : companion)),
+    );
+    this.markDraftChanged();
+  }
+
+  removeCompanion(id: string): void {
+    this.companions.update((current) => current.filter((companion) => companion.id !== id));
+    this.markDraftChanged();
+  }
+
   statusOf(participantId: string): RsvpStatus {
     return this.draft()[participantId] ?? 'PENDING';
   }
@@ -324,8 +494,7 @@ export class RsvpHome {
 
   setStatus(participantId: string, status: RsvpStatus): void {
     this.draft.update((current) => ({ ...current, [participantId]: status }));
-    this.pendingOperationId = null;
-    this.submissionState.set('idle');
+    this.markDraftChanged();
   }
 
   saveResponses(): void {
@@ -338,7 +507,7 @@ export class RsvpHome {
       status: this.statusOf(participant.id),
     }));
     this.submissionState.set('saving');
-    this.service.respond(operationId, participants).subscribe({
+    this.service.respond(operationId, participants, this.companions()).subscribe({
       next: (response) => {
         this.applyInvitation(response.invitation);
         this.pendingOperationId = null;
@@ -373,6 +542,12 @@ export class RsvpHome {
         invitation.participants.map((participant) => [participant.id, participant.status]),
       ),
     );
+    this.companions.set(invitation.companions);
+  }
+
+  private markDraftChanged(): void {
+    this.pendingOperationId = null;
+    this.submissionState.set('idle');
   }
 
   private focusState(): void {

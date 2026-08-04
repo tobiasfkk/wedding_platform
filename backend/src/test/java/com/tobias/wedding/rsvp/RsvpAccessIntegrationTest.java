@@ -13,6 +13,9 @@ import jakarta.servlet.http.Cookie;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +25,7 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -43,6 +47,9 @@ class RsvpAccessIntegrationTest {
     @Autowired
     private JdbcClient jdbcClient;
 
+    @Autowired
+    private RsvpResponseService responseService;
+
     private UUID weddingId;
     private UUID invitationId;
     private UUID otherInvitationId;
@@ -52,6 +59,7 @@ class RsvpAccessIntegrationTest {
 
     @BeforeEach
     void prepareData() {
+        jdbcClient.sql("DELETE FROM wedding.companion").update();
         jdbcClient.sql("DELETE FROM wedding.rsvp_change").update();
         jdbcClient.sql("DELETE FROM wedding.rsvp_response").update();
         jdbcClient.sql("DELETE FROM wedding.rsvp_submission").update();
@@ -89,6 +97,7 @@ class RsvpAccessIntegrationTest {
                 .andExpect(jsonPath("$.participants[?(@.name == 'Ana Exemplo')]").isNotEmpty())
                 .andExpect(jsonPath("$.participants[0].status").value("PENDING"))
                 .andExpect(jsonPath("$.participants[1].status").value("PENDING"))
+                .andExpect(jsonPath("$.companions.length()").value(0))
                 .andExpect(jsonPath("$.participants[?(@.name == 'Pessoa de outro convite')]").isEmpty())
                 .andReturn();
         Cookie sessionCookie = accessResult.getResponse().getCookie("SESSION");
@@ -175,6 +184,161 @@ class RsvpAccessIntegrationTest {
     }
 
     @Test
+    void addsEditsRemovesAndReplaysCompanionsWithoutDuplicates() throws Exception {
+        Cookie sessionCookie = accessSession(activateAndReadToken(invitationId), "198.51.100.52");
+        UUID firstCompanionId = UUID.randomUUID();
+        UUID secondCompanionId = UUID.randomUUID();
+        String companions = companions(
+                firstCompanionId, "Carla Exemplo", secondCompanionId, "Diego Exemplo");
+        String request = submission(
+                UUID.randomUUID(), firstGuestId, "CONFIRMED", secondGuestId, "DECLINED", companions);
+
+        mockMvc.perform(post("/api/rsvp/responses")
+                        .cookie(sessionCookie)
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(request))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.invitation.companions.length()").value(2))
+                .andExpect(jsonPath("$.invitation.companions[?(@.name == 'Carla Exemplo')]").isNotEmpty());
+
+        mockMvc.perform(post("/api/rsvp/responses")
+                        .cookie(sessionCookie)
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(request))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.replayed").value(true));
+        assertThat(count("wedding.companion")).isEqualTo(2);
+
+        mockMvc.perform(post("/api/rsvp/responses")
+                        .cookie(sessionCookie)
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(submission(
+                                UUID.randomUUID(),
+                                firstGuestId,
+                                "CONFIRMED",
+                                secondGuestId,
+                                "DECLINED",
+                                "[{\"id\":\"" + firstCompanionId + "\",\"name\":\"Carla Atualizada\"}]")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.invitation.companions.length()").value(1))
+                .andExpect(jsonPath("$.invitation.companions[0].id").value(firstCompanionId.toString()))
+                .andExpect(jsonPath("$.invitation.companions[0].name").value("Carla Atualizada"));
+
+        assertThat(countWhere("wedding.companion", "removed_at IS NULL")).isEqualTo(1);
+        assertThat(countWhere("wedding.companion", "removed_at IS NOT NULL")).isEqualTo(1);
+    }
+
+    @Test
+    void rejectsInvalidCompanionsAndPreservesThePreviousResponse() throws Exception {
+        Cookie sessionCookie = accessSession(activateAndReadToken(invitationId), "198.51.100.53");
+        UUID companionId = UUID.randomUUID();
+        mockMvc.perform(post("/api/rsvp/responses")
+                        .cookie(sessionCookie)
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(submission(
+                                UUID.randomUUID(),
+                                firstGuestId,
+                                "CONFIRMED",
+                                secondGuestId,
+                                "DECLINED",
+                                "[{\"id\":\"" + companionId + "\",\"name\":\"Carla\"}]")))
+                .andExpect(status().isOk());
+
+        String overLimit = companions(
+                UUID.randomUUID(), "Um", UUID.randomUUID(), "Dois").replace(
+                        "]", ",{\"id\":\"" + UUID.randomUUID() + "\",\"name\":\"Três\"}]");
+        mockMvc.perform(post("/api/rsvp/responses")
+                        .cookie(sessionCookie)
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(submission(
+                                UUID.randomUUID(), firstGuestId, "DECLINED", secondGuestId, "DECLINED", overLimit)))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("RSVP_SUBMISSION_CONFLICT"));
+
+        assertThat(countWhere("wedding.companion", "removed_at IS NULL")).isEqualTo(1);
+        assertThat(jdbcClient.sql("SELECT name FROM wedding.companion WHERE id = :id")
+                        .param("id", companionId)
+                        .query(String.class)
+                        .single())
+                .isEqualTo("Carla");
+        assertThat(jdbcClient.sql("SELECT status FROM wedding.rsvp_response WHERE guest_id = :id")
+                        .param("id", firstGuestId)
+                        .query(String.class)
+                        .single())
+                .isEqualTo("CONFIRMED");
+
+        mockMvc.perform(post("/api/rsvp/responses")
+                        .cookie(sessionCookie)
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(submission(
+                                UUID.randomUUID(),
+                                firstGuestId,
+                                "CONFIRMED",
+                                secondGuestId,
+                                "DECLINED",
+                                "[{\"id\":\"" + companionId + "\",\"name\":\"   \"}]")))
+                .andExpect(status().isBadRequest());
+        assertThat(countWhere("wedding.companion", "removed_at IS NULL")).isEqualTo(1);
+    }
+
+    @Test
+    void doesNotAllowCompanionsWhenTheLimitIsZero() throws Exception {
+        Cookie sessionCookie = accessSession(activateAndReadToken(otherInvitationId), "198.51.100.54");
+        String request = """
+                {
+                  "operationId": "%s",
+                  "participants": [{"participantId": "%s", "status": "CONFIRMED"}],
+                  "companions": [{"id": "%s", "name": "Sem vaga"}]
+                }
+                """.formatted(UUID.randomUUID(), otherGuestId, UUID.randomUUID());
+
+        mockMvc.perform(post("/api/rsvp/responses")
+                        .cookie(sessionCookie)
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(request))
+                .andExpect(status().isConflict());
+        assertThat(count("wedding.companion")).isZero();
+    }
+
+    @Test
+    void serializesConcurrentCompanionChangesInsideTheLimit() throws Exception {
+        activateAndReadToken(invitationId);
+        jdbcClient.sql("UPDATE wedding.invitation SET companion_limit = 1 WHERE id = :id")
+                .param("id", invitationId)
+                .update();
+        UUID accessCodeId = jdbcClient.sql(
+                        "SELECT id FROM wedding.invitation_access_code "
+                                + "WHERE invitation_id = :id AND revoked_at IS NULL")
+                .param("id", invitationId)
+                .query(UUID.class)
+                .single();
+        MockHttpSession firstSession = rsvpSession(accessCodeId);
+        MockHttpSession secondSession = rsvpSession(accessCodeId);
+        RsvpSubmissionRequest firstRequest = concurrentSubmission("Primeiro acompanhante");
+        RsvpSubmissionRequest secondRequest = concurrentSubmission("Segundo acompanhante");
+        CountDownLatch ready = new CountDownLatch(2);
+        CountDownLatch start = new CountDownLatch(1);
+
+        try (var executor = Executors.newFixedThreadPool(2)) {
+            var first = executor.submit(() -> submitAfterBarrier(firstRequest, firstSession, ready, start));
+            var second = executor.submit(() -> submitAfterBarrier(secondRequest, secondSession, ready, start));
+            assertThat(ready.await(5, TimeUnit.SECONDS)).isTrue();
+            start.countDown();
+            assertThat(first.get(10, TimeUnit.SECONDS)).isNotNull();
+            assertThat(second.get(10, TimeUnit.SECONDS)).isNotNull();
+        }
+
+        assertThat(countWhere("wedding.companion", "removed_at IS NULL")).isEqualTo(1);
+    }
+
+    @Test
     void givesTheSameSafeResponseForRandomOldAndInactiveCodes() throws Exception {
         String firstToken = activateAndReadToken(invitationId);
         String secondToken = regenerateAndReadToken(invitationId);
@@ -243,13 +407,62 @@ class RsvpAccessIntegrationTest {
                   "participants": [
                     {"participantId": "%s", "status": "%s"},
                     {"participantId": "%s", "status": "%s"}
-                  ]
+                  ],
+                  "companions": []
                 }
                 """.formatted(operationId, firstId, firstStatus, secondId, secondStatus);
     }
 
+    private String submission(
+            UUID operationId,
+            UUID firstId,
+            String firstStatus,
+            UUID secondId,
+            String secondStatus,
+            String companions) {
+        return submission(operationId, firstId, firstStatus, secondId, secondStatus)
+                .replace("\"companions\": []", "\"companions\": " + companions);
+    }
+
+    private String companions(UUID firstId, String firstName, UUID secondId, String secondName) {
+        return "[{\"id\":\"" + firstId + "\",\"name\":\"" + firstName + "\"},"
+                + "{\"id\":\"" + secondId + "\",\"name\":\"" + secondName + "\"}]";
+    }
+
     private long count(String table) {
         return jdbcClient.sql("SELECT COUNT(*) FROM " + table).query(Long.class).single();
+    }
+
+    private long countWhere(String table, String condition) {
+        return jdbcClient.sql("SELECT COUNT(*) FROM " + table + " WHERE " + condition)
+                .query(Long.class)
+                .single();
+    }
+
+    private MockHttpSession rsvpSession(UUID accessCodeId) {
+        MockHttpSession session = new MockHttpSession();
+        session.setAttribute(RsvpAccessService.INVITATION_SESSION_ATTRIBUTE, invitationId.toString());
+        session.setAttribute(RsvpAccessService.ACCESS_CODE_SESSION_ATTRIBUTE, accessCodeId.toString());
+        return session;
+    }
+
+    private RsvpSubmissionRequest concurrentSubmission(String companionName) {
+        return new RsvpSubmissionRequest(
+                UUID.randomUUID(),
+                java.util.List.of(
+                        new RsvpParticipantRequest(firstGuestId, RsvpStatus.CONFIRMED),
+                        new RsvpParticipantRequest(secondGuestId, RsvpStatus.DECLINED)),
+                java.util.List.of(new RsvpCompanionRequest(UUID.randomUUID(), companionName)));
+    }
+
+    private RsvpSubmissionResponse submitAfterBarrier(
+            RsvpSubmissionRequest request,
+            MockHttpSession session,
+            CountDownLatch ready,
+            CountDownLatch start) throws InterruptedException {
+        ready.countDown();
+        start.await(5, TimeUnit.SECONDS);
+        return responseService.submit(request, session);
     }
 
     private String activateAndReadToken(UUID id) throws Exception {

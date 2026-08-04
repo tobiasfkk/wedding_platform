@@ -10,6 +10,14 @@ public class RsvpSubmissionException extends RuntimeException {
         return new RsvpSubmissionException("O identificador da operação já foi usado com outros dados.");
     }
 
+    static RsvpSubmissionException invalidCompanions() {
+        return new RsvpSubmissionException("Os acompanhantes informados não são válidos para este convite.");
+    }
+
+    static RsvpSubmissionException companionLimitExceeded() {
+        return new RsvpSubmissionException("O limite de acompanhantes deste convite foi excedido.");
+    }
+
     private RsvpSubmissionException(String message) {
         super(message);
     }
