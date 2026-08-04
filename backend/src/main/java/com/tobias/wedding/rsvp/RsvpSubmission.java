@@ -23,26 +23,48 @@ class RsvpSubmission {
     @Column(nullable = false, length = 30)
     private String origin;
 
+    @Column(name = "submitted_by", length = 254)
+    private String submittedBy;
+
     @Column(name = "submitted_at", nullable = false)
     private Instant submittedAt;
 
     protected RsvpSubmission() {}
 
-    private RsvpSubmission(UUID id, UUID invitationId, String requestHash, String origin, Instant submittedAt) {
+    private RsvpSubmission(
+            UUID id,
+            UUID invitationId,
+            String requestHash,
+            String origin,
+            String submittedBy,
+            Instant submittedAt) {
         this.id = id;
         this.invitationId = invitationId;
         this.requestHash = requestHash;
         this.origin = origin;
+        this.submittedBy = submittedBy;
         this.submittedAt = submittedAt;
     }
 
     static RsvpSubmission create(
-            UUID id, UUID invitationId, String requestHash, String origin, Instant submittedAt) {
-        return new RsvpSubmission(id, invitationId, requestHash, origin, submittedAt);
+            UUID id,
+            UUID invitationId,
+            String requestHash,
+            String origin,
+            String submittedBy,
+            Instant submittedAt) {
+        return new RsvpSubmission(id, invitationId, requestHash, origin, submittedBy, submittedAt);
     }
 
-    boolean matches(UUID expectedInvitationId, String expectedRequestHash) {
-        return invitationId.equals(expectedInvitationId) && requestHash.equals(expectedRequestHash);
+    boolean matches(
+            UUID expectedInvitationId,
+            String expectedRequestHash,
+            String expectedOrigin,
+            String expectedSubmittedBy) {
+        return invitationId.equals(expectedInvitationId)
+                && requestHash.equals(expectedRequestHash)
+                && origin.equals(expectedOrigin)
+                && java.util.Objects.equals(submittedBy, expectedSubmittedBy);
     }
 
     Instant submittedAt() {

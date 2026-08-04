@@ -36,6 +36,9 @@ class RsvpChange {
     @Column(nullable = false, length = 30)
     private String origin;
 
+    @Column(name = "changed_by", length = 254)
+    private String changedBy;
+
     @Column(name = "occurred_at", nullable = false)
     private Instant occurredAt;
 
@@ -48,6 +51,7 @@ class RsvpChange {
             RsvpStatus previousStatus,
             RsvpStatus newStatus,
             String origin,
+            String changedBy,
             Instant occurredAt) {
         this.id = UUID.randomUUID();
         this.submissionId = submissionId;
@@ -56,6 +60,7 @@ class RsvpChange {
         this.previousStatus = previousStatus;
         this.newStatus = newStatus;
         this.origin = origin;
+        this.changedBy = changedBy;
         this.occurredAt = occurredAt;
     }
 
@@ -66,6 +71,7 @@ class RsvpChange {
             RsvpStatus previousStatus,
             RsvpStatus newStatus,
             String origin,
+            String changedBy,
             Instant occurredAt) {
         return new RsvpChange(
                 submissionId,
@@ -74,6 +80,7 @@ class RsvpChange {
                 previousStatus,
                 newStatus,
                 origin,
+                changedBy,
                 occurredAt);
     }
 }

@@ -29,7 +29,7 @@ class FlywayMigrationIntegrationTest {
                 .validateOnMigrate(true)
                 .load();
 
-        assertThat(flyway.migrate().migrationsExecuted).isEqualTo(8);
+        assertThat(flyway.migrate().migrationsExecuted).isEqualTo(9);
 
         try (Connection connection = POSTGRES.createConnection("");
                 Statement statement = connection.createStatement();

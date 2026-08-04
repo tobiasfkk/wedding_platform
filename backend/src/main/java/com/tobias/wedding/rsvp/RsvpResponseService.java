@@ -1,7 +1,10 @@
 package com.tobias.wedding.rsvp;
 
 import com.tobias.wedding.invitation.InvitationAccessView;
+import com.tobias.wedding.invitation.InvitationCodeVerifier;
+import com.tobias.wedding.invitation.InvitationNotFoundException;
 import com.tobias.wedding.invitation.InvitationParticipantView;
+import com.tobias.wedding.wedding.CurrentWedding;
 import jakarta.servlet.http.HttpSession;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -25,8 +28,11 @@ import org.springframework.transaction.annotation.Transactional;
 class RsvpResponseService {
 
     private static final String PUBLIC_LINK_ORIGIN = "PUBLIC_LINK";
+    private static final String ADMIN_ORIGIN = "ADMIN";
 
     private final RsvpAccessService accessService;
+    private final InvitationCodeVerifier invitationVerifier;
+    private final CurrentWedding currentWedding;
     private final ObjectProvider<RsvpResponseRepository> responseRepositories;
     private final ObjectProvider<RsvpSubmissionRepository> submissionRepositories;
     private final ObjectProvider<RsvpChangeRepository> changeRepositories;
@@ -34,11 +40,15 @@ class RsvpResponseService {
 
     RsvpResponseService(
             RsvpAccessService accessService,
+            InvitationCodeVerifier invitationVerifier,
+            CurrentWedding currentWedding,
             ObjectProvider<RsvpResponseRepository> responseRepositories,
             ObjectProvider<RsvpSubmissionRepository> submissionRepositories,
             ObjectProvider<RsvpChangeRepository> changeRepositories,
             ObjectProvider<CompanionRepository> companionRepositories) {
         this.accessService = accessService;
+        this.invitationVerifier = invitationVerifier;
+        this.currentWedding = currentWedding;
         this.responseRepositories = responseRepositories;
         this.submissionRepositories = submissionRepositories;
         this.changeRepositories = changeRepositories;
@@ -60,14 +70,56 @@ class RsvpResponseService {
         if (!editable(access)) {
             throw RsvpSubmissionException.deadlinePassed();
         }
-        Map<UUID, RsvpStatus> requestedStatuses = validateParticipants(access, request.participants());
-        Map<UUID, String> requestedCompanions = validateCompanions(access, request.companions());
+        return submit(
+                access,
+                request.operationId(),
+                request.participants(),
+                request.companions(),
+                PUBLIC_LINK_ORIGIN,
+                null,
+                false);
+    }
+
+    @Transactional(readOnly = true)
+    AdminRsvpResponse adminView(UUID invitationId) {
+        InvitationAccessView access = invitationVerifier
+                .findAdministrativeAccess(invitationId, currentWedding.requireId())
+                .orElseThrow(InvitationNotFoundException::new);
+        return new AdminRsvpResponse(hasExistingResponse(invitationId), view(access));
+    }
+
+    @Transactional
+    AdminRsvpResponse submitAdmin(UUID invitationId, AdminRsvpRequest request, String actor) {
+        InvitationAccessView access = invitationVerifier
+                .findAdministrativeAccessForUpdate(invitationId, currentWedding.requireId())
+                .orElseThrow(InvitationNotFoundException::new);
+        RsvpSubmissionResponse result = submit(
+                access,
+                request.operationId(),
+                request.participants(),
+                request.companions(),
+                ADMIN_ORIGIN,
+                actor,
+                !request.replaceExisting());
+        return new AdminRsvpResponse(true, result.invitation());
+    }
+
+    private RsvpSubmissionResponse submit(
+            InvitationAccessView access,
+            UUID operationId,
+            List<RsvpParticipantRequest> participants,
+            List<RsvpCompanionRequest> companions,
+            String origin,
+            String actor,
+            boolean confirmationRequired) {
+        Map<UUID, RsvpStatus> requestedStatuses = validateParticipants(access, participants);
+        Map<UUID, String> requestedCompanions = validateCompanions(access, companions);
         String requestHash = requestHash(requestedStatuses, requestedCompanions);
 
-        var previousSubmission = submissionRepository().findById(request.operationId());
+        var previousSubmission = submissionRepository().findById(operationId);
         if (previousSubmission.isPresent()) {
             RsvpSubmission submission = previousSubmission.get();
-            if (!submission.matches(access.invitationId(), requestHash)) {
+            if (!submission.matches(access.invitationId(), requestHash, origin, actor)) {
                 throw RsvpSubmissionException.reusedOperation();
             }
             return new RsvpSubmissionResponse(
@@ -79,13 +131,18 @@ class RsvpResponseService {
                             currentCompanions(access.invitationId())));
         }
 
+        if (confirmationRequired && hasExistingResponse(access.invitationId())) {
+            throw RsvpSubmissionException.replacementConfirmationRequired();
+        }
+
         Instant submittedAt = Instant.now();
         try {
             submissionRepository().saveAndFlush(RsvpSubmission.create(
-                    request.operationId(),
+                    operationId,
                     access.invitationId(),
                     requestHash,
-                    PUBLIC_LINK_ORIGIN,
+                    origin,
+                    actor,
                     submittedAt));
         } catch (DataIntegrityViolationException exception) {
             throw RsvpSubmissionException.reusedOperation();
@@ -95,12 +152,14 @@ class RsvpResponseService {
                 .collect(Collectors.toMap(RsvpResponse::guestId, Function.identity()));
         List<RsvpChange> recordedChanges = access.participants().stream()
                 .map(participant -> apply(
-                        request.operationId(),
+                        operationId,
                         access.invitationId(),
                         participant,
                         requestedStatuses.get(participant.id()),
                         submittedAt,
-                        current))
+                        current,
+                        origin,
+                        actor))
                 .flatMap(java.util.Optional::stream)
                 .toList();
 
@@ -121,7 +180,9 @@ class RsvpResponseService {
             InvitationParticipantView participant,
             RsvpStatus requestedStatus,
             Instant submittedAt,
-            Map<UUID, RsvpResponse> current) {
+            Map<UUID, RsvpResponse> current,
+            String origin,
+            String actor) {
         RsvpResponse response = current.computeIfAbsent(
                 participant.id(),
                 id -> RsvpResponse.create(invitationId, id, RsvpStatus.PENDING, submittedAt));
@@ -136,8 +197,14 @@ class RsvpResponseService {
                 participant.id(),
                 previousStatus,
                 requestedStatus,
-                PUBLIC_LINK_ORIGIN,
+                origin,
+                actor,
                 submittedAt));
+    }
+
+    private boolean hasExistingResponse(UUID invitationId) {
+        return !responseRepository().findAllByInvitationId(invitationId).isEmpty()
+                || currentCompanions(invitationId).size() > 0;
     }
 
     private Map<UUID, RsvpStatus> validateParticipants(

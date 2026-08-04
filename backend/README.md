@@ -102,6 +102,8 @@ A listagem aceita `query`, `status` (`ALL`, `ACTIVE` ou `INACTIVE`), `page` base
 | `POST /api/admin/invitations/{id}/activate` | Ativa o convite e retorna o link uma única vez |
 | `POST /api/admin/invitations/{id}/regenerate-link` | Revoga o código atual e retorna um novo link |
 | `POST /api/admin/invitations/{id}/inactivate` | Inativa o convite e revoga imediatamente o código |
+| `GET /api/admin/invitations/{id}/rsvp` | Consulta a resposta atual de participantes e acompanhantes |
+| `PUT /api/admin/invitations/{id}/rsvp` | Registra ou corrige a resposta em nome do administrador |
 
 O convite exige nome, limite de acompanhantes entre 0 e 100 e ao menos um convidado ativo. Cada
 convidado possui somente um vínculo corrente; remoções encerram o vínculo sem apagar seu histórico.
@@ -109,6 +111,11 @@ Convites permanecem como `DRAFT` até a ativação. Cada código possui 256 bits
 seu HMAC-SHA-256 é armazenado. O link original aparece apenas na resposta de ativação ou regeneração;
 se for perdido, deve ser regenerado. A rotação preserva o resumo anterior para auditoria, mas o
 revoga atomicamente. Tokens e links nunca são escritos nos logs.
+
+A correção administrativa do RSVP não é limitada pelo prazo público e exige confirmação explícita
+para substituir uma resposta existente. Ela aplica os mesmos limites e invariantes do fluxo público,
+mantém a operação idempotente e registra `ADMIN`, o e-mail do administrador e o instante em submissão
+e histórico. O estado corrente é atualizado sem apagar alterações anteriores.
 
 ## API pública de acesso ao RSVP
 

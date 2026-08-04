@@ -22,6 +22,13 @@ export const routes: Routes = [
       import('./features/admin/admin-login').then((component) => component.AdminLogin),
   },
   {
+    path: 'admin/invitations/:id/rsvp',
+    title: 'Resposta de RSVP | Wedding Platform',
+    canActivate: [adminGuard],
+    loadComponent: () =>
+      import('./features/admin/admin-rsvp-editor').then((component) => component.AdminRsvpEditor),
+  },
+  {
     path: 'admin/invitations',
     title: 'Convites | Wedding Platform',
     canActivate: [adminGuard],
