@@ -44,9 +44,14 @@ async function mockIdentifiedInvitation(page: Page, editable = true): Promise<vo
 }
 
 async function expectNoHorizontalOverflow(page: Page): Promise<void> {
-  await expect
-    .poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth))
-    .toBe(true);
+  const dimensions = await page.evaluate(() => ({
+    scrollWidth: document.documentElement.scrollWidth,
+    viewportWidth: window.innerWidth,
+  }));
+  expect(
+    dimensions.scrollWidth,
+    `A página possui ${dimensions.scrollWidth}px para uma viewport de ${dimensions.viewportWidth}px.`,
+  ).toBeLessThanOrEqual(dimensions.viewportWidth);
 }
 
 for (const width of [320, 360, 390, 430]) {

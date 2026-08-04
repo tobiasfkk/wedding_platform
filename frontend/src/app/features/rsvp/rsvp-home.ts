@@ -391,6 +391,9 @@ type SubmissionState = 'idle' | 'saving' | 'saved' | 'error';
       padding: 1rem;
       border-radius: 0.75rem;
     }
+    .save-result:focus-visible {
+      outline-offset: -0.25rem;
+    }
     .save-result--success {
       background: color-mix(in srgb, #2e7d32 12%, var(--color-surface));
       color: #1b5e20;
