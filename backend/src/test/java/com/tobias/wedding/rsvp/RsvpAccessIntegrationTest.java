@@ -314,7 +314,8 @@ class RsvpAccessIntegrationTest {
                 .param("id", invitationId)
                 .update();
         UUID accessCodeId = jdbcClient.sql(
-                        "SELECT id FROM wedding.invitation_access_code WHERE invitation_id = :id AND active")
+                        "SELECT id FROM wedding.invitation_access_code "
+                                + "WHERE invitation_id = :id AND revoked_at IS NULL")
                 .param("id", invitationId)
                 .query(UUID.class)
                 .single();
