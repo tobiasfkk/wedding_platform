@@ -104,6 +104,7 @@ A listagem aceita `query`, `status` (`ALL`, `ACTIVE` ou `INACTIVE`), `page` base
 | `POST /api/admin/invitations/{id}/inactivate` | Inativa o convite e revoga imediatamente o código |
 | `GET /api/admin/invitations/{id}/rsvp` | Consulta a resposta atual de participantes e acompanhantes |
 | `PUT /api/admin/invitations/{id}/rsvp` | Registra ou corrige a resposta em nome do administrador |
+| `GET /api/admin/rsvp/dashboard` | Consulta totais e convites com busca, estado e paginação |
 
 O convite exige nome, limite de acompanhantes entre 0 e 100 e ao menos um convidado ativo. Cada
 convidado possui somente um vínculo corrente; remoções encerram o vínculo sem apagar seu histórico.
@@ -116,6 +117,10 @@ A correção administrativa do RSVP não é limitada pelo prazo público e exige
 para substituir uma resposta existente. Ela aplica os mesmos limites e invariantes do fluxo público,
 mantém a operação idempotente e registra `ADMIN`, o e-mail do administrador e o instante em submissão
 e histórico. O estado corrente é atualizado sem apagar alterações anteriores.
+
+O dashboard considera somente a versão atual de cada resposta. Acompanhantes ativos entram no
+total de confirmados; os filtros por nome ou situação e a paginação são processados no banco. Os
+nomes de participantes e acompanhantes são retornados apenas neste endpoint administrativo.
 
 ## API pública de acesso ao RSVP
 

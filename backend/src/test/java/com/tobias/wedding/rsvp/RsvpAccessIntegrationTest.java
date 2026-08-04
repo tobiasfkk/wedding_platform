@@ -457,6 +457,73 @@ class RsvpAccessIntegrationTest {
     }
 
     @Test
+    void listsFiltersAndRefreshesTheCurrentRsvpDashboard() throws Exception {
+        UUID companionId = UUID.randomUUID();
+        mockMvc.perform(put("/api/admin/invitations/{id}/rsvp", invitationId)
+                        .with(user("admin@example.com").roles("ADMIN"))
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(adminSubmission(
+                                UUID.randomUUID(),
+                                false,
+                                "CONFIRMED",
+                                "DECLINED",
+                                "[{\"id\":\"" + companionId + "\",\"name\":\"Carla\"}]")))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/admin/rsvp/dashboard")
+                        .param("page", "0")
+                        .param("size", "1")
+                        .with(user("admin@example.com").roles("ADMIN")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totals.confirmed").value(2))
+                .andExpect(jsonPath("$.totals.declined").value(1))
+                .andExpect(jsonPath("$.totals.pending").value(1))
+                .andExpect(jsonPath("$.items.length()").value(1))
+                .andExpect(jsonPath("$.totalElements").value(2))
+                .andExpect(jsonPath("$.totalPages").value(2));
+
+        mockMvc.perform(get("/api/admin/rsvp/dashboard")
+                        .param("query", "ana")
+                        .param("status", "CONFIRMED")
+                        .with(user("admin@example.com").roles("ADMIN")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items.length()").value(1))
+                .andExpect(jsonPath("$.items[0].invitationId").value(invitationId.toString()))
+                .andExpect(jsonPath("$.items[0].participants[0].name").value("Ana Exemplo"))
+                .andExpect(jsonPath("$.items[0].companions[0].name").value("Carla"));
+
+        mockMvc.perform(get("/api/admin/rsvp/dashboard")
+                        .param("query", "outro")
+                        .param("status", "PENDING")
+                        .with(user("admin@example.com").roles("ADMIN")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items.length()").value(1))
+                .andExpect(jsonPath("$.items[0].invitationId").value(otherInvitationId.toString()));
+
+        mockMvc.perform(put("/api/admin/invitations/{id}/rsvp", invitationId)
+                        .with(user("admin@example.com").roles("ADMIN"))
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(adminSubmission(
+                                UUID.randomUUID(), true, "DECLINED", "CONFIRMED", "[]")))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/admin/rsvp/dashboard")
+                        .with(user("admin@example.com").roles("ADMIN")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totals.confirmed").value(1))
+                .andExpect(jsonPath("$.totals.declined").value(1))
+                .andExpect(jsonPath("$.totals.pending").value(1));
+    }
+
+    @Test
+    void unauthenticatedVisitorCannotReadTheRsvpDashboard() throws Exception {
+        mockMvc.perform(get("/api/admin/rsvp/dashboard"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
     void givesTheSameSafeResponseForRandomOldAndInactiveCodes() throws Exception {
         String firstToken = activateAndReadToken(invitationId);
         String secondToken = regenerateAndReadToken(invitationId);
