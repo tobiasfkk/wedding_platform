@@ -41,6 +41,8 @@ links inválidos, antigos e inativos usam o mesmo estado de erro e não expõem 
 
 ```bash
 npm test -- --watch=false
+npm run e2e:install
+npm run e2e:mobile
 npm run build
 npm run format:check
 ```
@@ -51,9 +53,10 @@ Para aplicar a formatação configurada pelo projeto:
 npm run format
 ```
 
-Os testes unitários usam Vitest, conforme o padrão de novos projetos Angular 22. O
-[ADR 0005](../docs/adr/0005-interface-e-testes-e2e.md) define Angular Material/CDK como base visual
-e Playwright para os fluxos E2E, que serão introduzidos junto aos fluxos críticos do MVP.
+Os testes unitários usam Vitest, conforme o padrão de novos projetos Angular 22. O RSVP também
+possui uma suíte Playwright nas larguras móveis definidas em
+[`docs/VALIDACAO_MOBILE_RSVP.md`](../docs/VALIDACAO_MOBILE_RSVP.md). O
+[ADR 0005](../docs/adr/0005-interface-e-testes-e2e.md) registra as decisões de interface e E2E.
 
 ## Estrutura
 
