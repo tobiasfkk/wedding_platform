@@ -57,6 +57,9 @@ class RsvpResponseService {
     RsvpSubmissionResponse submit(RsvpSubmissionRequest request, HttpSession session) {
         InvitationAccessView access = accessService.currentForUpdate(session)
                 .orElseThrow(() -> new RsvpAccessException(false));
+        if (!editable(access)) {
+            throw RsvpSubmissionException.deadlinePassed();
+        }
         Map<UUID, RsvpStatus> requestedStatuses = validateParticipants(access, request.participants());
         Map<UUID, String> requestedCompanions = validateCompanions(access, request.companions());
         String requestHash = requestHash(requestedStatuses, requestedCompanions);
@@ -177,7 +180,11 @@ class RsvpResponseService {
                         statuses.getOrDefault(participant.id(), RsvpStatus.PENDING)))
                 .toList();
         return new RsvpInvitationResponse(
-                access.groupName(), access.companionLimit(), participants, companions);
+                access.groupName(), access.companionLimit(), editable(access), participants, companions);
+    }
+
+    private boolean editable(InvitationAccessView access) {
+        return !Instant.now().isAfter(access.rsvpDeadline());
     }
 
     private Map<UUID, String> validateCompanions(

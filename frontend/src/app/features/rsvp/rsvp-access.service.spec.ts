@@ -41,6 +41,7 @@ describe('RsvpAccessService', () => {
     request.flush({
       groupName: 'Família',
       companionLimit: 1,
+      editable: true,
       participants: [{ id: 'guest-1', name: 'Ana', status: 'PENDING' }],
       companions: [],
     });
@@ -71,7 +72,13 @@ describe('RsvpAccessService', () => {
     request.flush({
       savedAt: '2027-01-01T00:00:00Z',
       replayed: false,
-      invitation: { groupName: 'Família', companionLimit: 0, participants: [], companions: [] },
+      invitation: {
+        groupName: 'Família',
+        companionLimit: 0,
+        editable: true,
+        participants: [],
+        companions: [],
+      },
     });
   });
 });

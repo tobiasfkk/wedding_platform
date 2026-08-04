@@ -5,6 +5,7 @@ import java.util.List;
 record RsvpInvitationResponse(
         String groupName,
         int companionLimit,
+        boolean editable,
         List<RsvpParticipantResponse> participants,
         List<RsvpCompanionResponse> companions) {
 

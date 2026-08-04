@@ -30,7 +30,14 @@ type SubmissionState = 'idle' | 'saving' | 'saved' | 'error';
         <div class="rsvp-card">
           <p class="eyebrow">Seu convite</p>
           <h1 id="rsvp-state-title" tabindex="-1">{{ currentInvitation.groupName }}</h1>
-          <p class="lead">Informe a presença de cada pessoa do grupo.</p>
+          @if (currentInvitation.editable) {
+            <p class="lead">Informe a presença de cada pessoa do grupo.</p>
+          } @else {
+            <div class="deadline-notice" role="status">
+              <strong>O prazo de confirmação foi encerrado.</strong>
+              <span>Você ainda pode consultar a resposta mais recente deste convite.</span>
+            </div>
+          }
 
           <section class="invitation-summary" aria-labelledby="participants-title">
             <h2 id="participants-title">Quem vai participar?</h2>
@@ -48,7 +55,7 @@ type SubmissionState = 'idle' | 'saving' | 'saved' | 'error';
                       type="button"
                       [class.is-selected]="statusOf(participant.id) === 'CONFIRMED'"
                       [attr.aria-pressed]="statusOf(participant.id) === 'CONFIRMED'"
-                      [disabled]="submissionState() === 'saving'"
+                      [disabled]="!currentInvitation.editable || submissionState() === 'saving'"
                       (click)="setStatus(participant.id, 'CONFIRMED')"
                     >
                       Vou participar
@@ -58,7 +65,7 @@ type SubmissionState = 'idle' | 'saving' | 'saved' | 'error';
                       type="button"
                       [class.is-selected]="statusOf(participant.id) === 'DECLINED'"
                       [attr.aria-pressed]="statusOf(participant.id) === 'DECLINED'"
-                      [disabled]="submissionState() === 'saving'"
+                      [disabled]="!currentInvitation.editable || submissionState() === 'saving'"
                       (click)="setStatus(participant.id, 'DECLINED')"
                     >
                       Não vou participar
@@ -68,7 +75,7 @@ type SubmissionState = 'idle' | 'saving' | 'saved' | 'error';
                       type="button"
                       [class.is-selected]="statusOf(participant.id) === 'PENDING'"
                       [attr.aria-pressed]="statusOf(participant.id) === 'PENDING'"
-                      [disabled]="submissionState() === 'saving'"
+                      [disabled]="!currentInvitation.editable || submissionState() === 'saving'"
                       (click)="setStatus(participant.id, 'PENDING')"
                     >
                       Decidir depois
@@ -94,6 +101,7 @@ type SubmissionState = 'idle' | 'saving' | 'saved' | 'error';
                   class="add-companion"
                   [disabled]="
                     companions().length >= currentInvitation.companionLimit ||
+                    !currentInvitation.editable ||
                     submissionState() === 'saving'
                   "
                   (click)="addCompanion()"
@@ -117,14 +125,14 @@ type SubmissionState = 'idle' | 'saving' | 'saved' | 'error';
                           maxlength="160"
                           autocomplete="name"
                           [value]="companion.name"
-                          [disabled]="submissionState() === 'saving'"
+                          [disabled]="!currentInvitation.editable || submissionState() === 'saving'"
                           [attr.aria-invalid]="!companion.name.trim()"
                           (input)="updateCompanion(companion.id, $any($event.target).value)"
                         />
                         <button
                           mat-button
                           type="button"
-                          [disabled]="submissionState() === 'saving'"
+                          [disabled]="!currentInvitation.editable || submissionState() === 'saving'"
                           [attr.aria-label]="'Remover acompanhante ' + (index + 1)"
                           (click)="removeCompanion(companion.id)"
                         >
@@ -141,15 +149,17 @@ type SubmissionState = 'idle' | 'saving' | 'saved' | 'error';
             </section>
           }
 
-          <button
-            class="save-button"
-            mat-flat-button
-            type="button"
-            [disabled]="submissionState() === 'saving' || hasInvalidCompanion()"
-            (click)="saveResponses()"
-          >
-            {{ submissionState() === 'saving' ? 'Salvando…' : 'Salvar respostas' }}
-          </button>
+          @if (currentInvitation.editable) {
+            <button
+              class="save-button"
+              mat-flat-button
+              type="button"
+              [disabled]="submissionState() === 'saving' || hasInvalidCompanion()"
+              (click)="saveResponses()"
+            >
+              {{ submissionState() === 'saving' ? 'Salvando…' : 'Salvar respostas' }}
+            </button>
+          }
           @if (submissionState() === 'saved') {
             <div
               id="rsvp-save-result"
@@ -215,6 +225,14 @@ type SubmissionState = 'idle' | 'saving' | 'saved' | 'error';
     }
     .lead {
       margin-block-end: 1.5rem;
+    }
+    .deadline-notice {
+      display: grid;
+      gap: 0.25rem;
+      margin-block: 1rem 1.5rem;
+      padding: 1rem;
+      border-radius: 0.75rem;
+      background: var(--color-accent-soft);
     }
     .rsvp-card--centered .lead {
       margin-inline: auto;
@@ -463,7 +481,7 @@ export class RsvpHome {
 
   addCompanion(): void {
     const invitation = this.invitation();
-    if (!invitation || this.companions().length >= invitation.companionLimit) return;
+    if (!invitation?.editable || this.companions().length >= invitation.companionLimit) return;
     const companion = { id: globalThis.crypto.randomUUID(), name: '' };
     this.companions.update((current) => [...current, companion]);
     this.markDraftChanged();
@@ -499,7 +517,7 @@ export class RsvpHome {
 
   saveResponses(): void {
     const invitation = this.invitation();
-    if (!invitation || this.submissionState() === 'saving') return;
+    if (!invitation?.editable || this.submissionState() === 'saving') return;
     this.pendingOperationId ??= globalThis.crypto.randomUUID();
     const operationId = this.pendingOperationId;
     const participants = invitation.participants.map((participant) => ({

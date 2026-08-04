@@ -2,6 +2,7 @@ package com.tobias.wedding.invitation;
 
 import com.tobias.wedding.guest.GuestDirectory;
 import com.tobias.wedding.guest.GuestSummary;
+import com.tobias.wedding.wedding.WeddingSchedule;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -20,18 +21,21 @@ public class InvitationCodeVerifier {
     private final ObjectProvider<InvitationGuestRepository> membershipRepositories;
     private final InvitationCodeCodec codec;
     private final GuestDirectory guests;
+    private final WeddingSchedule schedule;
 
     InvitationCodeVerifier(
             ObjectProvider<InvitationAccessCodeRepository> accessCodeRepositories,
             ObjectProvider<InvitationRepository> invitationRepositories,
             ObjectProvider<InvitationGuestRepository> membershipRepositories,
             InvitationCodeCodec codec,
-            GuestDirectory guests) {
+            GuestDirectory guests,
+            WeddingSchedule schedule) {
         this.accessCodeRepositories = accessCodeRepositories;
         this.invitationRepositories = invitationRepositories;
         this.membershipRepositories = membershipRepositories;
         this.codec = codec;
         this.guests = guests;
+        this.schedule = schedule;
     }
 
     @Transactional(readOnly = true)
@@ -106,7 +110,11 @@ public class InvitationCodeVerifier {
                 .map(guest -> new InvitationParticipantView(guest.id(), guest.name()))
                 .toList();
         return new InvitationAccessView(
-                invitation.id(), invitation.name(), invitation.companionLimit(), participants);
+                invitation.id(),
+                invitation.name(),
+                invitation.companionLimit(),
+                schedule.rsvpDeadline(invitation.weddingEventId()),
+                participants);
     }
 
     private InvitationAccessCodeRepository accessCodeRepository() {

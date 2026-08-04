@@ -134,6 +134,11 @@ mesmo conteúdo retorna sucesso sem duplicar registros;
 reutilizá-lo com conteúdo diferente retorna conflito. O histórico registra instante e origem
 `PUBLIC_LINK`, sem armazenar endereço IP ou o código do convite.
 
+A data-limite é configurada no fuso do evento e persistida como instante. Até esse instante, o acesso
+público pode revisar participantes e acompanhantes. Depois dele, a API continua retornando a resposta
+mais recente para consulta, mas rejeita qualquer nova submissão antes de modificar dados; o frontend
+apresenta o convite em modo somente leitura.
+
 Após dez tentativas inválidas pela mesma origem em quinze minutos, novas trocas recebem `429`. O
 limite é mantido em memória no MVP; em uma implantação com múltiplas instâncias ele deverá migrar para
 um armazenamento compartilhado. Em produção, cabe à infraestrutura encaminhar o endereço de origem

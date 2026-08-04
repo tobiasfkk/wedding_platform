@@ -18,6 +18,11 @@ public class RsvpSubmissionException extends RuntimeException {
         return new RsvpSubmissionException("O limite de acompanhantes deste convite foi excedido.");
     }
 
+    static RsvpSubmissionException deadlinePassed() {
+        return new RsvpSubmissionException(
+                "O prazo para alterar a confirmação de presença já foi encerrado.");
+    }
+
     private RsvpSubmissionException(String message) {
         super(message);
     }

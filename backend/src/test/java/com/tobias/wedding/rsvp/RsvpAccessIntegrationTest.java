@@ -93,6 +93,7 @@ class RsvpAccessIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.groupName").value("Família Exemplo"))
                 .andExpect(jsonPath("$.companionLimit").value(2))
+                .andExpect(jsonPath("$.editable").value(true))
                 .andExpect(jsonPath("$.participants.length()").value(2))
                 .andExpect(jsonPath("$.participants[?(@.name == 'Ana Exemplo')]").isNotEmpty())
                 .andExpect(jsonPath("$.participants[0].status").value("PENDING"))
@@ -336,6 +337,48 @@ class RsvpAccessIntegrationTest {
         }
 
         assertThat(countWhere("wedding.companion", "removed_at IS NULL")).isEqualTo(1);
+    }
+
+    @Test
+    void preservesTheLatestResponseAndRejectsChangesAfterTheDeadline() throws Exception {
+        Cookie sessionCookie = accessSession(activateAndReadToken(invitationId), "198.51.100.55");
+        mockMvc.perform(post("/api/rsvp/responses")
+                        .cookie(sessionCookie)
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(submission(
+                                UUID.randomUUID(), firstGuestId, "CONFIRMED", secondGuestId, "DECLINED")))
+                .andExpect(status().isOk());
+
+        jdbcClient.sql("UPDATE wedding.wedding_event SET rsvp_deadline = :deadline WHERE id = :id")
+                .param("deadline", OffsetDateTime.now(ZoneOffset.UTC).minusMinutes(1))
+                .param("id", weddingId)
+                .update();
+
+        mockMvc.perform(get("/api/rsvp/session").cookie(sessionCookie))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.invitation.editable").value(false))
+                .andExpect(jsonPath("$.invitation.participants[0].status").value("CONFIRMED"))
+                .andExpect(jsonPath("$.invitation.participants[1].status").value("DECLINED"));
+
+        mockMvc.perform(post("/api/rsvp/responses")
+                        .cookie(sessionCookie)
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(submission(
+                                UUID.randomUUID(), firstGuestId, "DECLINED", secondGuestId, "CONFIRMED")))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("RSVP_SUBMISSION_CONFLICT"))
+                .andExpect(jsonPath("$.detail").value(
+                        "O prazo para alterar a confirmação de presença já foi encerrado."));
+
+        assertThat(count("wedding.rsvp_submission")).isEqualTo(1);
+        assertThat(count("wedding.rsvp_change")).isEqualTo(2);
+        assertThat(jdbcClient.sql("SELECT status FROM wedding.rsvp_response WHERE guest_id = :id")
+                        .param("id", firstGuestId)
+                        .query(String.class)
+                        .single())
+                .isEqualTo("CONFIRMED");
     }
 
     @Test
