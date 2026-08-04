@@ -30,21 +30,27 @@ class RsvpResponseService {
     private final ObjectProvider<RsvpResponseRepository> responseRepositories;
     private final ObjectProvider<RsvpSubmissionRepository> submissionRepositories;
     private final ObjectProvider<RsvpChangeRepository> changeRepositories;
+    private final ObjectProvider<CompanionRepository> companionRepositories;
 
     RsvpResponseService(
             RsvpAccessService accessService,
             ObjectProvider<RsvpResponseRepository> responseRepositories,
             ObjectProvider<RsvpSubmissionRepository> submissionRepositories,
-            ObjectProvider<RsvpChangeRepository> changeRepositories) {
+            ObjectProvider<RsvpChangeRepository> changeRepositories,
+            ObjectProvider<CompanionRepository> companionRepositories) {
         this.accessService = accessService;
         this.responseRepositories = responseRepositories;
         this.submissionRepositories = submissionRepositories;
         this.changeRepositories = changeRepositories;
+        this.companionRepositories = companionRepositories;
     }
 
     @Transactional(readOnly = true)
     RsvpInvitationResponse view(InvitationAccessView access) {
-        return view(access, currentStatuses(access.invitationId()));
+        return view(
+                access,
+                currentStatuses(access.invitationId()),
+                currentCompanions(access.invitationId()));
     }
 
     @Transactional
@@ -52,7 +58,8 @@ class RsvpResponseService {
         InvitationAccessView access = accessService.currentForUpdate(session)
                 .orElseThrow(() -> new RsvpAccessException(false));
         Map<UUID, RsvpStatus> requestedStatuses = validateParticipants(access, request.participants());
-        String requestHash = requestHash(requestedStatuses);
+        Map<UUID, String> requestedCompanions = validateCompanions(access, request.companions());
+        String requestHash = requestHash(requestedStatuses, requestedCompanions);
 
         var previousSubmission = submissionRepository().findById(request.operationId());
         if (previousSubmission.isPresent()) {
@@ -61,7 +68,12 @@ class RsvpResponseService {
                 throw RsvpSubmissionException.reusedOperation();
             }
             return new RsvpSubmissionResponse(
-                    submission.submittedAt(), true, view(access, currentStatuses(access.invitationId())));
+                    submission.submittedAt(),
+                    true,
+                    view(
+                            access,
+                            currentStatuses(access.invitationId()),
+                            currentCompanions(access.invitationId())));
         }
 
         Instant submittedAt = Instant.now();
@@ -91,10 +103,13 @@ class RsvpResponseService {
 
         responseRepository().saveAllAndFlush(current.values());
         changeRepository().saveAllAndFlush(recordedChanges);
+        synchronizeCompanions(access.invitationId(), requestedCompanions, submittedAt);
         Map<UUID, RsvpStatus> savedStatuses = current.values().stream()
                 .collect(Collectors.toMap(RsvpResponse::guestId, RsvpResponse::status));
         return new RsvpSubmissionResponse(
-                submittedAt, false, view(access, savedStatuses));
+                submittedAt,
+                false,
+                view(access, savedStatuses, currentCompanions(access.invitationId())));
     }
 
     private java.util.Optional<RsvpChange> apply(
@@ -144,21 +159,83 @@ class RsvpResponseService {
                 .collect(Collectors.toMap(RsvpResponse::guestId, RsvpResponse::status));
     }
 
-    private RsvpInvitationResponse view(InvitationAccessView access, Map<UUID, RsvpStatus> statuses) {
+    private List<RsvpCompanionResponse> currentCompanions(UUID invitationId) {
+        return companionRepository().findAllByInvitationIdOrderByCreatedAtAscIdAsc(invitationId).stream()
+                .filter(Companion::active)
+                .map(companion -> new RsvpCompanionResponse(companion.id(), companion.name()))
+                .toList();
+    }
+
+    private RsvpInvitationResponse view(
+            InvitationAccessView access,
+            Map<UUID, RsvpStatus> statuses,
+            List<RsvpCompanionResponse> companions) {
         List<RsvpParticipantResponse> participants = access.participants().stream()
                 .map(participant -> new RsvpParticipantResponse(
                         participant.id(),
                         participant.name(),
                         statuses.getOrDefault(participant.id(), RsvpStatus.PENDING)))
                 .toList();
-        return new RsvpInvitationResponse(access.groupName(), access.companionLimit(), participants);
+        return new RsvpInvitationResponse(
+                access.groupName(), access.companionLimit(), participants, companions);
     }
 
-    private String requestHash(Map<UUID, RsvpStatus> statuses) {
-        String canonical = statuses.entrySet().stream()
+    private Map<UUID, String> validateCompanions(
+            InvitationAccessView access, List<RsvpCompanionRequest> requestedCompanions) {
+        if (requestedCompanions.size() > access.companionLimit()) {
+            throw RsvpSubmissionException.companionLimitExceeded();
+        }
+        Map<UUID, String> requested = new HashMap<>();
+        for (RsvpCompanionRequest companion : requestedCompanions) {
+            String name = companion.name().strip();
+            if (name.isEmpty() || requested.put(companion.id(), name) != null) {
+                throw RsvpSubmissionException.invalidCompanions();
+            }
+        }
+        if (!requested.isEmpty()) {
+            boolean belongsToAnotherInvitation = companionRepository().findAllByIdIn(requested.keySet()).stream()
+                    .anyMatch(companion -> !companion.invitationId().equals(access.invitationId()));
+            if (belongsToAnotherInvitation) {
+                throw RsvpSubmissionException.invalidCompanions();
+            }
+        }
+        return Map.copyOf(requested);
+    }
+
+    private void synchronizeCompanions(
+            UUID invitationId, Map<UUID, String> requested, Instant submittedAt) {
+        Map<UUID, Companion> stored = companionRepository()
+                .findAllByInvitationIdOrderByCreatedAtAscIdAsc(invitationId)
+                .stream()
+                .collect(Collectors.toMap(Companion::id, Function.identity()));
+        stored.values().stream()
+                .filter(Companion::active)
+                .filter(companion -> !requested.containsKey(companion.id()))
+                .forEach(companion -> companion.remove(submittedAt));
+        requested.forEach((id, name) -> stored.compute(id, (ignored, companion) -> {
+            if (companion == null) {
+                return Companion.create(id, invitationId, name, submittedAt);
+            }
+            companion.update(name);
+            return companion;
+        }));
+        try {
+            companionRepository().saveAllAndFlush(stored.values());
+        } catch (DataIntegrityViolationException exception) {
+            throw RsvpSubmissionException.invalidCompanions();
+        }
+    }
+
+    private String requestHash(Map<UUID, RsvpStatus> statuses, Map<UUID, String> companions) {
+        String participantPart = statuses.entrySet().stream()
                 .sorted(Map.Entry.comparingByKey(Comparator.comparing(UUID::toString)))
-                .map(entry -> entry.getKey() + "=" + entry.getValue().name())
+                .map(entry -> "P:" + entry.getKey() + "=" + entry.getValue().name())
                 .collect(Collectors.joining("\n"));
+        String companionPart = companions.entrySet().stream()
+                .sorted(Map.Entry.comparingByKey(Comparator.comparing(UUID::toString)))
+                .map(entry -> "C:" + entry.getKey() + "=" + entry.getValue())
+                .collect(Collectors.joining("\n"));
+        String canonical = participantPart + "\n" + companionPart;
         try {
             byte[] digest = MessageDigest.getInstance("SHA-256")
                     .digest(canonical.getBytes(StandardCharsets.UTF_8));
@@ -178,5 +255,9 @@ class RsvpResponseService {
 
     private RsvpChangeRepository changeRepository() {
         return changeRepositories.getObject();
+    }
+
+    private CompanionRepository companionRepository() {
+        return companionRepositories.getObject();
     }
 }

@@ -12,10 +12,16 @@ export interface RsvpParticipant {
   status: RsvpStatus;
 }
 
+export interface RsvpCompanion {
+  id: string;
+  name: string;
+}
+
 export interface RsvpInvitation {
   groupName: string;
   companionLimit: number;
   participants: RsvpParticipant[];
+  companions: RsvpCompanion[];
 }
 
 export interface RsvpSession {
@@ -48,6 +54,7 @@ export class RsvpAccessService {
   respond(
     operationId: string,
     participants: Pick<RsvpParticipant, 'id' | 'status'>[],
+    companions: RsvpCompanion[],
   ): Observable<RsvpSubmissionResponse> {
     return this.http.post<RsvpSubmissionResponse>('/api/rsvp/responses', {
       operationId,
@@ -55,6 +62,7 @@ export class RsvpAccessService {
         participantId: participant.id,
         status: participant.status,
       })),
+      companions,
     });
   }
 }

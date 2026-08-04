@@ -42,15 +42,20 @@ describe('RsvpAccessService', () => {
       groupName: 'Família',
       companionLimit: 1,
       participants: [{ id: 'guest-1', name: 'Ana', status: 'PENDING' }],
+      companions: [],
     });
   });
 
   it('submits every participant with a stable operation identifier', () => {
     service
-      .respond('operation-1', [
-        { id: 'guest-1', status: 'CONFIRMED' },
-        { id: 'guest-2', status: 'DECLINED' },
-      ])
+      .respond(
+        'operation-1',
+        [
+          { id: 'guest-1', status: 'CONFIRMED' },
+          { id: 'guest-2', status: 'DECLINED' },
+        ],
+        [{ id: 'companion-1', name: 'Carla' }],
+      )
       .subscribe();
     const request = http.expectOne('/api/rsvp/responses');
 
@@ -61,11 +66,12 @@ describe('RsvpAccessService', () => {
         { participantId: 'guest-1', status: 'CONFIRMED' },
         { participantId: 'guest-2', status: 'DECLINED' },
       ],
+      companions: [{ id: 'companion-1', name: 'Carla' }],
     });
     request.flush({
       savedAt: '2027-01-01T00:00:00Z',
       replayed: false,
-      invitation: { groupName: 'Família', companionLimit: 0, participants: [] },
+      invitation: { groupName: 'Família', companionLimit: 0, participants: [], companions: [] },
     });
   });
 });

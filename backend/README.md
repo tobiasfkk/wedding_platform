@@ -116,19 +116,21 @@ revoga atomicamente. Tokens e links nunca são escritos nos logs.
 |---|---|
 | `GET /api/rsvp/session` | Emite CSRF e consulta uma identificação pública ainda válida |
 | `POST /api/rsvp/access` | Troca o código enviado no corpo por uma sessão limitada ao convite |
-| `POST /api/rsvp/responses` | Salva atomicamente o estado de todos os participantes do convite identificado |
+| `POST /api/rsvp/responses` | Salva atomicamente participantes e acompanhantes do convite identificado |
 
 O frontend lê o código do fragmento `#code=`, remove-o imediatamente da URL e o envia uma única vez
 no corpo HTTPS. A sessão guarda somente os identificadores internos do convite e da versão do código;
 ela deixa de funcionar se o convite for inativado ou o link for regenerado. A resposta pública contém
-apenas nome do grupo, identificador, nome e estado RSVP dos participantes ativos e limite de
-acompanhantes, sem contatos ou dados administrativos. Código aleatório, antigo ou inativo recebe a
+apenas nome do grupo, identificador, nome e estado RSVP dos participantes ativos, limite e lista atual
+de acompanhantes, sem contatos ou dados administrativos. Código aleatório, antigo ou inativo recebe a
 mesma resposta genérica.
 
-O salvamento recebe um `operationId` UUID e a lista completa de participantes com estado `PENDING`,
-`CONFIRMED` ou `DECLINED`. O servidor bloqueia alterações concorrentes no mesmo convite, rejeita
-pessoas ausentes ou pertencentes a outro grupo e persiste submissão, estado atual e histórico na mesma
-transação. Repetir o mesmo `operationId` com o mesmo conteúdo retorna sucesso sem duplicar registros;
+O salvamento recebe um `operationId` UUID, a lista completa de participantes com estado `PENDING`,
+`CONFIRMED` ou `DECLINED` e a lista completa de acompanhantes com identificador UUID e nome. O servidor
+bloqueia alterações concorrentes no mesmo convite, valida nomes obrigatórios e o limite configurado,
+rejeita pessoas ausentes ou pertencentes a outro grupo e persiste toda a resposta na mesma transação.
+Remover um acompanhante preserva seu registro como histórico. Repetir o mesmo `operationId` com o
+mesmo conteúdo retorna sucesso sem duplicar registros;
 reutilizá-lo com conteúdo diferente retorna conflito. O histórico registra instante e origem
 `PUBLIC_LINK`, sem armazenar endereço IP ou o código do convite.
 
