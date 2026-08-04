@@ -5,6 +5,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -382,6 +383,80 @@ class RsvpAccessIntegrationTest {
     }
 
     @Test
+    void administratorCorrectsResponsesAfterTheDeadlineWithConfirmationAndAudit() throws Exception {
+        jdbcClient.sql("UPDATE wedding.wedding_event SET rsvp_deadline = :deadline WHERE id = :id")
+                .param("deadline", OffsetDateTime.now(ZoneOffset.UTC).minusDays(1))
+                .param("id", weddingId)
+                .update();
+        UUID companionId = UUID.randomUUID();
+
+        mockMvc.perform(get("/api/admin/invitations/{id}/rsvp", invitationId)
+                        .with(user("admin@example.com").roles("ADMIN")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.hasExistingResponse").value(false))
+                .andExpect(jsonPath("$.invitation.groupName").value("Família Exemplo"));
+
+        mockMvc.perform(put("/api/admin/invitations/{id}/rsvp", invitationId)
+                        .with(user("admin@example.com").roles("ADMIN"))
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(adminSubmission(
+                                UUID.randomUUID(),
+                                false,
+                                "CONFIRMED",
+                                "DECLINED",
+                                "[{\"id\":\"" + companionId + "\",\"name\":\"Carla\"}]")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.hasExistingResponse").value(true));
+
+        assertThat(jdbcClient.sql("SELECT origin FROM wedding.rsvp_submission")
+                        .query(String.class)
+                        .single())
+                .isEqualTo("ADMIN");
+        assertThat(jdbcClient.sql("SELECT submitted_by FROM wedding.rsvp_submission")
+                        .query(String.class)
+                        .single())
+                .isEqualTo("admin@example.com");
+        assertThat(jdbcClient.sql("SELECT DISTINCT changed_by FROM wedding.rsvp_change")
+                        .query(String.class)
+                        .list())
+                .containsExactly("admin@example.com");
+
+        mockMvc.perform(put("/api/admin/invitations/{id}/rsvp", invitationId)
+                        .with(user("admin@example.com").roles("ADMIN"))
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(adminSubmission(
+                                UUID.randomUUID(), false, "DECLINED", "CONFIRMED", "[]")))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.detail").value(
+                        "Confirme a substituição da resposta atual antes de salvar a correção administrativa."));
+
+        mockMvc.perform(put("/api/admin/invitations/{id}/rsvp", invitationId)
+                        .with(user("admin@example.com").roles("ADMIN"))
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(adminSubmission(
+                                UUID.randomUUID(), true, "DECLINED", "CONFIRMED", "[]")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.invitation.participants[0].status").value("DECLINED"))
+                .andExpect(jsonPath("$.invitation.companions.length()").value(0));
+
+        assertThat(count("wedding.rsvp_submission")).isEqualTo(2);
+        assertThat(countWhere("wedding.companion", "removed_at IS NOT NULL")).isEqualTo(1);
+        assertThat(jdbcClient.sql("SELECT DISTINCT origin FROM wedding.rsvp_change")
+                        .query(String.class)
+                        .list())
+                .containsExactly("ADMIN");
+    }
+
+    @Test
+    void unauthenticatedVisitorCannotUseAdministrativeRsvp() throws Exception {
+        mockMvc.perform(get("/api/admin/invitations/{id}/rsvp", invitationId))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
     void givesTheSameSafeResponseForRandomOldAndInactiveCodes() throws Exception {
         String firstToken = activateAndReadToken(invitationId);
         String secondToken = regenerateAndReadToken(invitationId);
@@ -470,6 +545,32 @@ class RsvpAccessIntegrationTest {
     private String companions(UUID firstId, String firstName, UUID secondId, String secondName) {
         return "[{\"id\":\"" + firstId + "\",\"name\":\"" + firstName + "\"},"
                 + "{\"id\":\"" + secondId + "\",\"name\":\"" + secondName + "\"}]";
+    }
+
+    private String adminSubmission(
+            UUID operationId,
+            boolean replaceExisting,
+            String firstStatus,
+            String secondStatus,
+            String companions) {
+        return """
+                {
+                  "operationId": "%s",
+                  "replaceExisting": %s,
+                  "participants": [
+                    {"participantId": "%s", "status": "%s"},
+                    {"participantId": "%s", "status": "%s"}
+                  ],
+                  "companions": %s
+                }
+                """.formatted(
+                operationId,
+                replaceExisting,
+                firstGuestId,
+                firstStatus,
+                secondGuestId,
+                secondStatus,
+                companions);
     }
 
     private long count(String table) {

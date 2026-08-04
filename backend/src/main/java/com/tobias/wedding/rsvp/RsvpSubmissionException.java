@@ -23,6 +23,11 @@ public class RsvpSubmissionException extends RuntimeException {
                 "O prazo para alterar a confirmação de presença já foi encerrado.");
     }
 
+    static RsvpSubmissionException replacementConfirmationRequired() {
+        return new RsvpSubmissionException(
+                "Confirme a substituição da resposta atual antes de salvar a correção administrativa.");
+    }
+
     private RsvpSubmissionException(String message) {
         super(message);
     }

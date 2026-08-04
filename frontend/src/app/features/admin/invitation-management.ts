@@ -212,6 +212,7 @@ import {
                   </td>
                   <td>
                     <div class="row-actions">
+                      <a mat-button [routerLink]="[invitation.id, 'rsvp']">RSVP</a>
                       <button mat-button type="button" (click)="startEdit(invitation)">
                         Editar
                       </button>

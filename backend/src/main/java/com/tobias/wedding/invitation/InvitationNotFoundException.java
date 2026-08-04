@@ -2,7 +2,7 @@ package com.tobias.wedding.invitation;
 
 public class InvitationNotFoundException extends RuntimeException {
 
-    InvitationNotFoundException() {
+    public InvitationNotFoundException() {
         super("Convite não encontrado.");
     }
 }

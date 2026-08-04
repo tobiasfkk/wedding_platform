@@ -98,6 +98,22 @@ public class InvitationCodeVerifier {
                 .map(this::accessView);
     }
 
+    @Transactional(readOnly = true)
+    public Optional<InvitationAccessView> findAdministrativeAccess(UUID invitationId, UUID weddingId) {
+        return invitationRepository()
+                .findById(invitationId)
+                .filter(invitation -> invitation.weddingEventId().equals(weddingId))
+                .map(this::accessView);
+    }
+
+    @Transactional
+    public Optional<InvitationAccessView> findAdministrativeAccessForUpdate(
+            UUID invitationId, UUID weddingId) {
+        return invitationRepository()
+                .findByIdAndWeddingEventId(invitationId, weddingId)
+                .map(this::accessView);
+    }
+
     private InvitationAccessView accessView(Invitation invitation) {
         Set<UUID> guestIds = membershipRepository()
                 .findAllByInvitationIdAndUnlinkedAtIsNull(invitation.id())
