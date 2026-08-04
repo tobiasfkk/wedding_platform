@@ -22,6 +22,7 @@ import { WeddingSettingsComponent } from './wedding-settings';
       </button>
       <a mat-flat-button routerLink="/admin/guests">Gerenciar convidados</a>
       <a mat-flat-button routerLink="/admin/invitations">Gerenciar convites</a>
+      <a mat-flat-button routerLink="/admin/rsvp">Consultar respostas de RSVP</a>
     </section>
     <app-wedding-settings />
   `,

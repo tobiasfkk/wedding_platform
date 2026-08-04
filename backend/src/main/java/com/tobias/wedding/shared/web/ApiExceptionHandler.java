@@ -9,6 +9,7 @@ import com.tobias.wedding.invitation.InvitationGuestConflictException;
 import com.tobias.wedding.invitation.InvitationNotFoundException;
 import com.tobias.wedding.invitation.InvitationStateException;
 import com.tobias.wedding.rsvp.RsvpAccessException;
+import com.tobias.wedding.rsvp.RsvpDashboardFilterException;
 import com.tobias.wedding.rsvp.RsvpSubmissionException;
 import com.tobias.wedding.wedding.WeddingNotConfiguredException;
 import com.tobias.wedding.wedding.WeddingSettingsValidationException;
@@ -181,6 +182,18 @@ public class ApiExceptionHandler {
                 "Acesso indisponível",
                 "Não foi possível abrir este convite. Confira o link recebido ou fale com os responsáveis pelo evento.",
                 exception.rateLimited() ? "RSVP_ACCESS_RATE_LIMITED" : "RSVP_ACCESS_INVALID"));
+    }
+
+    @ExceptionHandler(RsvpDashboardFilterException.class)
+    ResponseEntity<ProblemDetail> handleRsvpDashboardFilter(RsvpDashboardFilterException exception) {
+        ProblemDetail problem = problem(
+                HttpStatus.BAD_REQUEST,
+                VALIDATION_TYPE,
+                "Filtro inválido",
+                exception.getMessage(),
+                "VALIDATION_ERROR");
+        problem.setProperty("errors", List.of(new ApiFieldError("status", exception.getMessage())));
+        return ResponseEntity.badRequest().body(problem);
     }
 
     @ExceptionHandler(RsvpSubmissionException.class)
