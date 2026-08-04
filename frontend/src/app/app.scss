@@ -88,3 +88,33 @@ footer {
     gap: 1rem;
   }
 }
+
+@media (max-width: 30rem) {
+  .app-header {
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+  }
+
+  .brand__mark {
+    width: 2rem;
+  }
+
+  nav {
+    width: 100%;
+
+    a {
+      min-height: 2.75rem;
+      flex: 1 1 auto;
+      padding: 0.65rem 0.5rem;
+      text-align: center;
+    }
+  }
+
+  main {
+    padding: 1rem;
+  }
+
+  footer {
+    padding-block: 1rem;
+  }
+}

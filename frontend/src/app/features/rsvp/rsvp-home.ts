@@ -18,7 +18,10 @@ type SubmissionState = 'idle' | 'saving' | 'saved' | 'error';
   selector: 'app-rsvp-home',
   imports: [RouterLink, MatButtonModule],
   template: `
-    <section class="rsvp-shell" aria-live="polite">
+    <section
+      class="rsvp-shell"
+      [attr.aria-busy]="state() === 'loading' || submissionState() === 'saving'"
+    >
       @if (state() === 'loading') {
         <div class="rsvp-card rsvp-card--centered" role="status">
           <p class="eyebrow">Confirmação de presença</p>
@@ -30,157 +33,169 @@ type SubmissionState = 'idle' | 'saving' | 'saved' | 'error';
         <div class="rsvp-card">
           <p class="eyebrow">Seu convite</p>
           <h1 id="rsvp-state-title" tabindex="-1">{{ currentInvitation.groupName }}</h1>
-          @if (currentInvitation.editable) {
-            <p class="lead">Informe a presença de cada pessoa do grupo.</p>
-          } @else {
-            <div class="deadline-notice" role="status">
-              <strong>O prazo de confirmação foi encerrado.</strong>
-              <span>Você ainda pode consultar a resposta mais recente deste convite.</span>
-            </div>
-          }
-
-          <section class="invitation-summary" aria-labelledby="participants-title">
-            <h2 id="participants-title">Quem vai participar?</h2>
-            <p class="response-guidance">Escolha uma resposta para cada pessoa do convite.</p>
-            <div class="participant-list">
-              @for (participant of currentInvitation.participants; track participant.id) {
-                <fieldset class="participant-card">
-                  <legend>{{ participant.name }}</legend>
-                  <div
-                    class="response-options"
-                    [attr.aria-label]="'Resposta de ' + participant.name"
-                  >
-                    <button
-                      mat-stroked-button
-                      type="button"
-                      [class.is-selected]="statusOf(participant.id) === 'CONFIRMED'"
-                      [attr.aria-pressed]="statusOf(participant.id) === 'CONFIRMED'"
-                      [disabled]="!currentInvitation.editable || submissionState() === 'saving'"
-                      (click)="setStatus(participant.id, 'CONFIRMED')"
-                    >
-                      Vou participar
-                    </button>
-                    <button
-                      mat-stroked-button
-                      type="button"
-                      [class.is-selected]="statusOf(participant.id) === 'DECLINED'"
-                      [attr.aria-pressed]="statusOf(participant.id) === 'DECLINED'"
-                      [disabled]="!currentInvitation.editable || submissionState() === 'saving'"
-                      (click)="setStatus(participant.id, 'DECLINED')"
-                    >
-                      Não vou participar
-                    </button>
-                    <button
-                      mat-button
-                      type="button"
-                      [class.is-selected]="statusOf(participant.id) === 'PENDING'"
-                      [attr.aria-pressed]="statusOf(participant.id) === 'PENDING'"
-                      [disabled]="!currentInvitation.editable || submissionState() === 'saving'"
-                      (click)="setStatus(participant.id, 'PENDING')"
-                    >
-                      Decidir depois
-                    </button>
-                  </div>
-                  <p class="current-response">{{ statusLabel(statusOf(participant.id)) }}</p>
-                </fieldset>
-              }
-            </div>
-            <p class="companion-rule">{{ companionRule(currentInvitation.companionLimit) }}</p>
-          </section>
-
-          @if (currentInvitation.companionLimit > 0) {
-            <section class="companion-section" aria-labelledby="companions-title">
-              <div class="companion-heading">
-                <div>
-                  <h2 id="companions-title">Acompanhantes</h2>
-                  <p>{{ companionAvailability(currentInvitation.companionLimit) }}</p>
-                </div>
-                <button
-                  mat-stroked-button
-                  type="button"
-                  class="add-companion"
-                  [disabled]="
-                    companions().length >= currentInvitation.companionLimit ||
-                    !currentInvitation.editable ||
-                    submissionState() === 'saving'
-                  "
-                  (click)="addCompanion()"
-                >
-                  Adicionar
-                </button>
+          <form (submit)="submitFromForm($event)">
+            @if (currentInvitation.editable) {
+              <p class="lead">Informe a presença de cada pessoa do grupo.</p>
+            } @else {
+              <div class="deadline-notice" role="status">
+                <strong>O prazo de confirmação foi encerrado.</strong>
+                <span>Você ainda pode consultar a resposta mais recente deste convite.</span>
               </div>
-              @if (companions().length === 0) {
-                <p class="empty-companions">Nenhum acompanhante adicionado.</p>
-              } @else {
-                <div class="companion-list">
-                  @for (companion of companions(); track companion.id; let index = $index) {
-                    <div class="companion-card">
-                      <label [for]="'companion-' + companion.id">
-                        Nome do acompanhante {{ index + 1 }}
-                      </label>
-                      <div class="companion-controls">
-                        <input
-                          [id]="'companion-' + companion.id"
-                          type="text"
-                          maxlength="160"
-                          autocomplete="name"
-                          [value]="companion.name"
-                          [disabled]="!currentInvitation.editable || submissionState() === 'saving'"
-                          [attr.aria-invalid]="!companion.name.trim()"
-                          (input)="updateCompanion(companion.id, $any($event.target).value)"
-                        />
-                        <button
-                          mat-button
-                          type="button"
-                          [disabled]="!currentInvitation.editable || submissionState() === 'saving'"
-                          [attr.aria-label]="'Remover acompanhante ' + (index + 1)"
-                          (click)="removeCompanion(companion.id)"
-                        >
-                          Remover
-                        </button>
-                      </div>
-                      @if (!companion.name.trim()) {
-                        <p class="field-error">Informe o nome do acompanhante.</p>
-                      }
-                    </div>
-                  }
-                </div>
-              }
-            </section>
-          }
+            }
 
-          @if (currentInvitation.editable) {
-            <button
-              class="save-button"
-              mat-flat-button
-              type="button"
-              [disabled]="submissionState() === 'saving' || hasInvalidCompanion()"
-              (click)="saveResponses()"
-            >
-              {{ submissionState() === 'saving' ? 'Salvando…' : 'Salvar respostas' }}
-            </button>
-          }
-          @if (submissionState() === 'saved') {
-            <div
-              id="rsvp-save-result"
-              class="save-result save-result--success"
-              role="status"
-              tabindex="-1"
-            >
-              <strong>Respostas salvas.</strong>
-              <span>Você pode revisá-las nesta tela.</span>
-            </div>
-          } @else if (submissionState() === 'error') {
-            <div
-              id="rsvp-save-result"
-              class="save-result save-result--error"
-              role="alert"
-              tabindex="-1"
-            >
-              <strong>Não foi possível salvar.</strong>
-              <span>Nenhuma resposta foi alterada. Tente novamente.</span>
-            </div>
-          }
+            <section class="invitation-summary" aria-labelledby="participants-title">
+              <h2 id="participants-title">Quem vai participar?</h2>
+              <p class="response-guidance">Escolha uma resposta para cada pessoa do convite.</p>
+              <div class="participant-list">
+                @for (participant of currentInvitation.participants; track participant.id) {
+                  <fieldset class="participant-card">
+                    <legend>{{ participant.name }}</legend>
+                    <div
+                      class="response-options"
+                      [attr.aria-label]="'Resposta de ' + participant.name"
+                    >
+                      <button
+                        mat-stroked-button
+                        type="button"
+                        [class.is-selected]="statusOf(participant.id) === 'CONFIRMED'"
+                        [attr.aria-pressed]="statusOf(participant.id) === 'CONFIRMED'"
+                        [disabled]="!currentInvitation.editable || submissionState() === 'saving'"
+                        (click)="setStatus(participant.id, 'CONFIRMED')"
+                      >
+                        Vou participar
+                      </button>
+                      <button
+                        mat-stroked-button
+                        type="button"
+                        [class.is-selected]="statusOf(participant.id) === 'DECLINED'"
+                        [attr.aria-pressed]="statusOf(participant.id) === 'DECLINED'"
+                        [disabled]="!currentInvitation.editable || submissionState() === 'saving'"
+                        (click)="setStatus(participant.id, 'DECLINED')"
+                      >
+                        Não vou participar
+                      </button>
+                      <button
+                        mat-button
+                        type="button"
+                        [class.is-selected]="statusOf(participant.id) === 'PENDING'"
+                        [attr.aria-pressed]="statusOf(participant.id) === 'PENDING'"
+                        [disabled]="!currentInvitation.editable || submissionState() === 'saving'"
+                        (click)="setStatus(participant.id, 'PENDING')"
+                      >
+                        Decidir depois
+                      </button>
+                    </div>
+                    <p class="current-response">{{ statusLabel(statusOf(participant.id)) }}</p>
+                  </fieldset>
+                }
+              </div>
+              <p class="companion-rule">{{ companionRule(currentInvitation.companionLimit) }}</p>
+            </section>
+
+            @if (currentInvitation.companionLimit > 0) {
+              <section class="companion-section" aria-labelledby="companions-title">
+                <div class="companion-heading">
+                  <div>
+                    <h2 id="companions-title">Acompanhantes</h2>
+                    <p>{{ companionAvailability(currentInvitation.companionLimit) }}</p>
+                  </div>
+                  <button
+                    id="rsvp-add-companion"
+                    mat-stroked-button
+                    type="button"
+                    class="add-companion"
+                    [disabled]="
+                      companions().length >= currentInvitation.companionLimit ||
+                      !currentInvitation.editable ||
+                      submissionState() === 'saving'
+                    "
+                    (click)="addCompanion()"
+                  >
+                    Adicionar
+                  </button>
+                </div>
+                @if (companions().length === 0) {
+                  <p class="empty-companions">Nenhum acompanhante adicionado.</p>
+                } @else {
+                  <div class="companion-list">
+                    @for (companion of companions(); track companion.id; let index = $index) {
+                      <div class="companion-card">
+                        <label [for]="'companion-' + companion.id">
+                          Nome do acompanhante {{ index + 1 }}
+                        </label>
+                        <div class="companion-controls">
+                          <input
+                            [id]="'companion-' + companion.id"
+                            type="text"
+                            maxlength="160"
+                            autocomplete="name"
+                            enterkeyhint="done"
+                            [value]="companion.name"
+                            [disabled]="
+                              !currentInvitation.editable || submissionState() === 'saving'
+                            "
+                            [attr.aria-invalid]="!companion.name.trim()"
+                            [attr.aria-describedby]="
+                              !companion.name.trim() ? 'companion-error-' + companion.id : null
+                            "
+                            (input)="updateCompanion(companion.id, $any($event.target).value)"
+                          />
+                          <button
+                            mat-button
+                            type="button"
+                            [disabled]="
+                              !currentInvitation.editable || submissionState() === 'saving'
+                            "
+                            [attr.aria-label]="'Remover acompanhante ' + (index + 1)"
+                            (click)="removeCompanion(companion.id, index)"
+                          >
+                            Remover
+                          </button>
+                        </div>
+                        @if (!companion.name.trim()) {
+                          <p [id]="'companion-error-' + companion.id" class="field-error">
+                            Informe o nome do acompanhante.
+                          </p>
+                        }
+                      </div>
+                    }
+                  </div>
+                }
+              </section>
+            }
+
+            @if (currentInvitation.editable) {
+              <button
+                class="save-button"
+                mat-flat-button
+                type="submit"
+                [disabled]="submissionState() === 'saving' || hasInvalidCompanion()"
+              >
+                {{ submissionState() === 'saving' ? 'Salvando…' : 'Salvar respostas' }}
+              </button>
+            }
+            @if (submissionState() === 'saved') {
+              <div
+                id="rsvp-save-result"
+                class="save-result save-result--success"
+                role="status"
+                tabindex="-1"
+              >
+                <strong>Respostas salvas.</strong>
+                <span>Você pode revisá-las nesta tela.</span>
+              </div>
+            } @else if (submissionState() === 'error') {
+              <div
+                id="rsvp-save-result"
+                class="save-result save-result--error"
+                role="alert"
+                tabindex="-1"
+              >
+                <strong>Não foi possível salvar.</strong>
+                <span>Nenhuma resposta foi alterada. Tente novamente.</span>
+              </div>
+            }
+          </form>
         </div>
       } @else {
         <div class="rsvp-card rsvp-card--centered">
@@ -350,6 +365,7 @@ type SubmissionState = 'idle' | 'saving' | 'saved' | 'error';
       background: var(--color-surface);
       color: var(--color-text);
       font: inherit;
+      scroll-margin-block: 25vh;
     }
     .companion-controls input:focus-visible {
       outline: 0.2rem solid var(--color-accent-soft);
@@ -408,7 +424,13 @@ type SubmissionState = 'idle' | 'saving' | 'saved' | 'error';
         place-items: start center;
       }
       .rsvp-card {
-        padding: 1.25rem;
+        padding: 1rem;
+        border-radius: 0.75rem;
+      }
+      .invitation-summary,
+      .participant-card,
+      .companion-card {
+        padding: 0.875rem;
       }
       .rsvp-card button,
       .rsvp-card a {
@@ -485,7 +507,7 @@ export class RsvpHome {
     const companion = { id: globalThis.crypto.randomUUID(), name: '' };
     this.companions.update((current) => [...current, companion]);
     this.markDraftChanged();
-    queueMicrotask(() => this.document.getElementById(`companion-${companion.id}`)?.focus());
+    this.focusAfterRender(`companion-${companion.id}`);
   }
 
   updateCompanion(id: string, name: string): void {
@@ -495,9 +517,15 @@ export class RsvpHome {
     this.markDraftChanged();
   }
 
-  removeCompanion(id: string): void {
+  removeCompanion(id: string, index: number): void {
     this.companions.update((current) => current.filter((companion) => companion.id !== id));
     this.markDraftChanged();
+    queueMicrotask(() => {
+      const remaining = this.companions();
+      const next = remaining[Math.min(index, remaining.length - 1)];
+      const targetId = next ? `companion-${next.id}` : 'rsvp-add-companion';
+      this.document.getElementById(targetId)?.focus();
+    });
   }
 
   statusOf(participantId: string): RsvpStatus {
@@ -517,7 +545,8 @@ export class RsvpHome {
 
   saveResponses(): void {
     const invitation = this.invitation();
-    if (!invitation?.editable || this.submissionState() === 'saving') return;
+    if (!invitation?.editable || this.submissionState() === 'saving' || this.hasInvalidCompanion())
+      return;
     this.pendingOperationId ??= globalThis.crypto.randomUUID();
     const operationId = this.pendingOperationId;
     const participants = invitation.participants.map((participant) => ({
@@ -537,6 +566,11 @@ export class RsvpHome {
         this.focusSaveResult();
       },
     });
+  }
+
+  submitFromForm(event: SubmitEvent): void {
+    event.preventDefault();
+    this.saveResponses();
   }
 
   private readAndRemoveCode(): string | null {
@@ -569,10 +603,14 @@ export class RsvpHome {
   }
 
   private focusState(): void {
-    queueMicrotask(() => this.document.getElementById('rsvp-state-title')?.focus());
+    this.focusAfterRender('rsvp-state-title');
   }
 
   private focusSaveResult(): void {
-    queueMicrotask(() => this.document.getElementById('rsvp-save-result')?.focus());
+    this.focusAfterRender('rsvp-save-result');
+  }
+
+  private focusAfterRender(id: string): void {
+    this.document.defaultView?.setTimeout(() => this.document.getElementById(id)?.focus());
   }
 }
