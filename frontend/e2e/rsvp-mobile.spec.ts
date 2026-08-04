@@ -44,13 +44,56 @@ async function mockIdentifiedInvitation(page: Page, editable = true): Promise<vo
 }
 
 async function expectNoHorizontalOverflow(page: Page): Promise<void> {
-  const dimensions = await page.evaluate(() => ({
-    scrollWidth: document.documentElement.scrollWidth,
-    viewportWidth: window.innerWidth,
-  }));
+  const dimensions = await page.evaluate(() => {
+    const viewportWidth = window.innerWidth;
+    const selectorFor = (element: Element): string => {
+      if (element.id) return `#${element.id}`;
+      const classes = Array.from(element.classList).slice(0, 3).join('.');
+      return `${element.tagName.toLowerCase()}${classes ? `.${classes}` : ''}`;
+    };
+    const candidates = Array.from(document.querySelectorAll('*')).map((element) => {
+      const rect = element.getBoundingClientRect();
+      const style = getComputedStyle(element);
+      const outlineOverflow = Math.max(
+        0,
+        Number.parseFloat(style.outlineWidth) + Number.parseFloat(style.outlineOffset),
+      );
+      return {
+        selector: selectorFor(element),
+        left: Math.round(rect.left * 100) / 100,
+        right: Math.round(rect.right * 100) / 100,
+        visualRight: Math.round((rect.right + outlineOverflow) * 100) / 100,
+        width: Math.round(rect.width * 100) / 100,
+        clientWidth: element.clientWidth,
+        scrollWidth: element.scrollWidth,
+        display: style.display,
+        minWidth: style.minWidth,
+        maxWidth: style.maxWidth,
+        overflowX: style.overflowX,
+        outline: `${style.outlineWidth} ${style.outlineOffset}`,
+      };
+    });
+    return {
+      scrollWidth: document.documentElement.scrollWidth,
+      viewportWidth,
+      activeElement: document.activeElement ? selectorFor(document.activeElement) : null,
+      overflowingElements: candidates
+        .filter(
+          (candidate) =>
+            candidate.left < -0.5 ||
+            candidate.visualRight > viewportWidth + 0.5 ||
+            candidate.scrollWidth > candidate.clientWidth + 1,
+        )
+        .sort((left, right) => right.visualRight - left.visualRight)
+        .slice(0, 12),
+      rightmostElements: candidates
+        .sort((left, right) => right.visualRight - left.visualRight)
+        .slice(0, 8),
+    };
+  });
   expect(
     dimensions.scrollWidth,
-    `A página possui ${dimensions.scrollWidth}px para uma viewport de ${dimensions.viewportWidth}px.`,
+    `A página possui ${dimensions.scrollWidth}px para uma viewport de ${dimensions.viewportWidth}px. Diagnóstico: ${JSON.stringify(dimensions)}`,
   ).toBeLessThanOrEqual(dimensions.viewportWidth);
 }
 
