@@ -20,6 +20,7 @@ export interface RsvpCompanion {
 export interface RsvpInvitation {
   groupName: string;
   companionLimit: number;
+  editable: boolean;
   participants: RsvpParticipant[];
   companions: RsvpCompanion[];
 }

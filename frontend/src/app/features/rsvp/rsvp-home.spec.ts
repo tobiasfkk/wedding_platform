@@ -13,6 +13,7 @@ describe('RsvpHome', () => {
   const invitation: RsvpInvitation = {
     groupName: 'Família Exemplo',
     companionLimit: 2,
+    editable: true,
     participants: [
       { id: '11111111-1111-1111-1111-111111111111', name: 'Ana Exemplo', status: 'PENDING' },
       { id: '22222222-2222-2222-2222-222222222222', name: 'Bruno Exemplo', status: 'DECLINED' },
@@ -151,6 +152,29 @@ describe('RsvpHome', () => {
         companions: [{ id: companionId, name: 'Carla Exemplo' }],
       },
     });
+  });
+
+  it('shows the latest response as read-only after the RSVP deadline', () => {
+    window.history.replaceState(null, '', '/rsvp');
+    const fixture = TestBed.createComponent(RsvpHome);
+    fixture.detectChanges();
+    http.expectOne('/api/rsvp/session').flush({
+      identified: true,
+      invitation: { ...invitation, editable: false },
+      csrfToken: 'rsvp-csrf',
+    });
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('O prazo de confirmação foi encerrado');
+    expect(fixture.nativeElement.textContent).toContain('Resposta atual: não vai participar');
+    expect(fixture.nativeElement.querySelector('.save-button')).toBeNull();
+    const responseButtons = Array.from<HTMLButtonElement>(
+      fixture.nativeElement.querySelectorAll('.response-options button'),
+    );
+    expect(responseButtons.every((button) => button.disabled)).toBe(true);
+    expect(
+      (fixture.nativeElement.querySelector('.add-companion') as HTMLButtonElement).disabled,
+    ).toBe(true);
   });
 
   it('uses the same safe error state when the exchange is rejected', () => {
