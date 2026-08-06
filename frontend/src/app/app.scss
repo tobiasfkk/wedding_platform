@@ -22,6 +22,8 @@
 }
 
 .app-header {
+  position: relative;
+  z-index: 5;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -109,6 +111,10 @@ footer {
       padding: 0.65rem 0.5rem;
       text-align: center;
     }
+  }
+
+  .admin-link {
+    display: none;
   }
 
   main {

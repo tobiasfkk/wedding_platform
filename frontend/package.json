@@ -5,7 +5,7 @@
     "ng": "ng",
     "start": "ng serve --proxy-config proxy.conf.json",
     "build": "ng build",
-    "e2e:mobile": "playwright test e2e/rsvp-mobile.spec.ts",
+    "e2e:mobile": "playwright test e2e",
     "e2e:install": "playwright install chromium",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",

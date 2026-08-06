@@ -4,8 +4,8 @@ html {
   @include mat.theme(
     (
       color: (
-        primary: mat.$rose-palette,
-        tertiary: mat.$red-palette,
+        primary: mat.$green-palette,
+        tertiary: mat.$yellow-palette,
         theme-type: light,
       ),
       typography: Inter,
@@ -16,14 +16,14 @@ html {
 
 :root {
   color-scheme: light;
-  --color-surface: #fffdf9;
-  --color-surface-subtle: #f8f2ea;
-  --color-ink: #2f2925;
-  --color-muted: #716861;
-  --color-border: #e6ddd3;
-  --color-accent: #a44f5e;
-  --color-accent-strong: #7d3241;
-  --color-accent-soft: #f7e7e9;
+  --color-surface: #fffef9;
+  --color-surface-subtle: #f1f4ee;
+  --color-ink: #1d241f;
+  --color-muted: #626d63;
+  --color-border: #d9e1d6;
+  --color-accent: #405744;
+  --color-accent-strong: #1f2d23;
+  --color-accent-soft: #e5ece2;
   font-family:
     Inter,
     ui-sans-serif,

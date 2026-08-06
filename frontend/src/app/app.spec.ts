@@ -26,6 +26,6 @@ describe('App', () => {
       (link as HTMLElement).textContent?.trim(),
     );
 
-    expect(links).toEqual(['Site público', 'RSVP', 'Administração']);
+    expect(links).toEqual(['Início', 'Confirmar presença', 'Área dos noivos']);
   });
 });
