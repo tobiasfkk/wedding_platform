@@ -11,6 +11,11 @@ import com.tobias.wedding.invitation.InvitationStateException;
 import com.tobias.wedding.rsvp.RsvpAccessException;
 import com.tobias.wedding.rsvp.RsvpDashboardFilterException;
 import com.tobias.wedding.rsvp.RsvpSubmissionException;
+import com.tobias.wedding.site.SiteMediaNotFoundException;
+import com.tobias.wedding.site.SiteMediaValidationException;
+import com.tobias.wedding.site.WeddingSiteNotPublishedException;
+import com.tobias.wedding.site.WeddingSiteValidationException;
+import com.tobias.wedding.site.WeddingSiteVersionConflictException;
 import com.tobias.wedding.wedding.WeddingNotConfiguredException;
 import com.tobias.wedding.wedding.WeddingSettingsValidationException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -107,6 +112,50 @@ public class ApiExceptionHandler {
                 "VALIDATION_ERROR");
         problem.setProperty("errors", List.of(new ApiFieldError(exception.field(), exception.getMessage())));
         return ResponseEntity.badRequest().body(problem);
+    }
+
+    @ExceptionHandler(WeddingSiteValidationException.class)
+    ResponseEntity<ProblemDetail> handleWeddingSiteValidation(WeddingSiteValidationException exception) {
+        ProblemDetail problem = problem(
+                HttpStatus.BAD_REQUEST,
+                VALIDATION_TYPE,
+                "Conteúdo inválido",
+                "Revise o conteúdo do site antes de continuar.",
+                "VALIDATION_ERROR");
+        problem.setProperty("errors", List.of(new ApiFieldError(exception.field(), exception.getMessage())));
+        return ResponseEntity.badRequest().body(problem);
+    }
+
+    @ExceptionHandler(SiteMediaValidationException.class)
+    ResponseEntity<ProblemDetail> handleSiteMediaValidation(SiteMediaValidationException exception) {
+        ProblemDetail problem = problem(
+                HttpStatus.BAD_REQUEST,
+                VALIDATION_TYPE,
+                "Imagem inválida",
+                exception.getMessage(),
+                "SITE_MEDIA_INVALID");
+        problem.setProperty("errors", List.of(new ApiFieldError("file", exception.getMessage())));
+        return ResponseEntity.badRequest().body(problem);
+    }
+
+    @ExceptionHandler({WeddingSiteNotPublishedException.class, SiteMediaNotFoundException.class})
+    ResponseEntity<ProblemDetail> handlePublicSiteNotFound(RuntimeException exception) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(problem(
+                HttpStatus.NOT_FOUND,
+                NOT_FOUND_TYPE,
+                "Conteúdo indisponível",
+                exception.getMessage(),
+                "SITE_NOT_PUBLISHED"));
+    }
+
+    @ExceptionHandler(WeddingSiteVersionConflictException.class)
+    ResponseEntity<ProblemDetail> handleWeddingSiteVersionConflict(WeddingSiteVersionConflictException exception) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(problem(
+                HttpStatus.CONFLICT,
+                CONFLICT_TYPE,
+                "Rascunho desatualizado",
+                exception.getMessage(),
+                "SITE_DRAFT_VERSION_CONFLICT"));
     }
 
     @ExceptionHandler(GuestFilterException.class)

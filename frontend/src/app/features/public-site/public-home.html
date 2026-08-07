@@ -1,3 +1,4 @@
+@let content = siteContent();
 <article class="wedding-page">
   <section class="hero" aria-labelledby="public-title">
     <div class="hero__glow hero__glow--top" aria-hidden="true"></div>
@@ -21,89 +22,98 @@
     </a>
   </section>
 
-  <section id="story" class="story section-shell reveal" aria-labelledby="story-title">
-    <div class="story__copy">
-      <p class="section-label">{{ content.story.eyebrow }}</p>
-      <h2 id="story-title">{{ content.story.title }}</h2>
-      @for (paragraph of content.story.paragraphs; track paragraph) {
-        <p>{{ paragraph }}</p>
+  @for (section of content.sectionOrder; track section) {
+    @switch (section) {
+      @case ('STORY') {
+        <section id="story" class="story section-shell reveal" aria-labelledby="story-title">
+          <div class="story__copy">
+            <p class="section-label">{{ content.story.eyebrow }}</p>
+            <h2 id="story-title">{{ content.story.title }}</h2>
+            @for (paragraph of content.story.paragraphs; track paragraph) {
+              <p>{{ paragraph }}</p>
+            }
+          </div>
+
+          <figure class="story__visual">
+            @if (content.story.image; as image) {
+              <img
+                [src]="image.src"
+                [alt]="image.alt"
+                [width]="image.width"
+                [height]="image.height"
+                loading="lazy"
+                decoding="async"
+              />
+            } @else {
+              <div
+                class="photo-placeholder"
+                role="img"
+                aria-label="Espaço reservado para uma foto do casal"
+              >
+                <span class="photo-placeholder__monogram" aria-hidden="true">∞</span>
+                <span>A foto favorita de vocês ficará aqui</span>
+              </div>
+            }
+            <figcaption>Um capítulo contado por vocês.</figcaption>
+          </figure>
+        </section>
       }
-    </div>
+      @case ('SCHEDULE') {
+        <section id="details" class="details" aria-labelledby="details-title">
+          <div class="section-heading section-shell reveal">
+            <p class="section-label">O grande dia</p>
+            <h2 id="details-title">Onde a nossa história encontra a sua.</h2>
+          </div>
 
-    <figure class="story__visual">
-      @if (content.story.image; as image) {
-        <img
-          [src]="image.src"
-          [alt]="image.alt"
-          [width]="image.width"
-          [height]="image.height"
-          loading="lazy"
-          decoding="async"
-        />
-      } @else {
-        <div
-          class="photo-placeholder"
-          role="img"
-          aria-label="Espaço reservado para uma foto do casal"
-        >
-          <span class="photo-placeholder__monogram" aria-hidden="true">∞</span>
-          <span>A foto favorita de vocês ficará aqui</span>
-        </div>
+          <div class="moments section-shell">
+            @for (moment of content.schedule; track moment.eyebrow) {
+              <article class="moment-card reveal">
+                <p class="section-label">{{ moment.eyebrow }}</p>
+                <h3>{{ moment.title }}</h3>
+                <dl>
+                  <div>
+                    <dt>Quando</dt>
+                    <dd>{{ moment.time }}</dd>
+                  </div>
+                  <div>
+                    <dt>Onde</dt>
+                    <dd>
+                      <strong>{{ moment.venue }}</strong>
+                      <span>{{ moment.address }}</span>
+                    </dd>
+                  </div>
+                </dl>
+              </article>
+            }
+          </div>
+        </section>
       }
-      <figcaption>Um capítulo contado por vocês.</figcaption>
-    </figure>
-  </section>
-
-  <section id="details" class="details" aria-labelledby="details-title">
-    <div class="section-heading section-shell reveal">
-      <p class="section-label">O grande dia</p>
-      <h2 id="details-title">Onde a nossa história encontra a sua.</h2>
-    </div>
-
-    <div class="moments section-shell">
-      @for (moment of content.schedule; track moment.eyebrow) {
-        <article class="moment-card reveal">
-          <p class="section-label">{{ moment.eyebrow }}</p>
-          <h3>{{ moment.title }}</h3>
-          <dl>
-            <div>
-              <dt>Quando</dt>
-              <dd>{{ moment.time }}</dd>
-            </div>
-            <div>
-              <dt>Onde</dt>
-              <dd>
-                <strong>{{ moment.venue }}</strong>
-                <span>{{ moment.address }}</span>
-              </dd>
-            </div>
-          </dl>
-        </article>
+      @case ('NOTICES') {
+        <section class="notes section-shell reveal" aria-labelledby="notes-title">
+          <div>
+            <p class="section-label">Antes de sair de casa</p>
+            <h2 id="notes-title">Informações importantes</h2>
+          </div>
+          <ol>
+            @for (notice of content.notices; track notice; let index = $index) {
+              <li>
+                <span aria-hidden="true">0{{ index + 1 }}</span>
+                <p>{{ notice }}</p>
+              </li>
+            }
+          </ol>
+        </section>
       }
-    </div>
-  </section>
-
-  <section class="notes section-shell reveal" aria-labelledby="notes-title">
-    <div>
-      <p class="section-label">Antes de sair de casa</p>
-      <h2 id="notes-title">Informações importantes</h2>
-    </div>
-    <ol>
-      @for (notice of content.notices; track notice; let index = $index) {
-        <li>
-          <span aria-hidden="true">0{{ index + 1 }}</span>
-          <p>{{ notice }}</p>
-        </li>
+      @case ('RSVP') {
+        <section class="rsvp-callout reveal" aria-labelledby="rsvp-title">
+          <div class="rsvp-callout__content">
+            <p class="section-label">{{ content.rsvp.eyebrow }}</p>
+            <h2 id="rsvp-title">{{ content.rsvp.title }}</h2>
+            <p>{{ content.rsvp.description }}</p>
+            <a class="button button--light" routerLink="/rsvp">Responder ao convite</a>
+          </div>
+        </section>
       }
-    </ol>
-  </section>
-
-  <section class="rsvp-callout reveal" aria-labelledby="rsvp-title">
-    <div class="rsvp-callout__content">
-      <p class="section-label">{{ content.rsvp.eyebrow }}</p>
-      <h2 id="rsvp-title">{{ content.rsvp.title }}</h2>
-      <p>{{ content.rsvp.description }}</p>
-      <a class="button button--light" routerLink="/rsvp">Responder ao convite</a>
-    </div>
-  </section>
+    }
+  }
 </article>

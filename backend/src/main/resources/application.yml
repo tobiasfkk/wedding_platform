@@ -17,8 +17,14 @@ spring:
     jdbc:
       initialize-schema: never
       table-name: wedding.spring_session
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 6MB
 
 wedding:
+  media:
+    local-directory: "${MEDIA_LOCAL_DIRECTORY:.local-data/media}"
   auth:
     allowed-origins: "${AUTH_ALLOWED_ORIGINS:http://localhost:4200}"
     initial-admin:
@@ -34,6 +40,8 @@ wedding:
       maximum-tracked-origins: 10000
 
 server:
+  tomcat:
+    max-part-count: 2
   servlet:
     session:
       cookie:
@@ -45,6 +53,7 @@ server:
     include-exception: false
     include-message: never
     include-stacktrace: never
+  max-http-request-header-size: 16KB
 
 management:
   endpoints:
