@@ -11,6 +11,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
+import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.UUID;
 import javax.imageio.ImageIO;
@@ -66,9 +67,9 @@ class WeddingSiteIntegrationTest {
                         )
                         """)
                 .param("id", UUID.randomUUID())
-                .param("startsAt", Instant.parse("2027-05-08T19:00:00Z"))
-                .param("deadline", Instant.parse("2027-04-08T02:59:00Z"))
-                .param("now", Instant.now())
+                .param("startsAt", Timestamp.from(Instant.parse("2027-05-08T19:00:00Z")))
+                .param("deadline", Timestamp.from(Instant.parse("2027-04-08T02:59:00Z")))
+                .param("now", Timestamp.from(Instant.now()))
                 .update();
     }
 
