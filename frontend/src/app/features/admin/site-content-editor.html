@@ -1,0 +1,288 @@
+<section class="editor" aria-labelledby="site-editor-title">
+  <a class="back-link" routerLink="/admin">← Voltar para administração</a>
+
+  <header class="editor__header">
+    <div>
+      <p class="eyebrow">Site dos convidados</p>
+      <h1 id="site-editor-title">Conteúdo e publicação</h1>
+      <p class="lead">
+        Edite com segurança, confira a prévia e publique somente quando estiver pronto.
+      </p>
+    </div>
+    <div class="publication-status" aria-label="Estado da publicação">
+      <strong>{{ published() ? 'Publicado' : 'Não publicado' }}</strong>
+      @if (hasUnpublishedChanges()) {
+        <span>Existem alterações ainda não publicadas</span>
+      } @else {
+        <span>A versão pública está atualizada</span>
+      }
+    </div>
+  </header>
+
+  @if (loading()) {
+    <p class="state-message" role="status">Carregando o rascunho…</p>
+  } @else if (errorMessage() && draftVersion() === 0 && form.controls.heroTitle.value === '') {
+    <div class="state-message state-message--error" role="alert">
+      <p>{{ errorMessage() }}</p>
+      <button mat-stroked-button type="button" (click)="load()">Tentar novamente</button>
+    </div>
+  } @else {
+    @if (message()) {
+      <p class="message message--success" role="status">{{ message() }}</p>
+    }
+    @if (errorMessage()) {
+      <p class="message message--error" role="alert">{{ errorMessage() }}</p>
+    }
+
+    <form [formGroup]="form" (ngSubmit)="save()" novalidate>
+      <details open>
+        <summary>
+          <span>01</span>
+          <strong>Abertura</strong>
+          <small>Primeira impressão, nomes e data</small>
+        </summary>
+        <div class="fields">
+          <mat-form-field appearance="outline">
+            <mat-label>Texto superior</mat-label>
+            <input matInput formControlName="heroEyebrow" maxlength="60" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Título principal</mat-label>
+            <textarea matInput formControlName="heroTitle" maxlength="120" rows="2"></textarea>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Introdução</mat-label>
+            <textarea
+              matInput
+              formControlName="heroIntroduction"
+              maxlength="400"
+              rows="3"
+            ></textarea>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Nomes e data</mat-label>
+            <input matInput formControlName="heroDateLabel" maxlength="120" />
+          </mat-form-field>
+        </div>
+      </details>
+
+      <details>
+        <summary>
+          <span>02</span>
+          <strong>Nossa história</strong>
+          <small>Texto e foto principal do casal</small>
+        </summary>
+        <div class="fields">
+          <mat-form-field appearance="outline">
+            <mat-label>Texto superior</mat-label>
+            <input matInput formControlName="storyEyebrow" maxlength="60" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Título da história</mat-label>
+            <input matInput formControlName="storyTitle" maxlength="120" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Parágrafos da história</mat-label>
+            <textarea matInput formControlName="storyParagraphs" rows="7"></textarea>
+            <mat-hint>Use uma linha para cada parágrafo, com no máximo 5 parágrafos.</mat-hint>
+          </mat-form-field>
+
+          <div class="media-field">
+            <div>
+              <strong>Foto do casal</strong>
+              <p>JPG ou PNG de até 5 MB e 6000 pixels.</p>
+            </div>
+            <label class="upload-button">
+              <input
+                type="file"
+                accept="image/jpeg,image/png"
+                [disabled]="uploading()"
+                (change)="uploadImage($event)"
+              />
+              {{ uploading() ? 'Enviando…' : image() ? 'Trocar foto' : 'Escolher foto' }}
+            </label>
+            @if (image(); as currentImage) {
+              <div class="media-preview">
+                <img
+                  [src]="currentImage.url"
+                  alt="Prévia da foto selecionada"
+                  [width]="currentImage.width"
+                  [height]="currentImage.height"
+                />
+                <button mat-stroked-button type="button" (click)="removeImage()">Remover</button>
+              </div>
+              <mat-form-field appearance="outline">
+                <mat-label>Descrição acessível da foto</mat-label>
+                <input matInput formControlName="storyImageAlt" maxlength="200" />
+                <mat-hint>Descreva brevemente quem aparece e o contexto.</mat-hint>
+              </mat-form-field>
+            }
+          </div>
+        </div>
+      </details>
+
+      <details>
+        <summary>
+          <span>03</span>
+          <strong>Cerimônia e recepção</strong>
+          <small>Horários, locais e endereços</small>
+        </summary>
+        <div class="event-grid">
+          <fieldset>
+            <legend>Cerimônia</legend>
+            <mat-form-field appearance="outline">
+              <mat-label>Texto superior</mat-label>
+              <input matInput formControlName="ceremonyEyebrow" maxlength="60" />
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Título</mat-label>
+              <input matInput formControlName="ceremonyTitle" maxlength="100" />
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Horário</mat-label>
+              <input matInput formControlName="ceremonyTime" maxlength="100" />
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Local</mat-label>
+              <input matInput formControlName="ceremonyVenue" maxlength="160" />
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Endereço</mat-label>
+              <textarea matInput formControlName="ceremonyAddress" maxlength="300"></textarea>
+            </mat-form-field>
+          </fieldset>
+          <fieldset>
+            <legend>Recepção</legend>
+            <mat-form-field appearance="outline">
+              <mat-label>Texto superior</mat-label>
+              <input matInput formControlName="receptionEyebrow" maxlength="60" />
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Título</mat-label>
+              <input matInput formControlName="receptionTitle" maxlength="100" />
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Horário</mat-label>
+              <input matInput formControlName="receptionTime" maxlength="100" />
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Local</mat-label>
+              <input matInput formControlName="receptionVenue" maxlength="160" />
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Endereço</mat-label>
+              <textarea matInput formControlName="receptionAddress" maxlength="300"></textarea>
+            </mat-form-field>
+          </fieldset>
+        </div>
+      </details>
+
+      <details>
+        <summary>
+          <span>04</span>
+          <strong>Informações importantes</strong>
+          <small>Orientações para os convidados</small>
+        </summary>
+        <div class="fields">
+          <mat-form-field appearance="outline">
+            <mat-label>Avisos</mat-label>
+            <textarea matInput formControlName="notices" rows="7"></textarea>
+            <mat-hint>Use uma linha por aviso, com no máximo 8 avisos.</mat-hint>
+          </mat-form-field>
+        </div>
+      </details>
+
+      <details>
+        <summary>
+          <span>05</span>
+          <strong>Confirmação de presença</strong>
+          <small>Chamada final para responder ao convite</small>
+        </summary>
+        <div class="fields">
+          <mat-form-field appearance="outline">
+            <mat-label>Texto superior</mat-label>
+            <input matInput formControlName="rsvpEyebrow" maxlength="60" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Título</mat-label>
+            <input matInput formControlName="rsvpTitle" maxlength="140" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Orientação</mat-label>
+            <textarea
+              matInput
+              formControlName="rsvpDescription"
+              maxlength="400"
+              rows="3"
+            ></textarea>
+          </mat-form-field>
+        </div>
+      </details>
+
+      <section class="order" aria-labelledby="section-order-title">
+        <div>
+          <p class="eyebrow">Ordem da página</p>
+          <h2 id="section-order-title">Reorganizar seções</h2>
+        </div>
+        <ol>
+          @for (section of sectionOrder(); track section; let index = $index) {
+            <li>
+              <span>{{ index + 1 }}</span>
+              <strong>{{ sectionLabel(section) }}</strong>
+              <div>
+                <button
+                  mat-stroked-button
+                  type="button"
+                  [disabled]="index === 0"
+                  [attr.aria-label]="'Mover ' + sectionLabel(section) + ' para cima'"
+                  (click)="moveSection(index, -1)"
+                >
+                  ↑
+                </button>
+                <button
+                  mat-stroked-button
+                  type="button"
+                  [disabled]="index === sectionOrder().length - 1"
+                  [attr.aria-label]="'Mover ' + sectionLabel(section) + ' para baixo'"
+                  (click)="moveSection(index, 1)"
+                >
+                  ↓
+                </button>
+              </div>
+            </li>
+          }
+        </ol>
+      </section>
+
+      <div class="actions">
+        <button mat-stroked-button type="button" (click)="showPreview()">Visualizar prévia</button>
+        <button mat-flat-button type="submit" [disabled]="saving()">
+          {{ saving() ? 'Salvando…' : 'Salvar rascunho' }}
+        </button>
+        <button mat-flat-button type="button" [disabled]="publishing()" (click)="publish()">
+          {{ publishing() ? 'Publicando…' : 'Publicar site' }}
+        </button>
+        @if (published()) {
+          <button mat-stroked-button type="button" [disabled]="publishing()" (click)="unpublish()">
+            Despublicar
+          </button>
+        }
+      </div>
+    </form>
+  }
+</section>
+
+@if (preview(); as previewContent) {
+  <section class="preview" aria-labelledby="preview-title">
+    <header>
+      <div>
+        <p class="eyebrow">Prévia administrativa</p>
+        <h2 id="preview-title">Ainda não publicado</h2>
+      </div>
+      <button mat-flat-button type="button" (click)="closePreview()">Fechar prévia</button>
+    </header>
+    <div class="preview__viewport">
+      <app-public-site-view [siteContent]="previewContent" [previewMode]="true" />
+    </div>
+  </section>
+}

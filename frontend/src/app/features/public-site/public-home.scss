@@ -16,6 +16,10 @@
   background: var(--wedding-white);
 }
 
+:host(.is-preview) {
+  margin: 0;
+}
+
 .wedding-page {
   overflow: clip;
 }

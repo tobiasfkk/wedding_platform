@@ -7,6 +7,32 @@ import { RouterTestingHarness } from '@angular/router/testing';
 import { apiSecurityInterceptor } from './core/auth/api-security.interceptor';
 import { routes } from './app.routes';
 
+const publishedSite = {
+  content: {
+    hero: {
+      eyebrow: 'Celebração',
+      title: 'Um dia para guardar na memória.',
+      introduction: 'Vamos celebrar juntos.',
+      dateLabel: '8 de maio de 2027',
+    },
+    story: {
+      eyebrow: 'Nossa história',
+      title: 'Do encontro ao sim',
+      paragraphs: ['Nossa história.'],
+      imageId: null,
+      imageAlt: null,
+      imageWidth: null,
+      imageHeight: null,
+    },
+    schedule: [],
+    notices: ['Chegue com antecedência.'],
+    rsvp: { eyebrow: 'RSVP', title: 'Confirme', description: 'Use seu convite.' },
+    sectionOrder: ['STORY', 'SCHEDULE', 'NOTICES', 'RSVP'],
+  },
+  version: 1,
+  publishedAt: '2027-01-01T12:00:00Z',
+};
+
 describe('Application routes', () => {
   let http: HttpTestingController;
 
@@ -23,15 +49,24 @@ describe('Application routes', () => {
 
   afterEach(() => http.verify());
 
-  it.each([
-    ['/', 'Um dia para guardar na memória.'],
-    ['/admin/login', 'Acessar administração'],
-  ])('loads %s', async (url, expectedHeading) => {
+  it('loads the published home', async () => {
     const harness = await RouterTestingHarness.create();
+    await harness.navigateByUrl('/');
+    http.expectOne('/api/public/site').flush(publishedSite);
+    await new Promise((resolve) => setTimeout(resolve, 0));
 
-    await harness.navigateByUrl(url);
+    expect(harness.routeNativeElement?.querySelector('h1')?.textContent).toContain(
+      'Um dia para guardar na memória.',
+    );
+  });
 
-    expect(harness.routeNativeElement?.querySelector('h1')?.textContent).toContain(expectedHeading);
+  it('loads the administrative login', async () => {
+    const harness = await RouterTestingHarness.create();
+    await harness.navigateByUrl('/admin/login');
+
+    expect(harness.routeNativeElement?.querySelector('h1')?.textContent).toContain(
+      'Acessar administração',
+    );
   });
 
   it('loads the public RSVP access route', async () => {

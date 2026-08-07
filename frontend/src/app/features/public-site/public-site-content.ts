@@ -18,7 +18,10 @@ export interface PublicWeddingContent {
     title: string;
     description: string;
   };
+  sectionOrder: readonly PublicSiteSection[];
 }
+
+export type PublicSiteSection = 'STORY' | 'SCHEDULE' | 'NOTICES' | 'RSVP';
 
 export interface PublicWeddingImage {
   src: string;
@@ -35,10 +38,7 @@ export interface PublicWeddingMoment {
   address: string;
 }
 
-/**
- * Conteúdo provisório usado pelo renderizador público.
- * A issue #48 substituirá esta origem local pelo conteúdo publicado pelo administrador.
- */
+/** Conteúdo inicial do editor e fixture compartilhada pelos testes do renderizador. */
 export const PUBLIC_WEDDING_CONTENT: PublicWeddingContent = {
   hero: {
     eyebrow: 'Celebração de casamento',
@@ -83,4 +83,5 @@ export const PUBLIC_WEDDING_CONTENT: PublicWeddingContent = {
     description:
       'Use o link individual recebido com o convite para informar quem poderá celebrar conosco.',
   },
+  sectionOrder: ['STORY', 'SCHEDULE', 'NOTICES', 'RSVP'],
 };

@@ -1,14 +1,28 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+import { of, throwError } from 'rxjs';
 
 import { PublicHome } from './public-home';
+import { PUBLIC_WEDDING_CONTENT } from './public-site-content';
+import { PublicSiteService } from './public-site.service';
 
 describe('PublicHome', () => {
+  const service = { loadPublished: vi.fn(() => of(PUBLIC_WEDDING_CONTENT)) };
+
   beforeEach(async () => {
+    service.loadPublished.mockReturnValue(of(PUBLIC_WEDDING_CONTENT));
     await TestBed.configureTestingModule({
       imports: [PublicHome],
-      providers: [provideRouter([])],
+      providers: [provideRouter([]), { provide: PublicSiteService, useValue: service }],
     }).compileComponents();
+  });
+
+  it('keeps unpublished content unavailable to visitors', () => {
+    service.loadPublished.mockReturnValue(throwError(() => ({ status: 404 })));
+    const fixture = TestBed.createComponent(PublicHome);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('ainda está sendo preparado');
   });
 
   it('renders the complete public wedding narrative', () => {
