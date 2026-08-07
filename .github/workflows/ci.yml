@@ -70,17 +70,17 @@ jobs:
       - name: Run frontend tests
         run: npm test -- --watch=false
 
-      - name: Install Chromium for mobile RSVP tests
+      - name: Install Chromium for mobile interface tests
         run: npx playwright install --with-deps chromium
 
-      - name: Run mobile RSVP tests
+      - name: Run mobile interface tests
         run: npm run e2e:mobile
 
-      - name: Preserve mobile test diagnostics
+      - name: Preserve mobile interface diagnostics
         if: failure()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: mobile-rsvp-diagnostics
+          name: mobile-interface-diagnostics
           path: |
             frontend/test-results/playwright
             frontend/playwright-report

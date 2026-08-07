@@ -24,7 +24,7 @@ describe('Application routes', () => {
   afterEach(() => http.verify());
 
   it.each([
-    ['/', 'Frontend operacional'],
+    ['/', 'Um dia para guardar na memória.'],
     ['/admin/login', 'Acessar administração'],
   ])('loads %s', async (url, expectedHeading) => {
     const harness = await RouterTestingHarness.create();
