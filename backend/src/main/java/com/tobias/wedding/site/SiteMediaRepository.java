@@ -1,5 +1,6 @@
 package com.tobias.wedding.site;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -10,6 +11,8 @@ interface SiteMediaRepository extends JpaRepository<SiteMedia, UUID> {
     Optional<SiteMedia> findByIdAndWeddingEventId(UUID id, UUID weddingEventId);
 
     List<SiteMedia> findAllByWeddingEventId(UUID weddingEventId);
+
+    List<SiteMedia> findAllByIdInAndWeddingEventId(Collection<UUID> ids, UUID weddingEventId);
 
     Optional<SiteMedia> findByIdAndPublishedTrue(UUID id);
 }

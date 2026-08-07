@@ -42,6 +42,26 @@ const publishedSite = {
       description: 'Use o seu convite individual para responder.',
     },
     sectionOrder: ['STORY', 'SCHEDULE', 'NOTICES', 'RSVP'],
+    photos: [
+      {
+        id: 'cover-photo',
+        placement: 'HERO',
+        alt: 'O casal diante das árvores.',
+        width: 1600,
+        height: 1200,
+        focalX: 62,
+        focalY: 38,
+      },
+      {
+        id: 'story-photo',
+        placement: 'STORY',
+        alt: 'O casal caminhando no jardim.',
+        width: 1200,
+        height: 1600,
+        focalX: 45,
+        focalY: 50,
+      },
+    ],
   },
   version: 1,
   publishedAt: '2027-01-01T12:00:00Z',
@@ -49,6 +69,15 @@ const publishedSite = {
 
 async function publishSiteLocally(page: Page): Promise<void> {
   await page.route('**/api/public/site', (route) => route.fulfill({ json: publishedSite }));
+  await page.route('**/api/public/site/media/**', (route) =>
+    route.fulfill({
+      contentType: 'image/png',
+      body: Buffer.from(
+        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=',
+        'base64',
+      ),
+    }),
+  );
 }
 
 async function expectNoHorizontalOverflow(page: Page): Promise<void> {
@@ -74,6 +103,16 @@ for (const width of [320, 390, 430]) {
     );
     await expectNoHorizontalOverflow(page);
 
+    const cover = page.locator('.hero__photo img');
+    await expect(cover).toHaveAttribute('fetchpriority', 'high');
+    await expect(cover).toHaveCSS('object-position', '62% 38%');
+
+    const storyPhoto = page.locator('.photo-chapter img').first();
+    await storyPhoto.scrollIntoViewIfNeeded();
+    await expect(storyPhoto).toBeVisible();
+    await expect(storyPhoto).toHaveAttribute('loading', 'lazy');
+    await expect(storyPhoto).toHaveAttribute('srcset', /width=480/);
+
     const rsvpAction = page.getByRole('link', { name: 'Responder ao convite' });
     await rsvpAction.scrollIntoViewIfNeeded();
     await expect(rsvpAction).toBeVisible();
@@ -88,7 +127,7 @@ test('removes non-essential movement when the visitor prefers reduced motion', a
   await page.goto('/');
 
   const animationNames = await page
-    .locator('.reveal')
+    .locator('.reveal, .photo-chapter img')
     .evaluateAll((elements) => elements.map((element) => getComputedStyle(element).animationName));
 
   expect(animationNames.every((animationName) => animationName === 'none')).toBe(true);

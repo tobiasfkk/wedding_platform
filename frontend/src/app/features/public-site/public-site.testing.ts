@@ -37,4 +37,15 @@ export const SITE_CONTENT_DTO: WeddingSiteContentDto = {
   notices: ['Chegue com antecedência.'],
   rsvp: { eyebrow: 'RSVP', title: 'Confirme sua presença', description: 'Use seu convite.' },
   sectionOrder: ['STORY', 'SCHEDULE', 'NOTICES', 'RSVP'],
+  photos: [
+    {
+      id: 'photo-1',
+      placement: 'STORY',
+      alt: 'O casal no jardim.',
+      width: 1200,
+      height: 800,
+      focalX: 45,
+      focalY: 35,
+    },
+  ],
 };

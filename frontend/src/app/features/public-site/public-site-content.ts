@@ -19,15 +19,27 @@ export interface PublicWeddingContent {
     description: string;
   };
   sectionOrder: readonly PublicSiteSection[];
+  photos: readonly PublicWeddingPhoto[];
 }
 
 export type PublicSiteSection = 'STORY' | 'SCHEDULE' | 'NOTICES' | 'RSVP';
+export type PublicPhotoPlacement = 'HERO' | PublicSiteSection;
 
 export interface PublicWeddingImage {
   src: string;
   alt: string;
   width: number;
   height: number;
+  srcSet?: string;
+  focalX?: number;
+  focalY?: number;
+}
+
+export interface PublicWeddingPhoto extends PublicWeddingImage {
+  id: string;
+  placement: PublicPhotoPlacement;
+  focalX: number;
+  focalY: number;
 }
 
 export interface PublicWeddingMoment {
@@ -84,4 +96,5 @@ export const PUBLIC_WEDDING_CONTENT: PublicWeddingContent = {
       'Use o link individual recebido com o convite para informar quem poderá celebrar conosco.',
   },
   sectionOrder: ['STORY', 'SCHEDULE', 'NOTICES', 'RSVP'],
+  photos: [],
 };

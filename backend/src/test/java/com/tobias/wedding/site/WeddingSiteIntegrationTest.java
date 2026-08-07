@@ -8,8 +8,10 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.sql.Timestamp;
 import java.time.Instant;
@@ -160,14 +162,14 @@ class WeddingSiteIntegrationTest {
     @WithMockUser(roles = "ADMIN")
     void exposesUploadedMediaOnlyAfterItsContentIsPublished() throws Exception {
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-        ImageIO.write(new BufferedImage(32, 24, BufferedImage.TYPE_INT_RGB), "png", bytes);
+        ImageIO.write(new BufferedImage(640, 480, BufferedImage.TYPE_INT_RGB), "png", bytes);
         MockMultipartFile file =
                 new MockMultipartFile("file", "casal.png", "image/png", bytes.toByteArray());
 
         String response = mockMvc.perform(multipart("/api/admin/site/media").file(file).with(csrf()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.width").value(32))
-                .andExpect(jsonPath("$.height").value(24))
+                .andExpect(jsonPath("$.width").value(640))
+                .andExpect(jsonPath("$.height").value(480))
                 .andReturn()
                 .getResponse()
                 .getContentAsString();
@@ -181,14 +183,28 @@ class WeddingSiteIntegrationTest {
 
         mockMvc.perform(put("/api/admin/site/draft")
                         .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
+                .contentType(MediaType.APPLICATION_JSON)
                         .content(draftRequest(0, contentJson("Nossa celebração", mediaId))))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.draft.photos[0].placement").value("HERO"))
+                .andExpect(jsonPath("$.draft.photos[0].focalX").value(62));
         mockMvc.perform(put("/api/admin/site/publication").with(csrf())).andExpect(status().isOk());
 
         mockMvc.perform(get("/api/public/site/media/{id}", mediaId))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType("image/png"));
+
+        byte[] resized = mockMvc.perform(get("/api/public/site/media/{id}", mediaId).param("width", "320"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType("image/png"))
+                .andReturn()
+                .getResponse()
+                .getContentAsByteArray();
+        assertEquals(320, ImageIO.read(new ByteArrayInputStream(resized)).getWidth());
+
+        mockMvc.perform(get("/api/public/site/media/{id}", mediaId).param("width", "200"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("SITE_MEDIA_INVALID"));
     }
 
     private String draftRequest(long version, String content) {
@@ -196,8 +212,19 @@ class WeddingSiteIntegrationTest {
     }
 
     private String contentJson(String title, String mediaId) {
-        String imageId = mediaId == null ? "null" : "\"" + mediaId + "\"";
-        String imageAlt = mediaId == null ? "null" : "\"O casal sorrindo no jardim.\"";
+        String photos = mediaId == null
+                ? "[]"
+                : """
+                  [{
+                    "id": "%s",
+                    "placement": "HERO",
+                    "alt": "O casal sorrindo no jardim.",
+                    "width": 640,
+                    "height": 480,
+                    "focalX": 62,
+                    "focalY": 38
+                  }]
+                  """.formatted(mediaId);
         return """
                 {
                   "hero": {
@@ -210,10 +237,10 @@ class WeddingSiteIntegrationTest {
                     "eyebrow": "Nossa história",
                     "title": "Do encontro ao nosso sim.",
                     "paragraphs": ["O primeiro capítulo da nossa história."],
-                    "imageId": %s,
-                    "imageAlt": %s,
-                    "imageWidth": %s,
-                    "imageHeight": %s
+                    "imageId": null,
+                    "imageAlt": null,
+                    "imageWidth": null,
+                    "imageHeight": null
                   },
                   "schedule": [
                     {
@@ -239,13 +266,11 @@ class WeddingSiteIntegrationTest {
                     "title": "Sua presença faz parte desta história.",
                     "description": "Use o seu convite individual para responder."
                   },
-                  "sectionOrder": ["STORY","SCHEDULE","NOTICES","RSVP"]
+                  "sectionOrder": ["STORY","SCHEDULE","NOTICES","RSVP"],
+                  "photos": %s
                 }
                 """.formatted(
                         title,
-                        imageId,
-                        imageAlt,
-                        mediaId == null ? "null" : "32",
-                        mediaId == null ? "null" : "24");
+                        photos);
     }
 }
