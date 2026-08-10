@@ -4,10 +4,13 @@ import com.tobias.wedding.wedding.CurrentWedding;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import org.springframework.stereotype.Service;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
@@ -133,6 +136,37 @@ class WeddingSiteService {
             throw new WeddingSiteValidationException(
                     "content.story.imageId", "Remova os metadados quando nenhuma imagem estiver selecionada.");
         }
+
+        long heroPhotos = content.photos().stream()
+                .filter(photo -> photo.placement() == SitePhotoPlacement.HERO)
+                .count();
+        if (heroPhotos > 1) {
+            throw new WeddingSiteValidationException(
+                    "content.photos", "Selecione somente uma foto para a abertura.");
+        }
+        if (content.photos().stream().map(WeddingSiteContent.Photo::id).distinct().count()
+                != content.photos().size()) {
+            throw new WeddingSiteValidationException(
+                    "content.photos", "Cada foto pode aparecer apenas uma vez na narrativa.");
+        }
+
+        List<UUID> photoIds = content.photos().stream().map(WeddingSiteContent.Photo::id).toList();
+        Map<UUID, SiteMedia> mediaById = photoIds.isEmpty()
+                ? Map.of()
+                : mediaRepository().findAllByIdInAndWeddingEventId(photoIds, weddingId).stream()
+                        .collect(Collectors.toMap(SiteMedia::id, Function.identity()));
+        for (WeddingSiteContent.Photo photo : content.photos()) {
+            SiteMedia media = mediaById.get(photo.id());
+            if (media == null) {
+                throw new WeddingSiteValidationException(
+                        "content.photos", "Uma das fotos selecionadas não pertence a este casamento.");
+            }
+            if (!Integer.valueOf(media.width()).equals(photo.width())
+                    || !Integer.valueOf(media.height()).equals(photo.height())) {
+                throw new WeddingSiteValidationException(
+                        "content.photos", "As dimensões informadas para uma das fotos são inválidas.");
+            }
+        }
     }
 
     private WeddingSiteRepository repository() {
@@ -154,8 +188,14 @@ class WeddingSiteService {
     }
 
     private Set<UUID> publishedMediaIds(WeddingSiteContent content) {
-        UUID storyImageId = content.story().imageId();
-        return storyImageId == null ? Set.of() : Set.of(storyImageId);
+        Set<UUID> ids = content.photos().stream()
+                .map(WeddingSiteContent.Photo::id)
+                .collect(Collectors.toSet());
+        UUID legacyStoryImageId = content.story().imageId();
+        if (legacyStoryImageId != null) {
+            ids.add(legacyStoryImageId);
+        }
+        return Set.copyOf(ids);
     }
 
     private String serialize(WeddingSiteContent content) {

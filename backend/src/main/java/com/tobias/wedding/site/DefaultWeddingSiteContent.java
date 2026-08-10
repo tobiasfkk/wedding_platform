@@ -50,6 +50,7 @@ final class DefaultWeddingSiteContent {
                         SiteSectionType.STORY,
                         SiteSectionType.SCHEDULE,
                         SiteSectionType.NOTICES,
-                        SiteSectionType.RSVP));
+                        SiteSectionType.RSVP),
+                List.of());
     }
 }

@@ -23,6 +23,7 @@ describe('PublicSiteService', () => {
     service.loadPublished().subscribe((content) => {
       expect(content.hero.title).toBe('Ana e Bruno');
       expect(content.story.image?.src).toBe('/api/public/site/media/photo-1');
+      expect(content.photos[0]?.srcSet).toContain('photo-1?width=480 480w');
     });
 
     const request = http.expectOne('/api/public/site');

@@ -15,8 +15,9 @@ rascunho; visitantes nunca recebem essa versão automaticamente.
 ## Fluxo administrativo
 
 Em `/admin/site`, o administrador pode editar abertura, história, cerimônia, recepção, avisos e
-chamada para RSVP. Também pode adicionar a foto do casal, alterar a ordem das seções suportadas,
-visualizar a prévia, salvar o rascunho e publicar ou despublicar explicitamente.
+chamada para RSVP. Também pode adicionar até 10 fotos, escolher onde cada uma aparece, ajustar o
+ponto focal, alterar a ordem das fotos e das seções, visualizar a prévia, salvar o rascunho e
+publicar ou despublicar explicitamente.
 
 Rascunho e publicação possuem versões independentes. Salvar não altera o site dos convidados; ao
 publicar, o backend copia uma versão consistente do rascunho. Alterações posteriores continuam
@@ -37,12 +38,18 @@ pela variável `MEDIA_LOCAL_DIRECTORY`. JPG e PNG são aceitos, com limite de 5 
 dimensão.
 
 Uma imagem de rascunho só pode ser lida pela rota administrativa autenticada. A rota pública de
-mídia passa a servi-la apenas quando a versão que a referencia é publicada.
+mídia passa a servi-la apenas quando a versão que a referencia é publicada. O renderizador solicita
+larguras de 480, 768, 1280 ou 1920 pixels conforme a tela; o backend reduz a imagem localmente sem
+alterar o arquivo original.
+
+Uma foto pode ocupar o fundo da abertura. As demais são associadas à história, agenda, avisos ou
+RSVP e aparecem em capítulos de tela cheia durante a rolagem. A ordem é controlada pelo conteúdo,
+e o mesmo resultado é usado na prévia administrativa e na página pública.
 
 ## Limites desta etapa
 
 - Não existe edição livre de HTML, CSS ou JavaScript.
 - As seções suportadas possuem estrutura estável e acessível.
 - O construtor visual amplo permanece como estudo futuro na issue #49.
-- Nesta etapa, apenas a foto principal da história pode ser cadastrada; galerias pertencem a uma
-  evolução posterior.
+- Não existe recorte destrutivo: o ponto focal controla o enquadramento responsivo e preserva o
+  arquivo original.

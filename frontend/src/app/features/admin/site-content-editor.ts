@@ -7,7 +7,11 @@ import { MatInputModule } from '@angular/material/input';
 import { RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 
-import { PublicSiteSection, PublicWeddingContent } from '../public-site/public-site-content';
+import {
+  PublicPhotoPlacement,
+  PublicSiteSection,
+  PublicWeddingContent,
+} from '../public-site/public-site-content';
 import {
   SiteMomentType,
   toPublicWeddingContent,
@@ -19,6 +23,13 @@ import { SiteContentService, SiteMediaUpload, WeddingSiteAdminState } from './si
 interface ApiProblem {
   detail?: string;
   errors?: Array<{ field: string; message: string }>;
+}
+
+interface SitePhotoEditor extends SiteMediaUpload {
+  placement: PublicPhotoPlacement;
+  alt: string;
+  focalX: number;
+  focalY: number;
 }
 
 type EditorFormValue = ReturnType<SiteContentEditor['form']['getRawValue']>;
@@ -51,10 +62,17 @@ export class SiteContentEditor {
   readonly hasUnpublishedChanges = signal(true);
   readonly draftVersion = signal(0);
   readonly sectionOrder = signal<PublicSiteSection[]>([]);
-  readonly image = signal<SiteMediaUpload | null>(null);
+  readonly photos = signal<SitePhotoEditor[]>([]);
   readonly preview = signal<PublicWeddingContent | null>(null);
   readonly message = signal<string | null>(null);
   readonly errorMessage = signal<string | null>(null);
+  readonly photoPlacements: readonly PublicPhotoPlacement[] = [
+    'HERO',
+    'STORY',
+    'SCHEDULE',
+    'NOTICES',
+    'RSVP',
+  ];
 
   readonly form = new FormGroup({
     heroEyebrow: new FormControl('', { nonNullable: true, validators: requiredText(60) }),
@@ -64,10 +82,6 @@ export class SiteContentEditor {
     storyEyebrow: new FormControl('', { nonNullable: true, validators: requiredText(60) }),
     storyTitle: new FormControl('', { nonNullable: true, validators: requiredText(120) }),
     storyParagraphs: new FormControl('', { nonNullable: true, validators: requiredText(3000) }),
-    storyImageAlt: new FormControl('', {
-      nonNullable: true,
-      validators: [Validators.maxLength(200)],
-    }),
     ceremonyEyebrow: new FormControl('', { nonNullable: true, validators: requiredText(60) }),
     ceremonyTitle: new FormControl('', { nonNullable: true, validators: requiredText(100) }),
     ceremonyTime: new FormControl('', { nonNullable: true, validators: requiredText(100) }),
@@ -182,6 +196,11 @@ export class SiteContentEditor {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
     if (!file || this.uploading()) return;
+    if (this.photos().length >= 10) {
+      this.errorMessage.set('A narrativa pode ter no máximo 10 fotos.');
+      input.value = '';
+      return;
+    }
     this.clearMessages();
     this.uploading.set(true);
     this.service
@@ -189,10 +208,12 @@ export class SiteContentEditor {
       .pipe(finalize(() => this.uploading.set(false)))
       .subscribe({
         next: (image) => {
-          this.image.set(image);
-          this.form.controls.storyImageAlt.setValue('');
+          this.photos.update((photos) => [
+            ...photos,
+            { ...image, placement: 'STORY', alt: '', focalX: 50, focalY: 50 },
+          ]);
           this.form.markAsDirty();
-          this.message.set('Foto enviada. Informe a descrição e salve o rascunho.');
+          this.message.set('Foto enviada. Escolha onde ela aparece, descreva e salve o rascunho.');
           input.value = '';
         },
         error: (error: HttpErrorResponse) => {
@@ -202,10 +223,49 @@ export class SiteContentEditor {
       });
   }
 
-  removeImage(): void {
-    this.image.set(null);
-    this.form.controls.storyImageAlt.setValue('');
+  removePhoto(id: string): void {
+    this.photos.update((photos) => photos.filter((photo) => photo.id !== id));
     this.form.markAsDirty();
+  }
+
+  updatePhoto(
+    id: string,
+    field: 'placement' | 'alt' | 'focalX' | 'focalY',
+    value: string | number,
+  ): void {
+    this.photos.update((photos) =>
+      photos.map((photo) => {
+        if (
+          field === 'placement' &&
+          value === 'HERO' &&
+          photo.id !== id &&
+          photo.placement === 'HERO'
+        ) {
+          return { ...photo, placement: 'STORY' };
+        }
+        return photo.id === id ? { ...photo, [field]: value } : photo;
+      }),
+    );
+    this.form.markAsDirty();
+  }
+
+  movePhoto(index: number, direction: -1 | 1): void {
+    const target = index + direction;
+    const photos = [...this.photos()];
+    if (target < 0 || target >= photos.length) return;
+    [photos[index], photos[target]] = [photos[target], photos[index]];
+    this.photos.set(photos);
+    this.form.markAsDirty();
+  }
+
+  photoPlacementLabel(placement: PublicPhotoPlacement): string {
+    return {
+      HERO: 'Fundo da abertura',
+      STORY: 'Após nossa história',
+      SCHEDULE: 'Após cerimônia e recepção',
+      NOTICES: 'Após informações importantes',
+      RSVP: 'Após confirmação de presença',
+    }[placement];
   }
 
   moveSection(index: number, direction: -1 | 1): void {
@@ -239,11 +299,9 @@ export class SiteContentEditor {
       this.errorMessage.set('Informe ao menos um parágrafo da história e um aviso.');
       return null;
     }
-    const image = this.image();
-    if (image && !value.storyImageAlt.trim()) {
-      this.form.controls.storyImageAlt.setErrors({ required: true });
-      this.form.controls.storyImageAlt.markAsTouched();
-      this.errorMessage.set('Descreva a foto para pessoas que não podem vê-la.');
+    const photos = this.photos();
+    if (photos.some((photo) => !photo.alt.trim())) {
+      this.errorMessage.set('Descreva todas as fotos para pessoas que não podem vê-las.');
       return null;
     }
     return {
@@ -257,10 +315,10 @@ export class SiteContentEditor {
         eyebrow: value.storyEyebrow.trim(),
         title: value.storyTitle.trim(),
         paragraphs,
-        imageId: image?.id ?? null,
-        imageAlt: image ? value.storyImageAlt.trim() : null,
-        imageWidth: image?.width ?? null,
-        imageHeight: image?.height ?? null,
+        imageId: null,
+        imageAlt: null,
+        imageWidth: null,
+        imageHeight: null,
       },
       schedule: [
         this.moment('CEREMONY', value, 'ceremony'),
@@ -273,6 +331,15 @@ export class SiteContentEditor {
         description: value.rsvpDescription.trim(),
       },
       sectionOrder: [...this.sectionOrder()],
+      photos: photos.map((photo) => ({
+        id: photo.id,
+        placement: photo.placement,
+        alt: photo.alt.trim(),
+        width: photo.width,
+        height: photo.height,
+        focalX: photo.focalX,
+        focalY: photo.focalY,
+      })),
     };
   }
 
@@ -313,7 +380,6 @@ export class SiteContentEditor {
       storyEyebrow: draft.story.eyebrow,
       storyTitle: draft.story.title,
       storyParagraphs: draft.story.paragraphs.join('\n'),
-      storyImageAlt: draft.story.imageAlt ?? '',
       ceremonyEyebrow: ceremony.eyebrow,
       ceremonyTitle: ceremony.title,
       ceremonyTime: ceremony.time,
@@ -329,17 +395,14 @@ export class SiteContentEditor {
       rsvpTitle: draft.rsvp.title,
       rsvpDescription: draft.rsvp.description,
     });
-    this.image.set(
-      draft.story.imageId && draft.story.imageWidth && draft.story.imageHeight
-        ? {
-            id: draft.story.imageId,
-            url: `/api/admin/site/media/${draft.story.imageId}`,
-            contentType: '',
-            width: draft.story.imageWidth,
-            height: draft.story.imageHeight,
-            sizeBytes: 0,
-          }
-        : null,
+    const photos = draft.photos ?? [];
+    this.photos.set(
+      photos.map((photo) => ({
+        ...photo,
+        url: `/api/admin/site/media/${photo.id}`,
+        contentType: '',
+        sizeBytes: 0,
+      })),
     );
     this.sectionOrder.set([...draft.sectionOrder]);
     this.form.markAsPristine();

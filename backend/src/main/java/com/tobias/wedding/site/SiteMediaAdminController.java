@@ -1,16 +1,17 @@
 package com.tobias.wedding.site;
 
-import org.springframework.http.MediaType;
+import java.util.UUID;
 import org.springframework.http.CacheControl;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/admin/site/media")
@@ -28,8 +29,9 @@ class SiteMediaAdminController {
     }
 
     @GetMapping("/{id}")
-    ResponseEntity<org.springframework.core.io.Resource> find(@PathVariable UUID id) {
-        SiteMediaService.SiteMediaDownload media = service.findForCurrentWedding(id);
+    ResponseEntity<org.springframework.core.io.Resource> find(
+            @PathVariable UUID id, @RequestParam(required = false) Integer width) {
+        SiteMediaService.SiteMediaDownload media = service.findForCurrentWedding(id, width);
         return ResponseEntity.ok()
                 .cacheControl(CacheControl.noCache())
                 .contentType(MediaType.parseMediaType(media.contentType()))

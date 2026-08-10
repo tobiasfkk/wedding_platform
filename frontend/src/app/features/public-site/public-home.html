@@ -1,6 +1,21 @@
 @let content = siteContent();
 <article class="wedding-page">
-  <section class="hero" aria-labelledby="public-title">
+  <section class="hero" [class.hero--with-photo]="coverPhoto()" aria-labelledby="public-title">
+    @if (coverPhoto(); as cover) {
+      <picture class="hero__photo" aria-hidden="true">
+        <img
+          [src]="cover.src"
+          [attr.srcset]="cover.srcSet"
+          sizes="100vw"
+          alt=""
+          [width]="cover.width"
+          [height]="cover.height"
+          [style.object-position]="objectPosition(cover)"
+          fetchpriority="high"
+          decoding="async"
+        />
+      </picture>
+    }
     <div class="hero__glow hero__glow--top" aria-hidden="true"></div>
     <div class="hero__glow hero__glow--bottom" aria-hidden="true"></div>
 
@@ -34,17 +49,8 @@
             }
           </div>
 
-          <figure class="story__visual">
-            @if (content.story.image; as image) {
-              <img
-                [src]="image.src"
-                [alt]="image.alt"
-                [width]="image.width"
-                [height]="image.height"
-                loading="lazy"
-                decoding="async"
-              />
-            } @else {
+          @if (photosFor('STORY').length === 0) {
+            <figure class="story__visual">
               <div
                 class="photo-placeholder"
                 role="img"
@@ -53,10 +59,27 @@
                 <span class="photo-placeholder__monogram" aria-hidden="true">∞</span>
                 <span>A foto favorita de vocês ficará aqui</span>
               </div>
-            }
-            <figcaption>Um capítulo contado por vocês.</figcaption>
-          </figure>
+              <figcaption>Um capítulo contado por vocês.</figcaption>
+            </figure>
+          }
         </section>
+        @for (photo of photosFor('STORY'); track photo.id) {
+          <figure class="photo-chapter">
+            <div class="photo-chapter__frame">
+              <img
+                [src]="photo.src"
+                [attr.srcset]="photo.srcSet"
+                sizes="100vw"
+                [alt]="photo.alt"
+                [width]="photo.width"
+                [height]="photo.height"
+                [style.object-position]="objectPosition(photo)"
+                loading="lazy"
+                decoding="async"
+              />
+            </div>
+          </figure>
+        }
       }
       @case ('SCHEDULE') {
         <section id="details" class="details" aria-labelledby="details-title">
@@ -87,6 +110,23 @@
             }
           </div>
         </section>
+        @for (photo of photosFor('SCHEDULE'); track photo.id) {
+          <figure class="photo-chapter">
+            <div class="photo-chapter__frame">
+              <img
+                [src]="photo.src"
+                [attr.srcset]="photo.srcSet"
+                sizes="100vw"
+                [alt]="photo.alt"
+                [width]="photo.width"
+                [height]="photo.height"
+                [style.object-position]="objectPosition(photo)"
+                loading="lazy"
+                decoding="async"
+              />
+            </div>
+          </figure>
+        }
       }
       @case ('NOTICES') {
         <section class="notes section-shell reveal" aria-labelledby="notes-title">
@@ -103,6 +143,23 @@
             }
           </ol>
         </section>
+        @for (photo of photosFor('NOTICES'); track photo.id) {
+          <figure class="photo-chapter">
+            <div class="photo-chapter__frame">
+              <img
+                [src]="photo.src"
+                [attr.srcset]="photo.srcSet"
+                sizes="100vw"
+                [alt]="photo.alt"
+                [width]="photo.width"
+                [height]="photo.height"
+                [style.object-position]="objectPosition(photo)"
+                loading="lazy"
+                decoding="async"
+              />
+            </div>
+          </figure>
+        }
       }
       @case ('RSVP') {
         <section class="rsvp-callout reveal" aria-labelledby="rsvp-title">
@@ -113,6 +170,23 @@
             <a class="button button--light" routerLink="/rsvp">Responder ao convite</a>
           </div>
         </section>
+        @for (photo of photosFor('RSVP'); track photo.id) {
+          <figure class="photo-chapter">
+            <div class="photo-chapter__frame">
+              <img
+                [src]="photo.src"
+                [attr.srcset]="photo.srcSet"
+                sizes="100vw"
+                [alt]="photo.alt"
+                [width]="photo.width"
+                [height]="photo.height"
+                [style.object-position]="objectPosition(photo)"
+                loading="lazy"
+                decoding="async"
+              />
+            </div>
+          </figure>
+        }
       }
     }
   }

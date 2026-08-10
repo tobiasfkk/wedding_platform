@@ -4,6 +4,7 @@ import { map, Observable } from 'rxjs';
 
 import {
   PublicSiteSection,
+  PublicPhotoPlacement,
   PublicWeddingContent,
   PublicWeddingMoment,
 } from './public-site-content';
@@ -25,6 +26,15 @@ export interface WeddingSiteContentDto {
   notices: string[];
   rsvp: PublicWeddingContent['rsvp'];
   sectionOrder: PublicSiteSection[];
+  photos?: Array<{
+    id: string;
+    placement: PublicPhotoPlacement;
+    alt: string;
+    width: number;
+    height: number;
+    focalX: number;
+    focalY: number;
+  }>;
 }
 
 interface WeddingSitePublicResponse {
@@ -49,6 +59,15 @@ export function toPublicWeddingContent(
   mediaBasePath = '/api/public/site/media',
 ): PublicWeddingContent {
   const story = content.story;
+  const mediaUrl = (id: string) => `${mediaBasePath}/${id}`;
+  const photos = (content.photos ?? []).map((photo) => {
+    const src = mediaUrl(photo.id);
+    return {
+      ...photo,
+      src,
+      srcSet: [480, 768, 1280, 1920].map((width) => `${src}?width=${width} ${width}w`).join(', '),
+    };
+  });
   return {
     hero: content.hero,
     story: {
@@ -58,7 +77,7 @@ export function toPublicWeddingContent(
       image:
         story.imageId && story.imageAlt && story.imageWidth && story.imageHeight
           ? {
-              src: `${mediaBasePath}/${story.imageId}`,
+              src: mediaUrl(story.imageId),
               alt: story.imageAlt,
               width: story.imageWidth,
               height: story.imageHeight,
@@ -69,5 +88,6 @@ export function toPublicWeddingContent(
     notices: content.notices,
     rsvp: content.rsvp,
     sectionOrder: content.sectionOrder,
+    photos,
   };
 }

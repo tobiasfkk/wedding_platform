@@ -1,15 +1,19 @@
 package com.tobias.wedding.site;
 
 import com.tobias.wedding.wedding.CurrentWedding;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import javax.imageio.ImageIO;
-import org.springframework.core.io.Resource;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -81,17 +85,17 @@ class SiteMediaService {
     }
 
     @Transactional(readOnly = true)
-    SiteMediaDownload findPublished(UUID id) {
+    SiteMediaDownload findPublished(UUID id, Integer requestedWidth) {
         SiteMedia media = repository().findByIdAndPublishedTrue(id).orElseThrow(SiteMediaNotFoundException::new);
-        return new SiteMediaDownload(storage.load(media.storageKey()), media.contentType());
+        return download(media, requestedWidth);
     }
 
     @Transactional(readOnly = true)
-    SiteMediaDownload findForCurrentWedding(UUID id) {
+    SiteMediaDownload findForCurrentWedding(UUID id, Integer requestedWidth) {
         SiteMedia media = repository()
                 .findByIdAndWeddingEventId(id, currentWedding.requireId())
                 .orElseThrow(SiteMediaNotFoundException::new);
-        return new SiteMediaDownload(storage.load(media.storageKey()), media.contentType());
+        return download(media, requestedWidth);
     }
 
     @Transactional
@@ -103,6 +107,47 @@ class SiteMediaService {
 
     private SiteMediaRepository repository() {
         return repositories.getObject();
+    }
+
+    private SiteMediaDownload download(SiteMedia media, Integer requestedWidth) {
+        Resource original = storage.load(media.storageKey());
+        if (requestedWidth != null && (requestedWidth < 320 || requestedWidth > 1920)) {
+            throw new SiteMediaValidationException("Solicite uma imagem entre 320 e 1920 pixels de largura.");
+        }
+        if (requestedWidth == null || requestedWidth >= media.width()) {
+            return new SiteMediaDownload(original, media.contentType());
+        }
+
+        try (InputStream input = original.getInputStream();
+                ByteArrayOutputStream output = new ByteArrayOutputStream()) {
+            BufferedImage source = ImageIO.read(input);
+            if (source == null) {
+                throw new SiteMediaNotFoundException();
+            }
+            int targetHeight = Math.max(
+                    1,
+                    (int) Math.round(source.getHeight() * requestedWidth / (double) source.getWidth()));
+            int imageType = "image/png".equals(media.contentType())
+                    ? BufferedImage.TYPE_INT_ARGB
+                    : BufferedImage.TYPE_INT_RGB;
+            BufferedImage resized = new BufferedImage(requestedWidth, targetHeight, imageType);
+            Graphics2D graphics = resized.createGraphics();
+            try {
+                graphics.setRenderingHint(
+                        RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+                graphics.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+                graphics.drawImage(source, 0, 0, requestedWidth, targetHeight, null);
+            } finally {
+                graphics.dispose();
+            }
+            String format = "image/png".equals(media.contentType()) ? "png" : "jpg";
+            if (!ImageIO.write(resized, format, output)) {
+                throw new IOException("Formato de imagem indisponível.");
+            }
+            return new SiteMediaDownload(new ByteArrayResource(output.toByteArray()), media.contentType());
+        } catch (IOException exception) {
+            throw new SiteMediaNotFoundException();
+        }
     }
 
     private SiteMediaUploadResponse response(SiteMedia media) {

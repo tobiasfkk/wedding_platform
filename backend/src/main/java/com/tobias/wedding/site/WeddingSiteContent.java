@@ -1,6 +1,8 @@
 package com.tobias.wedding.site;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -17,12 +19,27 @@ public record WeddingSiteContent(
                 List<@NotBlank @Size(max = 300) String> notices,
         @NotNull @Valid Rsvp rsvp,
         @NotNull @Size(min = 4, max = 4, message = "A ordem deve conter todas as seções.")
-                List<@NotNull SiteSectionType> sectionOrder) {
+                List<@NotNull SiteSectionType> sectionOrder,
+        @NotNull @Size(max = 10, message = "Selecione no máximo 10 fotos.") List<@Valid Photo> photos) {
 
     public WeddingSiteContent {
         schedule = schedule == null ? null : List.copyOf(schedule);
         notices = notices == null ? null : List.copyOf(notices);
         sectionOrder = sectionOrder == null ? null : List.copyOf(sectionOrder);
+        if (photos == null) {
+            photos = story != null && story.imageId() != null
+                    ? List.of(new Photo(
+                            story.imageId(),
+                            SitePhotoPlacement.STORY,
+                            story.imageAlt(),
+                            story.imageWidth(),
+                            story.imageHeight(),
+                            50,
+                            50))
+                    : List.of();
+        } else {
+            photos = List.copyOf(photos);
+        }
     }
 
     public record Hero(
@@ -52,6 +69,15 @@ public record WeddingSiteContent(
             @NotBlank @Size(max = 100) String time,
             @NotBlank @Size(max = 160) String venue,
             @NotBlank @Size(max = 300) String address) {}
+
+    public record Photo(
+            @NotNull UUID id,
+            @NotNull SitePhotoPlacement placement,
+            @NotBlank @Size(max = 200) String alt,
+            @NotNull @Min(1) @Max(6000) Integer width,
+            @NotNull @Min(1) @Max(6000) Integer height,
+            @NotNull @Min(0) @Max(100) Integer focalX,
+            @NotNull @Min(0) @Max(100) Integer focalY) {}
 
     public record Rsvp(
             @NotBlank @Size(max = 60) String eyebrow,

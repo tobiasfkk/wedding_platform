@@ -82,6 +82,32 @@ h2 {
   rotate: 8deg;
 }
 
+.hero--with-photo::after {
+  position: absolute;
+  z-index: -3;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgb(8 15 10 / 38%), rgb(8 15 10 / 72%)),
+    radial-gradient(circle at 50% 35%, transparent 10%, rgb(10 19 13 / 38%) 78%);
+  content: '';
+}
+
+.hero__photo,
+.hero__photo img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.hero__photo {
+  z-index: -4;
+}
+
+.hero__photo img {
+  object-fit: cover;
+}
+
 .hero__glow {
   position: absolute;
   z-index: -2;
@@ -258,6 +284,30 @@ h2 {
   text-align: center;
 }
 
+.photo-chapter {
+  min-height: 118svh;
+  margin: 0;
+  background: var(--wedding-moss-950);
+}
+
+.photo-chapter__frame {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  overflow: hidden;
+}
+
+.photo-chapter img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  scale: 1.04;
+  animation: photo-drift linear both;
+  animation-range: entry 0% exit 100%;
+  animation-timeline: view();
+}
+
 .details {
   padding-block: clamp(5rem, 14vw, 9rem);
   background: var(--wedding-paper);
@@ -424,6 +474,17 @@ h2 {
   }
 }
 
+@keyframes photo-drift {
+  from {
+    filter: saturate(0.88) brightness(0.9);
+    scale: 1.08;
+  }
+  to {
+    filter: saturate(1) brightness(1);
+    scale: 1;
+  }
+}
+
 @media (min-width: 48rem) {
   .section-shell {
     width: min(100% - 5rem, 64rem);
@@ -433,6 +494,11 @@ h2 {
     grid-template-columns: minmax(0, 1fr) minmax(18rem, 0.72fr);
     align-items: center;
     gap: clamp(3rem, 8vw, 7rem);
+  }
+
+  .story__copy:only-child {
+    grid-column: 1 / -1;
+    max-width: 48rem;
   }
 
   .moments {
@@ -466,10 +532,16 @@ h2 {
 
 @media (prefers-reduced-motion: reduce) {
   .button,
+  .photo-chapter img,
   .reveal,
   .scroll-cue__line {
     animation: none;
     transition: none;
+  }
+
+  .photo-chapter img {
+    filter: none;
+    scale: 1;
   }
 
   .button:hover {
