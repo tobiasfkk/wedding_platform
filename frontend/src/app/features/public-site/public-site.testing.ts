@@ -16,6 +16,7 @@ export const SITE_CONTENT_DTO: WeddingSiteContentDto = {
     imageWidth: 1200,
     imageHeight: 800,
   },
+  locationMode: 'SEPARATE',
   schedule: [
     {
       type: 'CEREMONY',
@@ -24,6 +25,8 @@ export const SITE_CONTENT_DTO: WeddingSiteContentDto = {
       time: '16h',
       venue: 'Espaço Jardim',
       address: 'Rua das Flores, 100',
+      visible: true,
+      mapUrl: 'https://www.google.com/maps/place/Espaco+Jardim',
     },
     {
       type: 'RECEPTION',
@@ -32,6 +35,8 @@ export const SITE_CONTENT_DTO: WeddingSiteContentDto = {
       time: 'Após a cerimônia',
       venue: 'Salão Jardim',
       address: 'No mesmo local',
+      visible: true,
+      mapUrl: null,
     },
   ],
   notices: ['Chegue com antecedência.'],

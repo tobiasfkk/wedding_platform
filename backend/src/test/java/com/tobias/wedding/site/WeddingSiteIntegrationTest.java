@@ -160,6 +160,49 @@ class WeddingSiteIntegrationTest {
 
     @Test
     @WithMockUser(roles = "ADMIN")
+    void persistsSharedLocationsAndValidatesVisibilityAndMapLinks() throws Exception {
+        String sharedLocation = contentJson("Nossa celebração", null)
+                .replace("\"locationMode\": \"SEPARATE\"", "\"locationMode\": \"SHARED\"")
+                .replace("\"venue\": \"Salão Jardim\"", "\"venue\": \"Espaço Jardim\"")
+                .replace("\"address\": \"No mesmo local\"", "\"address\": \"Rua das Flores, 100\"")
+                .replace(
+                        "\"mapUrl\": null",
+                        "\"mapUrl\": \"https://www.google.com/maps/place/Espaco+Jardim\"");
+
+        mockMvc.perform(put("/api/admin/site/draft")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(draftRequest(0, sharedLocation)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.draft.locationMode").value("SHARED"))
+                .andExpect(jsonPath("$.draft.schedule[0].mapUrl")
+                        .value("https://www.google.com/maps/place/Espaco+Jardim"));
+        mockMvc.perform(put("/api/admin/site/publication").with(csrf())).andExpect(status().isOk());
+        mockMvc.perform(get("/api/public/site"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.locationMode").value("SHARED"));
+
+        String noVisibleMoment = contentJson("Sem local", null)
+                .replace("\"visible\": true", "\"visible\": false");
+        mockMvc.perform(put("/api/admin/site/draft")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(draftRequest(1, noVisibleMoment)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors[0].field").value("content.schedule"));
+
+        String unsafeMap = contentJson("Mapa inseguro", null)
+                .replace("\"mapUrl\": null", "\"mapUrl\": \"javascript:alert(1)\"");
+        mockMvc.perform(put("/api/admin/site/draft")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(draftRequest(1, unsafeMap)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors[0].message").value("Informe um link HTTPS válido do Google Maps."));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
     void exposesUploadedMediaOnlyAfterItsContentIsPublished() throws Exception {
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
         ImageIO.write(new BufferedImage(640, 480, BufferedImage.TYPE_INT_RGB), "png", bytes);
@@ -242,6 +285,7 @@ class WeddingSiteIntegrationTest {
                     "imageWidth": null,
                     "imageHeight": null
                   },
+                  "locationMode": "SEPARATE",
                   "schedule": [
                     {
                       "type": "CEREMONY",
@@ -249,7 +293,9 @@ class WeddingSiteIntegrationTest {
                       "title": "O nosso sim",
                       "time": "16h",
                       "venue": "Espaço Jardim",
-                      "address": "Rua das Flores, 100"
+                      "address": "Rua das Flores, 100",
+                      "visible": true,
+                      "mapUrl": null
                     },
                     {
                       "type": "RECEPTION",
@@ -257,7 +303,9 @@ class WeddingSiteIntegrationTest {
                       "title": "Vamos celebrar",
                       "time": "Após a cerimônia",
                       "venue": "Salão Jardim",
-                      "address": "No mesmo local"
+                      "address": "No mesmo local",
+                      "visible": true,
+                      "mapUrl": null
                     }
                   ],
                   "notices": ["Chegue com antecedência."],

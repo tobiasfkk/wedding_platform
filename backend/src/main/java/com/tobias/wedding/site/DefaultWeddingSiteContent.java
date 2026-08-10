@@ -6,7 +6,10 @@ final class DefaultWeddingSiteContent {
 
     private DefaultWeddingSiteContent() {}
 
-    static WeddingSiteContent create() {
+    static WeddingSiteContent create(String configuredLocation) {
+        String sharedVenue = configuredLocation == null || configuredLocation.isBlank()
+                ? "Local do casamento"
+                : configuredLocation.strip();
         return new WeddingSiteContent(
                 new WeddingSiteContent.Hero(
                         "Celebração de casamento",
@@ -29,15 +32,19 @@ final class DefaultWeddingSiteContent {
                                 "01 · Cerimônia",
                                 "O nosso sim",
                                 "Horário a confirmar",
-                                "Local da cerimônia",
-                                "O endereço será publicado pelos noivos."),
+                                sharedVenue,
+                                "O endereço será publicado pelos noivos.",
+                                true,
+                                null),
                         new WeddingSiteContent.Moment(
                                 SiteMomentType.RECEPTION,
                                 "02 · Recepção",
                                 "Vamos celebrar",
                                 "Após a cerimônia",
-                                "Local da recepção",
-                                "Os detalhes serão publicados pelos noivos.")),
+                                sharedVenue,
+                                "O endereço será publicado pelos noivos.",
+                                true,
+                                null)),
                 List.of(
                         "Chegue com antecedência para aproveitar cada momento com tranquilidade.",
                         "Consulte seu convite individual para confirmar quem participará com você.",
@@ -51,6 +58,7 @@ final class DefaultWeddingSiteContent {
                         SiteSectionType.SCHEDULE,
                         SiteSectionType.NOTICES,
                         SiteSectionType.RSVP),
-                List.of());
+                List.of(),
+                SiteLocationMode.SHARED);
     }
 }

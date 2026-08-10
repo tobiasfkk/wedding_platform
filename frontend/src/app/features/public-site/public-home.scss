@@ -334,6 +334,10 @@ h2 {
   background: var(--wedding-white);
 }
 
+.moment-card:only-child {
+  grid-column: 1 / -1;
+}
+
 .moment-card h3 {
   margin: 1rem 0 2.5rem;
   font-family: Georgia, serif;
@@ -372,6 +376,43 @@ h2 {
 .moment-card dd span {
   display: grid;
   gap: 0.3rem;
+}
+
+.map-link {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  justify-self: start;
+  margin-block-start: 0.5rem;
+  color: var(--wedding-moss-700);
+  font-size: 0.86rem;
+  font-weight: 800;
+  text-underline-offset: 0.22em;
+}
+
+.shared-location-card {
+  margin-block-start: 1rem;
+  padding: clamp(1.5rem, 6vw, 2.5rem);
+  border-radius: 1.25rem;
+  background: var(--wedding-moss-950);
+  color: var(--wedding-white);
+}
+
+.shared-location-card h3 {
+  margin: 0.75rem 0 0;
+  font-family: Georgia, serif;
+  font-size: clamp(1.8rem, 7vw, 3rem);
+  font-weight: 400;
+}
+
+.shared-location-card > p:not(.section-label) {
+  margin: 0.75rem 0 0;
+  color: rgb(255 254 249 / 76%);
+  line-height: 1.6;
+}
+
+.shared-location-card .map-link {
+  color: var(--wedding-white);
 }
 
 .moment-card dd span {

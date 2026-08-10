@@ -20,4 +20,11 @@ public class CurrentWedding {
                 .map(WeddingEvent::id)
                 .orElseThrow(WeddingNotConfiguredException::new);
     }
+
+    @Transactional(readOnly = true)
+    public String requireLocation() {
+        return repositories.getObject().findFirstByOrderByCreatedAtAsc()
+                .map(WeddingEvent::location)
+                .orElseThrow(WeddingNotConfiguredException::new);
+    }
 }

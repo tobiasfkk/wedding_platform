@@ -5,6 +5,7 @@ import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
@@ -43,7 +44,12 @@ class WeddingSiteService {
         return repository().findByWeddingEventId(weddingId)
                 .map(this::adminResponse)
                 .orElseGet(() -> new WeddingSiteAdminResponse(
-                        DefaultWeddingSiteContent.create(), 0, false, null, null, true));
+                        DefaultWeddingSiteContent.create(currentWedding.requireLocation()),
+                        0,
+                        false,
+                        null,
+                        null,
+                        true));
     }
 
     @Transactional
@@ -112,6 +118,30 @@ class WeddingSiteService {
                     "content.schedule", "Informe uma cerimônia e uma recepção, sem duplicações.");
         }
 
+        List<WeddingSiteContent.Moment> visibleMoments = content.schedule().stream()
+                .filter(moment -> Boolean.TRUE.equals(moment.visible()))
+                .toList();
+        if (visibleMoments.isEmpty()) {
+            throw new WeddingSiteValidationException(
+                    "content.schedule", "Mantenha a cerimônia ou a recepção visível.");
+        }
+        for (WeddingSiteContent.Moment moment : content.schedule()) {
+            if (Boolean.TRUE.equals(moment.visible())
+                    && (isBlank(moment.venue()) || isBlank(moment.address()))) {
+                throw new WeddingSiteValidationException(
+                        "content.schedule", "Informe o local e o endereço de cada momento visível.");
+            }
+            if (moment.mapUrl() != null && !GoogleMapsUrlPolicy.allows(moment.mapUrl())) {
+                throw new WeddingSiteValidationException(
+                        "content.schedule", "Informe um link HTTPS válido do Google Maps.");
+            }
+        }
+        if (content.locationMode() == SiteLocationMode.SHARED
+                && visibleMoments.stream().skip(1).anyMatch(moment -> !sameLocation(visibleMoments.getFirst(), moment))) {
+            throw new WeddingSiteValidationException(
+                    "content.schedule", "Use o mesmo local, endereço e mapa nos momentos compartilhados.");
+        }
+
         if (new HashSet<>(content.sectionOrder()).size() != SiteSectionType.values().length
                 || !EnumSet.copyOf(content.sectionOrder()).equals(EnumSet.allOf(SiteSectionType.class))) {
             throw new WeddingSiteValidationException(
@@ -175,6 +205,20 @@ class WeddingSiteService {
 
     private SiteMediaRepository mediaRepository() {
         return mediaRepositories.getObject();
+    }
+
+    private boolean isBlank(String value) {
+        return value == null || value.isBlank();
+    }
+
+    private boolean sameLocation(WeddingSiteContent.Moment first, WeddingSiteContent.Moment other) {
+        return Objects.equals(normalize(first.venue()), normalize(other.venue()))
+                && Objects.equals(normalize(first.address()), normalize(other.address()))
+                && Objects.equals(first.mapUrl(), other.mapUrl());
+    }
+
+    private String normalize(String value) {
+        return value == null ? null : value.strip();
     }
 
     private WeddingSiteAdminResponse adminResponse(WeddingSite site) {

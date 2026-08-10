@@ -220,53 +220,133 @@
           <strong>Cerimônia e recepção</strong>
           <small>Horários, locais e endereços</small>
         </summary>
-        <div class="event-grid">
-          <fieldset>
-            <legend>Cerimônia</legend>
-            <mat-form-field appearance="outline">
-              <mat-label>Texto superior</mat-label>
-              <input matInput formControlName="ceremonyEyebrow" maxlength="60" />
-            </mat-form-field>
-            <mat-form-field appearance="outline">
-              <mat-label>Título</mat-label>
-              <input matInput formControlName="ceremonyTitle" maxlength="100" />
-            </mat-form-field>
-            <mat-form-field appearance="outline">
-              <mat-label>Horário</mat-label>
-              <input matInput formControlName="ceremonyTime" maxlength="100" />
-            </mat-form-field>
-            <mat-form-field appearance="outline">
-              <mat-label>Local</mat-label>
-              <input matInput formControlName="ceremonyVenue" maxlength="160" />
-            </mat-form-field>
-            <mat-form-field appearance="outline">
-              <mat-label>Endereço</mat-label>
-              <textarea matInput formControlName="ceremonyAddress" maxlength="300"></textarea>
-            </mat-form-field>
+        <div class="event-settings">
+          <fieldset class="location-mode">
+            <legend>Organização dos locais</legend>
+            <div class="location-mode__options" role="group" aria-label="Organização dos locais">
+              <button
+                type="button"
+                [class.location-mode__option--selected]="
+                  form.controls.locationMode.value === 'SHARED'
+                "
+                [attr.aria-pressed]="form.controls.locationMode.value === 'SHARED'"
+                (click)="setLocationMode('SHARED')"
+              >
+                Um local para todo o casamento
+              </button>
+              <button
+                type="button"
+                [class.location-mode__option--selected]="
+                  form.controls.locationMode.value === 'SEPARATE'
+                "
+                [attr.aria-pressed]="form.controls.locationMode.value === 'SEPARATE'"
+                (click)="setLocationMode('SEPARATE')"
+              >
+                Locais separados
+              </button>
+            </div>
           </fieldset>
-          <fieldset>
-            <legend>Recepção</legend>
-            <mat-form-field appearance="outline">
-              <mat-label>Texto superior</mat-label>
-              <input matInput formControlName="receptionEyebrow" maxlength="60" />
-            </mat-form-field>
-            <mat-form-field appearance="outline">
-              <mat-label>Título</mat-label>
-              <input matInput formControlName="receptionTitle" maxlength="100" />
-            </mat-form-field>
-            <mat-form-field appearance="outline">
-              <mat-label>Horário</mat-label>
-              <input matInput formControlName="receptionTime" maxlength="100" />
-            </mat-form-field>
-            <mat-form-field appearance="outline">
-              <mat-label>Local</mat-label>
-              <input matInput formControlName="receptionVenue" maxlength="160" />
-            </mat-form-field>
-            <mat-form-field appearance="outline">
-              <mat-label>Endereço</mat-label>
-              <textarea matInput formControlName="receptionAddress" maxlength="300"></textarea>
-            </mat-form-field>
-          </fieldset>
+
+          @if (form.controls.locationMode.value === 'SHARED') {
+            <fieldset class="shared-location">
+              <legend>Local compartilhado</legend>
+              <mat-form-field appearance="outline">
+                <mat-label>Nome do local</mat-label>
+                <input matInput formControlName="ceremonyVenue" maxlength="160" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Endereço</mat-label>
+                <textarea matInput formControlName="ceremonyAddress" maxlength="300"></textarea>
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Link do Google Maps (opcional)</mat-label>
+                <input matInput type="url" formControlName="ceremonyMapUrl" maxlength="2048" />
+                <mat-hint>Cole um link HTTPS compartilhado pelo Google Maps.</mat-hint>
+                @if (form.controls.ceremonyMapUrl.hasError('googleMapsUrl')) {
+                  <mat-error>Informe um link HTTPS válido do Google Maps.</mat-error>
+                }
+              </mat-form-field>
+            </fieldset>
+          }
+
+          <div class="event-grid">
+            <fieldset [class.event-card--hidden]="!form.controls.ceremonyVisible.value">
+              <legend>
+                <span>Cerimônia</span>
+                <label class="visibility-toggle">
+                  <input type="checkbox" formControlName="ceremonyVisible" />
+                  Mostrar no site
+                </label>
+              </legend>
+              <mat-form-field appearance="outline">
+                <mat-label>Texto superior</mat-label>
+                <input matInput formControlName="ceremonyEyebrow" maxlength="60" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Título</mat-label>
+                <input matInput formControlName="ceremonyTitle" maxlength="100" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Horário</mat-label>
+                <input matInput formControlName="ceremonyTime" maxlength="100" />
+              </mat-form-field>
+              @if (form.controls.locationMode.value === 'SEPARATE') {
+                <mat-form-field appearance="outline">
+                  <mat-label>Local</mat-label>
+                  <input matInput formControlName="ceremonyVenue" maxlength="160" />
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Endereço</mat-label>
+                  <textarea matInput formControlName="ceremonyAddress" maxlength="300"></textarea>
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Link do Google Maps (opcional)</mat-label>
+                  <input matInput type="url" formControlName="ceremonyMapUrl" maxlength="2048" />
+                  @if (form.controls.ceremonyMapUrl.hasError('googleMapsUrl')) {
+                    <mat-error>Informe um link HTTPS válido do Google Maps.</mat-error>
+                  }
+                </mat-form-field>
+              }
+            </fieldset>
+            <fieldset [class.event-card--hidden]="!form.controls.receptionVisible.value">
+              <legend>
+                <span>Recepção</span>
+                <label class="visibility-toggle">
+                  <input type="checkbox" formControlName="receptionVisible" />
+                  Mostrar no site
+                </label>
+              </legend>
+              <mat-form-field appearance="outline">
+                <mat-label>Texto superior</mat-label>
+                <input matInput formControlName="receptionEyebrow" maxlength="60" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Título</mat-label>
+                <input matInput formControlName="receptionTitle" maxlength="100" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Horário</mat-label>
+                <input matInput formControlName="receptionTime" maxlength="100" />
+              </mat-form-field>
+              @if (form.controls.locationMode.value === 'SEPARATE') {
+                <mat-form-field appearance="outline">
+                  <mat-label>Local</mat-label>
+                  <input matInput formControlName="receptionVenue" maxlength="160" />
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Endereço</mat-label>
+                  <textarea matInput formControlName="receptionAddress" maxlength="300"></textarea>
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Link do Google Maps (opcional)</mat-label>
+                  <input matInput type="url" formControlName="receptionMapUrl" maxlength="2048" />
+                  @if (form.controls.receptionMapUrl.hasError('googleMapsUrl')) {
+                    <mat-error>Informe um link HTTPS válido do Google Maps.</mat-error>
+                  }
+                </mat-form-field>
+              }
+            </fieldset>
+          </div>
         </div>
       </details>
 

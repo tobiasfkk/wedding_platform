@@ -20,7 +20,8 @@ public record WeddingSiteContent(
         @NotNull @Valid Rsvp rsvp,
         @NotNull @Size(min = 4, max = 4, message = "A ordem deve conter todas as seções.")
                 List<@NotNull SiteSectionType> sectionOrder,
-        @NotNull @Size(max = 10, message = "Selecione no máximo 10 fotos.") List<@Valid Photo> photos) {
+        @NotNull @Size(max = 10, message = "Selecione no máximo 10 fotos.") List<@Valid Photo> photos,
+        @NotNull SiteLocationMode locationMode) {
 
     public WeddingSiteContent {
         schedule = schedule == null ? null : List.copyOf(schedule);
@@ -40,6 +41,7 @@ public record WeddingSiteContent(
         } else {
             photos = List.copyOf(photos);
         }
+        locationMode = locationMode == null ? SiteLocationMode.SEPARATE : locationMode;
     }
 
     public record Hero(
@@ -67,8 +69,16 @@ public record WeddingSiteContent(
             @NotBlank @Size(max = 60) String eyebrow,
             @NotBlank @Size(max = 100) String title,
             @NotBlank @Size(max = 100) String time,
-            @NotBlank @Size(max = 160) String venue,
-            @NotBlank @Size(max = 300) String address) {}
+            @Size(max = 160) String venue,
+            @Size(max = 300) String address,
+            @NotNull Boolean visible,
+            @Size(max = 2048) String mapUrl) {
+
+        public Moment {
+            visible = visible == null ? Boolean.TRUE : visible;
+            mapUrl = mapUrl == null || mapUrl.isBlank() ? null : mapUrl.strip();
+        }
+    }
 
     public record Photo(
             @NotNull UUID id,

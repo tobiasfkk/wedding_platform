@@ -17,6 +17,7 @@ const publishedSite = {
       imageWidth: null,
       imageHeight: null,
     },
+    locationMode: 'SHARED',
     schedule: [
       {
         type: 'CEREMONY',
@@ -25,14 +26,18 @@ const publishedSite = {
         time: '16h',
         venue: 'Espaço Jardim',
         address: 'Rua das Flores, 100',
+        visible: true,
+        mapUrl: 'https://maps.app.goo.gl/example',
       },
       {
         type: 'RECEPTION',
         eyebrow: '02 · Recepção',
         title: 'Vamos celebrar',
         time: 'Após a cerimônia',
-        venue: 'Salão Jardim',
-        address: 'No mesmo local',
+        venue: 'Espaço Jardim',
+        address: 'Rua das Flores, 100',
+        visible: true,
+        mapUrl: 'https://maps.app.goo.gl/example',
       },
     ],
     notices: ['Chegue com antecedência.'],
@@ -112,6 +117,14 @@ for (const width of [320, 390, 430]) {
     await expect(storyPhoto).toBeVisible();
     await expect(storyPhoto).toHaveAttribute('loading', 'lazy');
     await expect(storyPhoto).toHaveAttribute('srcset', /width=480/);
+
+    const sharedLocation = page.locator('.shared-location-card');
+    await sharedLocation.scrollIntoViewIfNeeded();
+    await expect(sharedLocation).toBeVisible();
+    await expect(sharedLocation).toContainText('Espaço Jardim');
+    const mapLink = sharedLocation.getByRole('link', { name: 'Abrir no Google Maps' });
+    await expect(mapLink).toHaveAttribute('rel', /noopener/);
+    expect((await mapLink.boundingBox())?.height).toBeGreaterThanOrEqual(44);
 
     const rsvpAction = page.getByRole('link', { name: 'Responder ao convite' });
     await rsvpAction.scrollIntoViewIfNeeded();

@@ -98,17 +98,48 @@
                     <dt>Quando</dt>
                     <dd>{{ moment.time }}</dd>
                   </div>
-                  <div>
-                    <dt>Onde</dt>
-                    <dd>
-                      <strong>{{ moment.venue }}</strong>
-                      <span>{{ moment.address }}</span>
-                    </dd>
-                  </div>
+                  @if (content.locationMode === 'SEPARATE') {
+                    <div>
+                      <dt>Onde</dt>
+                      <dd>
+                        <strong>{{ moment.venue }}</strong>
+                        <span>{{ moment.address }}</span>
+                        @if (moment.mapUrl) {
+                          <a
+                            class="map-link"
+                            [href]="moment.mapUrl"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            Abrir no Google Maps
+                          </a>
+                        }
+                      </dd>
+                    </div>
+                  }
                 </dl>
               </article>
             }
           </div>
+          @if (content.locationMode === 'SHARED') {
+            @if (content.schedule[0]; as sharedMoment) {
+              <article class="shared-location-card section-shell reveal">
+                <p class="section-label">Um só lugar</p>
+                <h3>{{ sharedMoment.venue }}</h3>
+                <p>{{ sharedMoment.address }}</p>
+                @if (sharedMoment.mapUrl) {
+                  <a
+                    class="map-link"
+                    [href]="sharedMoment.mapUrl"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Abrir no Google Maps
+                  </a>
+                }
+              </article>
+            }
+          }
         </section>
         @for (photo of photosFor('SCHEDULE'); track photo.id) {
           <figure class="photo-chapter">
