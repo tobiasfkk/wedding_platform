@@ -4,7 +4,9 @@ import { of } from 'rxjs';
 import { vi } from 'vitest';
 
 import { SITE_CONTENT_DTO } from '../public-site/public-site.testing';
-import { SiteContentEditor } from './site-content-editor';
+import { FormControl } from '@angular/forms';
+
+import { googleMapsUrlValidator, SiteContentEditor } from './site-content-editor';
 import { SiteContentService, WeddingSiteAdminState } from './site-content.service';
 
 const state: WeddingSiteAdminState = {
@@ -130,5 +132,60 @@ describe('SiteContentEditor', () => {
 
     expect(service.saveDraft).not.toHaveBeenCalled();
     expect(component.errorMessage()).toContain('Descreva todas as fotos');
+  });
+
+  it('persists one shared location without duplicating admin input', () => {
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    const fixture = TestBed.createComponent(SiteContentEditor);
+    fixture.detectChanges();
+    const component = fixture.componentInstance;
+
+    component.setLocationMode('SHARED');
+    component.form.controls.ceremonyMapUrl.setValue(
+      'https://www.google.com/maps/place/Espaco+Jardim',
+    );
+    component.save();
+
+    expect(service.saveDraft).toHaveBeenCalledWith(
+      2,
+      expect.objectContaining({
+        locationMode: 'SHARED',
+        schedule: [
+          expect.objectContaining({
+            visible: true,
+            venue: 'Espaço Jardim',
+            mapUrl: 'https://www.google.com/maps/place/Espaco+Jardim',
+          }),
+          expect.objectContaining({
+            visible: true,
+            venue: 'Espaço Jardim',
+            mapUrl: 'https://www.google.com/maps/place/Espaco+Jardim',
+          }),
+        ],
+      }),
+    );
+  });
+
+  it('requires one visible moment and validates Google Maps links', () => {
+    const fixture = TestBed.createComponent(SiteContentEditor);
+    fixture.detectChanges();
+    const component = fixture.componentInstance;
+    component.form.controls.ceremonyVisible.setValue(false);
+    component.form.controls.receptionVisible.setValue(false);
+
+    component.save();
+
+    expect(service.saveDraft).not.toHaveBeenCalled();
+    expect(component.errorMessage()).toContain('cerimônia ou a recepção');
+    expect(
+      googleMapsUrlValidator(
+        new FormControl('https://maps.app.goo.gl/example', { nonNullable: true }),
+      ),
+    ).toBeNull();
+    expect(
+      googleMapsUrlValidator(new FormControl('javascript:alert(1)', { nonNullable: true })),
+    ).toEqual({
+      googleMapsUrl: true,
+    });
   });
 });

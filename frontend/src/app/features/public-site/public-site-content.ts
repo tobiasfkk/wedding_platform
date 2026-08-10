@@ -11,6 +11,7 @@ export interface PublicWeddingContent {
     paragraphs: readonly string[];
     image: PublicWeddingImage | null;
   };
+  locationMode: PublicLocationMode;
   schedule: readonly PublicWeddingMoment[];
   notices: readonly string[];
   rsvp: {
@@ -24,6 +25,7 @@ export interface PublicWeddingContent {
 
 export type PublicSiteSection = 'STORY' | 'SCHEDULE' | 'NOTICES' | 'RSVP';
 export type PublicPhotoPlacement = 'HERO' | PublicSiteSection;
+export type PublicLocationMode = 'SHARED' | 'SEPARATE';
 
 export interface PublicWeddingImage {
   src: string;
@@ -48,6 +50,7 @@ export interface PublicWeddingMoment {
   time: string;
   venue: string;
   address: string;
+  mapUrl: string | null;
 }
 
 /** Conteúdo inicial do editor e fixture compartilhada pelos testes do renderizador. */
@@ -68,6 +71,7 @@ export const PUBLIC_WEDDING_CONTENT: PublicWeddingContent = {
     ],
     image: null,
   },
+  locationMode: 'SEPARATE',
   schedule: [
     {
       eyebrow: '01 · Cerimônia',
@@ -75,6 +79,7 @@ export const PUBLIC_WEDDING_CONTENT: PublicWeddingContent = {
       time: 'Horário a confirmar',
       venue: 'Local da cerimônia',
       address: 'O endereço será publicado pelos noivos.',
+      mapUrl: 'https://www.google.com/maps/place/Local+da+cerimonia',
     },
     {
       eyebrow: '02 · Recepção',
@@ -82,6 +87,7 @@ export const PUBLIC_WEDDING_CONTENT: PublicWeddingContent = {
       time: 'Após a cerimônia',
       venue: 'Local da recepção',
       address: 'Os detalhes serão publicados pelos noivos.',
+      mapUrl: null,
     },
   ],
   notices: [

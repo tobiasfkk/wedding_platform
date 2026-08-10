@@ -3,6 +3,7 @@ import { inject, Injectable } from '@angular/core';
 import { map, Observable } from 'rxjs';
 
 import {
+  PublicLocationMode,
   PublicSiteSection,
   PublicPhotoPlacement,
   PublicWeddingContent,
@@ -22,7 +23,14 @@ export interface WeddingSiteContentDto {
     imageWidth: number | null;
     imageHeight: number | null;
   };
-  schedule: Array<PublicWeddingMoment & { type: SiteMomentType }>;
+  schedule: Array<
+    Omit<PublicWeddingMoment, 'mapUrl'> & {
+      type: SiteMomentType;
+      visible?: boolean;
+      mapUrl?: string | null;
+    }
+  >;
+  locationMode?: PublicLocationMode;
   notices: string[];
   rsvp: PublicWeddingContent['rsvp'];
   sectionOrder: PublicSiteSection[];
@@ -70,6 +78,7 @@ export function toPublicWeddingContent(
   });
   return {
     hero: content.hero,
+    locationMode: content.locationMode ?? 'SEPARATE',
     story: {
       eyebrow: story.eyebrow,
       title: story.title,
@@ -84,7 +93,16 @@ export function toPublicWeddingContent(
             }
           : null,
     },
-    schedule: content.schedule,
+    schedule: content.schedule
+      .filter((moment) => moment.visible !== false)
+      .map((moment) => ({
+        eyebrow: moment.eyebrow,
+        title: moment.title,
+        time: moment.time,
+        venue: moment.venue,
+        address: moment.address,
+        mapUrl: moment.mapUrl ?? null,
+      })),
     notices: content.notices,
     rsvp: content.rsvp,
     sectionOrder: content.sectionOrder,

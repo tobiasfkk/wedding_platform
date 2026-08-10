@@ -11,18 +11,27 @@ class WeddingSiteContentCompatibilityTest {
     private final JsonMapper objectMapper = JsonMapper.builder().build();
 
     @Test
-    void readsDraftsCreatedBeforeThePhotoCollectionExisted() throws Exception {
-        String currentJson = objectMapper.writeValueAsString(DefaultWeddingSiteContent.create());
-        String legacyJson = currentJson.replace(",\"photos\":[]", "");
+    void readsDraftsCreatedBeforePhotosAndLocationOptionsExisted() throws Exception {
+        String currentJson = objectMapper.writeValueAsString(DefaultWeddingSiteContent.create("Espaço Jardim"));
+        String legacyJson = currentJson
+                .replace(",\"photos\":[]", "")
+                .replace(",\"locationMode\":\"SHARED\"", "")
+                .replace(",\"visible\":true", "")
+                .replace(",\"mapUrl\":null", "");
 
         WeddingSiteContent content = objectMapper.readValue(legacyJson, WeddingSiteContent.class);
 
         assertThat(content.photos()).isEmpty();
+        assertThat(content.locationMode()).isEqualTo(SiteLocationMode.SEPARATE);
+        assertThat(content.schedule()).allSatisfy(moment -> {
+            assertThat(moment.visible()).isTrue();
+            assertThat(moment.mapUrl()).isNull();
+        });
     }
 
     @Test
     void migratesTheLegacyStoryImageIntoTheNarrative() {
-        WeddingSiteContent current = DefaultWeddingSiteContent.create();
+        WeddingSiteContent current = DefaultWeddingSiteContent.create("Espaço Jardim");
         UUID mediaId = UUID.randomUUID();
         WeddingSiteContent.Story legacyStory = new WeddingSiteContent.Story(
                 current.story().eyebrow(),
@@ -40,7 +49,8 @@ class WeddingSiteContentCompatibilityTest {
                 current.notices(),
                 current.rsvp(),
                 current.sectionOrder(),
-                null);
+                null,
+                current.locationMode());
 
         assertThat(migrated.photos())
                 .singleElement()

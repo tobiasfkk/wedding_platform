@@ -1,6 +1,13 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, HostListener, inject, signal } from '@angular/core';
-import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+  AbstractControl,
+  FormControl,
+  FormGroup,
+  ReactiveFormsModule,
+  ValidationErrors,
+  Validators,
+} from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -9,6 +16,7 @@ import { finalize } from 'rxjs';
 
 import {
   PublicPhotoPlacement,
+  PublicLocationMode,
   PublicSiteSection,
   PublicWeddingContent,
 } from '../public-site/public-site-content';
@@ -35,6 +43,29 @@ interface SitePhotoEditor extends SiteMediaUpload {
 type EditorFormValue = ReturnType<SiteContentEditor['form']['getRawValue']>;
 
 const requiredText = (maximum: number) => [Validators.required, Validators.maxLength(maximum)];
+const googleMapsHosts = new Set([
+  'google.com',
+  'www.google.com',
+  'maps.google.com',
+  'google.com.br',
+  'www.google.com.br',
+  'maps.google.com.br',
+  'maps.app.goo.gl',
+  'goo.gl',
+]);
+
+export function googleMapsUrlValidator(control: AbstractControl<string>): ValidationErrors | null {
+  const value = control.value.trim();
+  if (!value) return null;
+  try {
+    const url = new URL(value);
+    return url.protocol === 'https:' && googleMapsHosts.has(url.hostname.toLowerCase())
+      ? null
+      : { googleMapsUrl: true };
+  } catch {
+    return { googleMapsUrl: true };
+  }
+}
 
 @Component({
   selector: 'app-site-content-editor',
@@ -82,16 +113,39 @@ export class SiteContentEditor {
     storyEyebrow: new FormControl('', { nonNullable: true, validators: requiredText(60) }),
     storyTitle: new FormControl('', { nonNullable: true, validators: requiredText(120) }),
     storyParagraphs: new FormControl('', { nonNullable: true, validators: requiredText(3000) }),
+    locationMode: new FormControl<PublicLocationMode>('SHARED', { nonNullable: true }),
+    ceremonyVisible: new FormControl(true, { nonNullable: true }),
     ceremonyEyebrow: new FormControl('', { nonNullable: true, validators: requiredText(60) }),
     ceremonyTitle: new FormControl('', { nonNullable: true, validators: requiredText(100) }),
     ceremonyTime: new FormControl('', { nonNullable: true, validators: requiredText(100) }),
-    ceremonyVenue: new FormControl('', { nonNullable: true, validators: requiredText(160) }),
-    ceremonyAddress: new FormControl('', { nonNullable: true, validators: requiredText(300) }),
+    ceremonyVenue: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.maxLength(160)],
+    }),
+    ceremonyAddress: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.maxLength(300)],
+    }),
+    ceremonyMapUrl: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.maxLength(2048), googleMapsUrlValidator],
+    }),
+    receptionVisible: new FormControl(true, { nonNullable: true }),
     receptionEyebrow: new FormControl('', { nonNullable: true, validators: requiredText(60) }),
     receptionTitle: new FormControl('', { nonNullable: true, validators: requiredText(100) }),
     receptionTime: new FormControl('', { nonNullable: true, validators: requiredText(100) }),
-    receptionVenue: new FormControl('', { nonNullable: true, validators: requiredText(160) }),
-    receptionAddress: new FormControl('', { nonNullable: true, validators: requiredText(300) }),
+    receptionVenue: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.maxLength(160)],
+    }),
+    receptionAddress: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.maxLength(300)],
+    }),
+    receptionMapUrl: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.maxLength(2048), googleMapsUrlValidator],
+    }),
     notices: new FormControl('', { nonNullable: true, validators: requiredText(2400) }),
     rsvpEyebrow: new FormControl('', { nonNullable: true, validators: requiredText(60) }),
     rsvpTitle: new FormControl('', { nonNullable: true, validators: requiredText(140) }),
@@ -268,6 +322,34 @@ export class SiteContentEditor {
     }[placement];
   }
 
+  setLocationMode(mode: PublicLocationMode): void {
+    const controls = this.form.controls;
+    if (controls.locationMode.value === mode) return;
+    if (
+      mode === 'SHARED' &&
+      this.locationsDiffer() &&
+      !window.confirm(
+        'Usar um local único substituirá os dados diferentes de cerimônia e recepção ao salvar. Continuar?',
+      )
+    ) {
+      return;
+    }
+    if (mode === 'SHARED') {
+      const source = controls.ceremonyVisible.value ? 'ceremony' : 'reception';
+      const venue = controls[`${source}Venue`].value;
+      const address = controls[`${source}Address`].value;
+      const mapUrl = controls[`${source}MapUrl`].value;
+      controls.ceremonyVenue.setValue(venue);
+      controls.ceremonyAddress.setValue(address);
+      controls.ceremonyMapUrl.setValue(mapUrl);
+      controls.receptionVenue.setValue(venue);
+      controls.receptionAddress.setValue(address);
+      controls.receptionMapUrl.setValue(mapUrl);
+    }
+    controls.locationMode.setValue(mode);
+    this.form.markAsDirty();
+  }
+
   moveSection(index: number, direction: -1 | 1): void {
     const target = index + direction;
     const order = [...this.sectionOrder()];
@@ -299,6 +381,14 @@ export class SiteContentEditor {
       this.errorMessage.set('Informe ao menos um parágrafo da história e um aviso.');
       return null;
     }
+    if (!value.ceremonyVisible && !value.receptionVisible) {
+      this.errorMessage.set('Mantenha a cerimônia ou a recepção visível.');
+      return null;
+    }
+    if (!this.hasRequiredLocations(value)) {
+      this.errorMessage.set('Informe o local e o endereço de cada momento visível.');
+      return null;
+    }
     const photos = this.photos();
     if (photos.some((photo) => !photo.alt.trim())) {
       this.errorMessage.set('Descreva todas as fotos para pessoas que não podem vê-las.');
@@ -324,6 +414,7 @@ export class SiteContentEditor {
         this.moment('CEREMONY', value, 'ceremony'),
         this.moment('RECEPTION', value, 'reception'),
       ],
+      locationMode: value.locationMode,
       notices,
       rsvp: {
         eyebrow: value.rsvpEyebrow.trim(),
@@ -348,16 +439,39 @@ export class SiteContentEditor {
     value: EditorFormValue,
     prefix: 'ceremony' | 'reception',
   ): WeddingSiteContentDto['schedule'][number] {
-    const field = (suffix: 'Eyebrow' | 'Title' | 'Time' | 'Venue' | 'Address') =>
+    const field = (suffix: 'Eyebrow' | 'Title' | 'Time' | 'Venue' | 'Address' | 'MapUrl') =>
       value[`${prefix}${suffix}`].trim();
+    const shared = value.locationMode === 'SHARED';
     return {
       type,
       eyebrow: field('Eyebrow'),
       title: field('Title'),
       time: field('Time'),
-      venue: field('Venue'),
-      address: field('Address'),
+      venue: shared ? value.ceremonyVenue.trim() : field('Venue'),
+      address: shared ? value.ceremonyAddress.trim() : field('Address'),
+      visible: value[`${prefix}Visible`],
+      mapUrl: (shared ? value.ceremonyMapUrl.trim() : field('MapUrl')) || null,
     };
+  }
+
+  private hasRequiredLocations(value: EditorFormValue): boolean {
+    if (value.locationMode === 'SHARED') {
+      return Boolean(value.ceremonyVenue.trim() && value.ceremonyAddress.trim());
+    }
+    return (['ceremony', 'reception'] as const).every(
+      (prefix) =>
+        !value[`${prefix}Visible`] ||
+        Boolean(value[`${prefix}Venue`].trim() && value[`${prefix}Address`].trim()),
+    );
+  }
+
+  private locationsDiffer(): boolean {
+    const value = this.form.getRawValue();
+    return (
+      value.ceremonyVenue.trim() !== value.receptionVenue.trim() ||
+      value.ceremonyAddress.trim() !== value.receptionAddress.trim() ||
+      value.ceremonyMapUrl.trim() !== value.receptionMapUrl.trim()
+    );
   }
 
   private lines(value: string, maximum: number): string[] {
@@ -380,16 +494,21 @@ export class SiteContentEditor {
       storyEyebrow: draft.story.eyebrow,
       storyTitle: draft.story.title,
       storyParagraphs: draft.story.paragraphs.join('\n'),
+      locationMode: draft.locationMode ?? 'SEPARATE',
+      ceremonyVisible: ceremony.visible ?? true,
       ceremonyEyebrow: ceremony.eyebrow,
       ceremonyTitle: ceremony.title,
       ceremonyTime: ceremony.time,
       ceremonyVenue: ceremony.venue,
       ceremonyAddress: ceremony.address,
+      ceremonyMapUrl: ceremony.mapUrl ?? '',
+      receptionVisible: reception.visible ?? true,
       receptionEyebrow: reception.eyebrow,
       receptionTitle: reception.title,
       receptionTime: reception.time,
       receptionVenue: reception.venue,
       receptionAddress: reception.address,
+      receptionMapUrl: reception.mapUrl ?? '',
       notices: draft.notices.join('\n'),
       rsvpEyebrow: draft.rsvp.eyebrow,
       rsvpTitle: draft.rsvp.title,
