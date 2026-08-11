@@ -1,8 +1,8 @@
 # Wedding Platform — Especificação do Produto e Plano de Engenharia
 
-> Status: aprovado como baseline inicial<br>
-> Versão: 1.0.0<br>
-> Última atualização: 29/07/2026<br>
+> Status: aprovado e atualizado para sites personalizados<br>
+> Versão: 2.1.0<br>
+> Última atualização: 11/08/2026<br>
 > Responsável: Tobias Felipe Kiefer
 
 ## 1. Propósito deste documento
@@ -13,7 +13,12 @@ O documento deve evoluir junto com o produto. Alterações relevantes de escopo,
 
 ## 2. Resumo executivo
 
-A Wedding Platform será uma aplicação web para centralizar informações de um casamento e simplificar a gestão de convidados e confirmações de presença. Os noivos poderão configurar o evento, administrar convidados, gerar convites individuais e acompanhar respostas. Os convidados poderão consultar as informações públicas e responder ao convite por meio de um código individual, sem precisar criar uma conta.
+A Wedding Platform será uma aplicação web para oferecer uma experiência pública exclusiva para cada
+casamento e simplificar a gestão de convidados e confirmações de presença. O site será desenhado e
+implementado por um desenvolvedor frontend conforme o projeto aprovado pelo cliente. Os noivos
+poderão administrar convidados, gerar convites individuais e acompanhar respostas. Os convidados
+poderão consultar o site e responder ao convite por meio de um
+código individual, sem precisar criar uma conta.
 
 Além de entregar um produto utilizável, o projeto será desenvolvido como exercício prático de engenharia de software. A solução deverá demonstrar análise de requisitos, arquitetura evolutiva, qualidade automatizada, segurança, observabilidade, entrega contínua e operação em ambiente publicado.
 
@@ -25,7 +30,9 @@ A organização de um casamento distribui informações e tarefas entre planilha
 
 ### 3.2 Proposta de valor
 
-Oferecer aos noivos um único lugar para publicar informações e administrar convites, enquanto o convidado recebe uma experiência simples, responsiva e personalizada para consultar o evento e confirmar presença.
+Oferecer aos noivos uma experiência digital exclusiva e um único lugar para administrar convites,
+enquanto o convidado recebe um site responsivo e personalizado para conhecer o evento e confirmar
+presença.
 
 ### 3.3 Objetivos do produto
 
@@ -51,7 +58,7 @@ Oferecer aos noivos um único lugar para publicar informações e administrar co
 
 O MVP será considerado bem-sucedido quando:
 
-- os noivos conseguirem configurar e publicar um casamento;
+- o site personalizado aprovado puder ser publicado pelo fluxo de entrega do frontend;
 - for possível cadastrar ou importar todos os convidados necessários;
 - cada grupo familiar receber um convite identificável por código único;
 - um convidado conseguir confirmar ou recusar presença pelo celular;
@@ -66,23 +73,24 @@ O MVP será considerado bem-sucedido quando:
 
 #### Site público
 
-- Página inicial do casamento.
+- Página exclusiva, desenhada e implementada diretamente no frontend.
 - Identificação do casal, data e horário do evento.
 - Informações de cerimônia e recepção.
 - Orientações importantes, como traje, estacionamento e contato.
+- Conteúdo editorial, imagens e identidade visual versionados com o código.
 - Layout responsivo e acessível.
 - Acesso à confirmação de presença.
 
 #### Administração
 
 - Login e logout dos administradores.
-- Configuração dos dados básicos do casamento.
 - Cadastro, edição, consulta e inativação de convidados.
 - Organização de convidados por convite ou grupo familiar.
 - Definição do limite de acompanhantes por convite.
 - Geração de código e link individual de convite.
 - Consulta e filtro de respostas.
 - Dashboard com confirmados, recusas e pendentes.
+- Configuração da data e do horário-limite para confirmações públicas.
 - Visualização de acompanhantes e restrições alimentares.
 
 #### Confirmação de presença
@@ -92,7 +100,7 @@ O MVP será considerado bem-sucedido quando:
 - Confirmação ou recusa de presença por pessoa elegível.
 - Cadastro de acompanhantes dentro do limite permitido.
 - Registro de restrições alimentares.
-- Alteração da resposta até a data-limite definida.
+- Alteração da resposta enquanto o convite estiver ativo e dentro do prazo de RSVP.
 - Confirmação visual de que a resposta foi salva.
 
 ### 4.2 Fora do escopo do MVP
@@ -109,6 +117,8 @@ Os itens abaixo pertencem ao roadmap e não devem bloquear a primeira entrega:
 - Marketplace de fornecedores.
 - Arquitetura distribuída em microsserviços.
 - Alta disponibilidade multi-região.
+- Editor visual, CMS, temas configuráveis ou autonomia administrativa sobre o site público.
+- Persistência de layout, conteúdo editorial ou imagens do site no backend.
 
 ### 4.3 Premissas iniciais
 
@@ -116,42 +126,42 @@ Os itens abaixo pertencem ao roadmap e não devem bloquear a primeira entrega:
 - Haverá inicialmente um ou dois administradores, normalmente os noivos.
 - Convidados não precisarão criar conta; o código do convite dará acesso somente aos dados necessários para responder.
 - O idioma inicial será português do Brasil.
-- Datas e horários serão armazenados de forma não ambígua e apresentados no fuso configurado para o evento.
 - O canal de distribuição do link do convite será manual no MVP.
+- Alterações no site público serão solicitadas ao desenvolvedor frontend e publicadas como código.
 
 ## 5. Stakeholders e atores
 
 | Ator | Interesse | Responsabilidades principais |
 |---|---|---|
-| Noivos/administradores | Organizar o evento e acompanhar respostas | Configurar evento, administrar convidados e consultar indicadores |
+| Noivos/administradores | Organizar convidados e acompanhar respostas | Administrar convidados, convites e confirmações |
+| Desenvolvedor frontend | Entregar a experiência exclusiva aprovada | Implementar, testar e publicar design, conteúdo editorial e imagens |
 | Convidado responsável | Responder por seu convite ou grupo | Confirmar presença e manter os dados do grupo corretos |
 | Acompanhante | Participar associado a um convite | Informar nome e, quando aplicável, restrição alimentar |
-| Operador técnico | Manter o sistema disponível e seguro | Publicar, monitorar, realizar backup e tratar incidentes |
-| Visitante | Consultar informações públicas | Navegar apenas pelo conteúdo publicado |
+| Operador técnico | Manter o sistema disponível e seguro | Monitorar, realizar backup e tratar incidentes |
+| Visitante | Consultar informações públicas | Navegar pelo site aprovado do casamento |
 
 ## 6. Glossário do domínio
 
 | Termo | Definição |
 |---|---|
-| Casamento | Evento configurado e publicado na plataforma |
+| Casamento | Evento apresentado por um site frontend próprio |
 | Administrador | Usuário autenticado autorizado a gerenciar o casamento |
 | Convidado | Pessoa previamente cadastrada e vinculada a um convite |
 | Convite | Unidade de acesso que agrupa um ou mais convidados e define permissões de resposta |
 | Responsável pelo convite | Pessoa que utiliza o código e responde pelo grupo |
 | Acompanhante | Pessoa adicionada durante a resposta, quando o convite permite |
 | RSVP | Resposta de presença: confirmada, recusada ou pendente |
-| Data-limite | Instante após o qual o convidado não pode alterar a resposta sem intervenção do administrador |
 | Restrição alimentar | Informação declarada para apoiar o planejamento do buffet |
 
 ## 7. Jornadas principais
 
-### 7.1 Preparar e publicar o evento
+### 7.1 Preparar e publicar o site
 
-1. O administrador entra na área restrita.
-2. Configura casal, data, locais, textos e data-limite de confirmação.
-3. Revisa uma prévia do site.
-4. Publica o evento.
-5. Visitantes passam a visualizar somente os dados marcados como públicos.
+1. O cliente fornece briefing, conteúdo e referências visuais.
+2. O desenvolvedor frontend implementa o site exclusivo em código.
+3. O cliente revisa e aprova a experiência.
+4. O desenvolvedor valida responsividade, acessibilidade, desempenho e integração com RSVP.
+5. A versão aprovada é publicada pelo pipeline do repositório.
 
 ### 7.2 Cadastrar e convidar um grupo
 
@@ -181,15 +191,7 @@ Os itens abaixo pertencem ao roadmap e não devem bloquear a primeira entrega:
 
 Cada regra possui um identificador estável para ser referenciada em histórias, testes e commits.
 
-### 8.1 Evento e publicação
-
-- **RN-EVT-001:** um casamento deve possuir nome de exibição, data, horário e ao menos um local antes de ser publicado.
-- **RN-EVT-002:** alterações salvas como rascunho não devem aparecer no site público até a publicação.
-- **RN-EVT-003:** a data-limite de RSVP não pode ser posterior ao início do evento.
-- **RN-EVT-004:** somente administradores autorizados podem publicar, despublicar ou alterar o evento.
-- **RN-EVT-005:** conteúdo não publicado ou desativado não pode ser consultado por visitantes.
-
-### 8.2 Convites e convidados
+### 8.1 Convites e convidados
 
 - **RN-INV-001:** todo convite ativo deve possuir um código único, aleatório, não sequencial e não reutilizado.
 - **RN-INV-002:** um convidado previamente cadastrado pertence a somente um convite ativo no mesmo casamento.
@@ -199,20 +201,21 @@ Cada regra possui um identificador estável para ser referenciada em histórias,
 - **RN-INV-006:** dados de outros convites nunca devem ser expostos ao convidado.
 - **RN-INV-007:** o administrador pode regenerar o código; ao fazê-lo, o código anterior deve deixar de funcionar.
 
-### 8.3 RSVP
+### 8.2 RSVP
 
 - **RN-RSVP-001:** cada pessoa vinculada ao convite pode estar com resposta pendente, confirmada ou recusada.
 - **RN-RSVP-002:** uma resposta só pode incluir pessoas vinculadas ao convite acessado.
 - **RN-RSVP-003:** o total de acompanhantes adicionados não pode ultrapassar o limite do convite.
 - **RN-RSVP-004:** o nome de cada acompanhante confirmado é obrigatório.
-- **RN-RSVP-005:** antes da data-limite, o responsável pode revisar e alterar a resposta.
-- **RN-RSVP-006:** após a data-limite, somente um administrador pode criar ou alterar respostas.
+- **RN-RSVP-005:** enquanto o convite estiver ativo e o prazo não tiver encerrado, o responsável pode revisar e alterar a resposta.
+- **RN-RSVP-006:** um administrador pode criar ou corrigir respostas pela área restrita.
 - **RN-RSVP-007:** toda alteração deve registrar data, origem e, quando autenticado, autor.
 - **RN-RSVP-008:** reenvios da mesma operação não podem gerar acompanhantes ou respostas duplicadas.
 - **RN-RSVP-009:** a confirmação deve ser transacional: ou todas as alterações válidas do grupo são salvas, ou nenhuma é.
 - **RN-RSVP-010:** o dashboard deve refletir apenas a versão mais recente de cada resposta, sem perder o histórico de mudanças.
+- **RN-RSVP-011:** após o prazo, o convidado pode consultar a resposta mais recente, mas não alterá-la; o administrador continua autorizado a corrigi-la.
 
-### 8.4 Privacidade e retenção
+### 8.3 Privacidade e retenção
 
 - **RN-PRV-001:** somente os dados pessoais estritamente necessários ao evento devem ser coletados.
 - **RN-PRV-002:** restrições alimentares são opcionais e devem ter finalidade claramente informada.
@@ -232,8 +235,6 @@ Cada regra possui um identificador estável para ser referenciada em histórias,
 | ID | Requisito | Prioridade | Fase |
 |---|---|---:|---:|
 | RF-001 | Autenticar e encerrar sessão de administrador | Must | 1 |
-| RF-002 | Consultar e editar configurações do casamento | Must | 1 |
-| RF-003 | Salvar rascunho, visualizar prévia e publicar conteúdo | Must | 2 |
 | RF-004 | Cadastrar, editar, consultar e inativar convidados | Must | 1 |
 | RF-005 | Criar convites e agrupar convidados | Must | 1 |
 | RF-006 | Configurar limite de acompanhantes | Must | 1 |
@@ -242,10 +243,10 @@ Cada regra possui um identificador estável para ser referenciada em histórias,
 | RF-009 | Confirmar ou recusar cada participante | Must | 1 |
 | RF-010 | Adicionar acompanhantes dentro do limite | Must | 1 |
 | RF-011 | Informar restrições alimentares | Must | 1 |
-| RF-012 | Alterar RSVP antes da data-limite | Must | 1 |
+| RF-012 | Alterar RSVP enquanto o convite estiver ativo | Must | 1 |
 | RF-013 | Consultar dashboard e filtrar respostas | Must | 1 |
 | RF-014 | Administrador registrar ou corrigir RSVP | Must | 1 |
-| RF-015 | Exibir site público responsivo | Must | 2 |
+| RF-015 | Exibir site público exclusivo, responsivo e implementado em código | Must | 2 |
 | RF-016 | Importar convidados por arquivo CSV | Should | 3 |
 | RF-017 | Exportar lista e respostas em CSV | Should | 3 |
 | RF-018 | Enviar lembretes por canal integrado | Should | 4 |
@@ -309,7 +310,6 @@ Cada regra possui um identificador estável para ser referenciada em histórias,
 ```mermaid
 erDiagram
     WEDDING ||--o{ ADMINISTRATOR : authorizes
-    WEDDING ||--o{ VENUE : contains
     WEDDING ||--o{ INVITATION : issues
     INVITATION ||--|{ GUEST : groups
     INVITATION ||--o{ COMPANION : allows
@@ -318,10 +318,6 @@ erDiagram
 
     WEDDING {
         uuid id
-        string display_name
-        datetime starts_at
-        datetime rsvp_deadline
-        string status
     }
     INVITATION {
         uuid id
@@ -369,6 +365,9 @@ backend
     └── shared
 ```
 
+O frontend público é específico da instalação. Sua estrutura, conteúdo editorial e ativos são
+implementados diretamente em código e não possuem representação no modelo do backend.
+
 Princípios:
 
 - regras de negócio não dependem de detalhes de interface ou infraestrutura;
@@ -388,7 +387,7 @@ Princípios:
 | Frontend | Angular, TypeScript, Reactive Forms e Angular Material/CDK ([ADR 0005](adr/0005-interface-e-testes-e2e.md)) |
 | Testes frontend | Vitest para testes unitários e Playwright para E2E ([ADR 0005](adr/0005-interface-e-testes-e2e.md)) |
 | Ambiente local | Docker e Docker Compose |
-| Entrada em produção | Cloudflare Pages, AWS App Runner, RDS PostgreSQL e S3 ([ADR 0006](adr/0006-hospedagem-inicial.md)) |
+| Entrada em produção | Cloudflare Pages, AWS App Runner e RDS PostgreSQL ([ADR 0006](adr/0006-hospedagem-inicial.md)) |
 | CI/CD | GitHub Actions |
 | Observabilidade | Actuator, Prometheus, Grafana e solução de logs a decidir |
 | Mensageria futura | RabbitMQ, introduzido primeiro em um caso de uso não crítico |
@@ -412,6 +411,7 @@ Princípios:
 | Organização do código | [ADR 0004 — Monorepo](adr/0004-estrutura-do-repositorio.md) |
 | Interface e E2E | [ADR 0005 — Angular Material e Playwright](adr/0005-interface-e-testes-e2e.md) |
 | Hospedagem e evolução | [ADR 0006 — Cloudflare Pages e AWS](adr/0006-hospedagem-inicial.md) |
+| Site público | [ADR 0007 — Sites personalizados em código](adr/0007-sites-personalizados-em-codigo.md) |
 
 ## 13. Estratégia de qualidade
 
@@ -426,12 +426,11 @@ Princípios:
 
 ### 13.2 Casos críticos obrigatórios
 
-- Código inexistente, expirado, inativo ou regenerado não concede acesso.
+- Código inexistente, inativo ou regenerado não concede acesso.
 - Um convite não permite consultar outro grupo.
 - Limite de acompanhantes não pode ser ultrapassado, inclusive sob requisições concorrentes.
 - Reenvio de uma resposta não duplica dados.
 - Falha parcial não deixa o grupo com uma resposta inconsistente.
-- Data-limite bloqueia alterações públicas, mas permite intervenção administrativa auditada.
 - Dashboard apresenta totais coerentes após criação, alteração e recusa.
 - Dados sensíveis não são expostos em erros ou logs.
 
@@ -506,7 +505,7 @@ O cronograma abaixo considera uma pessoa trabalhando aproximadamente **8 a 12 ho
 |---|---:|---|---|
 | 0. Descoberta e fundação | 1–2 | Requisitos revisados, backlog inicial, repositório, decisões básicas e ambiente local | Projeto inicia localmente; documentação e pipeline mínima existem |
 | 1. MVP de convites e RSVP | 3–8 | Administração, convidados, convites, respostas e dashboard | Fluxo completo passa em testes e pode ser demonstrado em homologação |
-| 2. Site público e lançamento | 9–11 | Conteúdo público responsivo, acabamento, segurança e produção | MVP disponível por HTTPS, monitorado e com backup validado |
+| 2. Site público e lançamento | 9–11 | Site exclusivo em código, acabamento, segurança e produção | MVP disponível por HTTPS, monitorado e com backup validado |
 | 3. Operação e produtividade | 12–14 | Importação/exportação, auditoria melhorada e observabilidade | Operação rotineira pode ser realizada com procedimentos documentados |
 | 4. Comunicação assíncrona | 15–18 | Notificações com RabbitMQ, resiliência e rastreabilidade | Falhas e duplicidades são tratadas sem corromper o estado do RSVP |
 | 5. Funcionalidades avançadas | 19–24 | Check-in, mesas ou galeria, conforme prioridade validada | Incrementos entregues com os mesmos padrões de qualidade |
@@ -527,19 +526,20 @@ O cronograma abaixo considera uma pessoa trabalhando aproximadamente **8 a 12 ho
 ### 15.3 Fase 1 — MVP de convites e RSVP
 
 - Implementar autenticação e autorização administrativa.
-- Modelar e implementar configurações do casamento.
 - Implementar convidados e agrupamento em convites.
 - Gerar e validar código individual.
 - Implementar o fluxo público de RSVP.
-- Aplicar limite de acompanhantes, data-limite e idempotência.
+- Aplicar limite de acompanhantes e idempotência.
 - Implementar administração de respostas.
 - Criar dashboard inicial.
 - Cobrir o fluxo com testes unitários, integração e E2E.
 
 ### 15.4 Fase 2 — Site público e lançamento
 
-- Implementar páginas públicas e prévia.
+- Receber briefing, conteúdo e referências aprovadas do cliente.
+- Implementar o site público exclusivo diretamente no frontend.
 - Trabalhar responsividade, acessibilidade e estados de interface.
+- Revisar o design com o cliente e versionar os ajustes aprovados.
 - Executar revisão de segurança e privacidade.
 - Preparar imagens de container e proxy reverso.
 - Configurar ambiente de homologação e produção.
@@ -561,10 +561,10 @@ O MVP estará pronto para lançamento quando todas as condições forem verdadei
 
 ### Produto
 
-- O administrador configura e publica o casamento.
+- O site exclusivo aprovado é publicado pelo pipeline do frontend.
 - O administrador gerencia convidados, convites e respostas.
 - Um link válido permite responder apenas pelo convite correspondente.
-- Limite de acompanhantes e data-limite são aplicados no servidor.
+- Limite de acompanhantes e estado do convite são aplicados no servidor.
 - O convidado consegue concluir o fluxo em tela móvel sem assistência.
 - O dashboard diferencia pessoas confirmadas, recusadas e pendentes.
 
@@ -614,6 +614,8 @@ Resolvidas durante a Fase 0:
 - Biblioteca visual e ferramenta E2E: [ADR 0005](adr/0005-interface-e-testes-e2e.md).
 - Autenticação administrativa, recuperação e papéis: [ADR 0002](adr/0002-autenticacao-administrativa.md).
 - Geração, armazenamento e rotação do código de convite: [ADR 0003](adr/0003-codigo-de-convite.md).
+- Personalização do site: implementação exclusiva em código pelo frontend, sem editor administrativo
+  ([ADR 0007](adr/0007-sites-personalizados-em-codigo.md)).
 
 Permanecem em aberto:
 
@@ -639,3 +641,5 @@ Permanecem em aberto:
 | 0.1.0 | 29/07/2026 | Criação da visão, escopo, regras, requisitos, arquitetura, qualidade e cronograma inicial |
 | 1.0.0 | 29/07/2026 | Aprovação da especificação como baseline inicial do projeto |
 | 1.1.0 | 03/08/2026 | Referência aos ADRs iniciais e resolução das decisões de autenticação, convite, interface, E2E e hospedagem |
+| 2.0.0 | 11/08/2026 | Substituição da personalização administrativa por sites exclusivos implementados em código |
+| 2.1.0 | 11/08/2026 | Remoção dos dados editoriais do evento e manutenção do prazo operacional no dashboard de RSVP |

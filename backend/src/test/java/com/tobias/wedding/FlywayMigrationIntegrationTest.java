@@ -29,7 +29,7 @@ class FlywayMigrationIntegrationTest {
                 .validateOnMigrate(true)
                 .load();
 
-        assertThat(flyway.migrate().migrationsExecuted).isEqualTo(10);
+        assertThat(flyway.migrate().migrationsExecuted).isEqualTo(11);
 
         try (Connection connection = POSTGRES.createConnection("");
                 Statement statement = connection.createStatement();
@@ -44,13 +44,22 @@ class FlywayMigrationIntegrationTest {
                 ResultSet result = statement.executeQuery(
                         "SELECT COUNT(*) FROM information_schema.tables "
                                 + "WHERE table_schema = 'wedding' "
+                                + "AND table_name IN ('wedding_site', 'site_media')")) {
+            assertThat(result.next()).isTrue();
+            assertThat(result.getInt(1)).isZero();
+        }
+
+        try (Connection connection = POSTGRES.createConnection("");
+                Statement statement = connection.createStatement();
+                ResultSet result = statement.executeQuery(
+                        "SELECT COUNT(*) FROM information_schema.tables "
+                                + "WHERE table_schema = 'wedding' "
                                 + "AND table_name IN ('administrator', 'spring_session', "
                                 + "'spring_session_attributes', 'wedding_event', 'guest', "
                                 + "'invitation', 'invitation_guest', 'invitation_access_code', "
-                                + "'rsvp_submission', 'rsvp_response', 'rsvp_change', 'companion', "
-                                + "'wedding_site', 'site_media')")) {
+                                + "'rsvp_submission', 'rsvp_response', 'rsvp_change', 'companion')")) {
             assertThat(result.next()).isTrue();
-            assertThat(result.getInt(1)).isEqualTo(14);
+            assertThat(result.getInt(1)).isEqualTo(12);
         }
     }
 

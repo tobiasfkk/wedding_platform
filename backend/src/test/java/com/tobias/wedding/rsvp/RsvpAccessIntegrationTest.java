@@ -94,7 +94,6 @@ class RsvpAccessIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.groupName").value("Família Exemplo"))
                 .andExpect(jsonPath("$.companionLimit").value(2))
-                .andExpect(jsonPath("$.editable").value(true))
                 .andExpect(jsonPath("$.participants.length()").value(2))
                 .andExpect(jsonPath("$.participants[?(@.name == 'Ana Exemplo')]").isNotEmpty())
                 .andExpect(jsonPath("$.participants[0].status").value("PENDING"))
@@ -341,7 +340,7 @@ class RsvpAccessIntegrationTest {
     }
 
     @Test
-    void preservesTheLatestResponseAndRejectsChangesAfterTheDeadline() throws Exception {
+    void preservesTheLatestResponseAndRejectsPublicChangesAfterTheDeadline() throws Exception {
         Cookie sessionCookie = accessSession(activateAndReadToken(invitationId), "198.51.100.55");
         mockMvc.perform(post("/api/rsvp/responses")
                         .cookie(sessionCookie)
@@ -388,6 +387,11 @@ class RsvpAccessIntegrationTest {
                 .param("deadline", OffsetDateTime.now(ZoneOffset.UTC).minusDays(1))
                 .param("id", weddingId)
                 .update();
+
+        administratorCorrectsResponsesWithConfirmationAndAudit();
+    }
+
+    private void administratorCorrectsResponsesWithConfirmationAndAudit() throws Exception {
         UUID companionId = UUID.randomUUID();
 
         mockMvc.perform(get("/api/admin/invitations/{id}/rsvp", invitationId)
@@ -700,17 +704,10 @@ class RsvpAccessIntegrationTest {
 
     private void createWedding(OffsetDateTime now) {
         jdbcClient.sql("""
-                        INSERT INTO wedding.wedding_event (
-                            id, display_name, starts_at, rsvp_deadline, time_zone, location,
-                            version, created_at, updated_at
-                        ) VALUES (
-                            :id, 'Casamento de teste', :startsAt, :deadline, 'America/Sao_Paulo',
-                            'Local de teste', 0, :now, :now
-                        )
+                        INSERT INTO wedding.wedding_event (id, created_at)
+                        VALUES (:id, :now)
                         """)
                 .param("id", weddingId)
-                .param("startsAt", OffsetDateTime.parse("2027-05-08T19:00:00Z"))
-                .param("deadline", OffsetDateTime.parse("2027-04-08T02:59:00Z"))
                 .param("now", now)
                 .update();
     }

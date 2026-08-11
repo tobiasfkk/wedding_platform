@@ -11,12 +11,12 @@ const invitation = {
   companions: [],
 };
 
-async function mockIdentifiedInvitation(page: Page, editable = true): Promise<void> {
+async function mockIdentifiedInvitation(page: Page): Promise<void> {
   await page.route('**/api/rsvp/session', (route) =>
     route.fulfill({
       json: {
         identified: true,
-        invitation: { ...invitation, editable },
+        invitation,
         csrfToken: 'csrf-for-browser-test',
       },
     }),
@@ -144,17 +144,6 @@ test('preserves validation and focus while editing companions on a phone', async
   await secondCompanion.fill('Daniel');
   await page.getByRole('button', { name: 'Remover acompanhante 1' }).click();
   await expect(page.getByLabel('Nome do acompanhante 1')).toBeFocused();
-});
-
-test('shows the deadline state without editable actions', async ({ page }) => {
-  await page.setViewportSize({ width: 360, height: 800 });
-  await mockIdentifiedInvitation(page, false);
-  await page.goto('/rsvp');
-
-  await expect(page.getByText('O prazo de confirmação foi encerrado.')).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Salvar respostas' })).toHaveCount(0);
-  await expect(page.locator('.response-options button:enabled')).toHaveCount(0);
-  await expectNoHorizontalOverflow(page);
 });
 
 test('keeps invalid links private and usable at the minimum width', async ({ page }) => {

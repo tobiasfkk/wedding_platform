@@ -18,6 +18,6 @@ public class WeddingSchedule {
         return repositories.getObject()
                 .findById(weddingId)
                 .map(WeddingEvent::rsvpDeadline)
-                .orElseThrow(() -> new IllegalStateException("Wedding event not found for invitation"));
+                .orElse(null);
     }
 }

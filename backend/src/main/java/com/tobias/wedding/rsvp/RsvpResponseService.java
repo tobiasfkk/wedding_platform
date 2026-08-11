@@ -251,7 +251,7 @@ class RsvpResponseService {
     }
 
     private boolean editable(InvitationAccessView access) {
-        return !Instant.now().isAfter(access.rsvpDeadline());
+        return access.rsvpDeadline() == null || !Instant.now().isAfter(access.rsvpDeadline());
     }
 
     private Map<UUID, String> validateCompanions(

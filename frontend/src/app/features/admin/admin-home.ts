@@ -4,11 +4,9 @@ import { Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 
 import { AuthService } from '../../core/auth/auth.service';
-import { WeddingSettingsComponent } from './wedding-settings';
-
 @Component({
   selector: 'app-admin-home',
-  imports: [MatButtonModule, RouterLink, WeddingSettingsComponent],
+  imports: [MatButtonModule, RouterLink],
   template: `
     <section class="page-intro" aria-labelledby="admin-title">
       <p class="eyebrow">Área restrita</p>
@@ -20,12 +18,10 @@ import { WeddingSettingsComponent } from './wedding-settings';
       <button mat-stroked-button type="button" (click)="logout()" [disabled]="loggingOut()">
         {{ loggingOut() ? 'Saindo…' : 'Encerrar sessão' }}
       </button>
-      <a mat-flat-button routerLink="/admin/site">Editar site dos convidados</a>
       <a mat-flat-button routerLink="/admin/guests">Gerenciar convidados</a>
       <a mat-flat-button routerLink="/admin/invitations">Gerenciar convites</a>
       <a mat-flat-button routerLink="/admin/rsvp">Consultar respostas de RSVP</a>
     </section>
-    <app-wedding-settings />
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

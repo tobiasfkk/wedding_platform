@@ -6,6 +6,7 @@
 
 - [Especificação do produto e plano de engenharia](ESPECIFICACAO_DO_PROJETO.md)
 - [Wireframes de baixa fidelidade](WIREFRAMES_BAIXA_FIDELIDADE.md)
+- [Site público personalizado](SITE_PUBLICO_E_CONTEUDO.md)
 
 ## Arquitetura
 

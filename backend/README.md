@@ -66,17 +66,6 @@ sessão são direcionados para `/admin/login`.
 Login inválido sempre devolve uma mensagem genérica. Após cinco falhas para a mesma combinação de
 conta e origem em quinze minutos, novas tentativas recebem `429` sem revelar se a conta existe.
 
-## API de configuração do casamento
-
-| Método e rota | Acesso | Resultado |
-|---|---|---|
-| `GET /api/admin/wedding` | Administrador | Consulta a configuração atual ou um rascunho vazio |
-| `PUT /api/admin/wedding` | Administrador com CSRF | Cria ou atualiza os dados essenciais do casamento |
-
-Datas e horários são recebidos separadamente e convertidos para instantes usando o `timeZone`
-IANA do evento (por padrão, `America/Sao_Paulo`). A data-limite do RSVP deve ser igual ou anterior
-ao início do casamento.
-
 ## API de convidados
 
 Todas as rotas exigem uma sessão administrativa; operações de escrita também exigem CSRF.
@@ -105,6 +94,8 @@ A listagem aceita `query`, `status` (`ALL`, `ACTIVE` ou `INACTIVE`), `page` base
 | `GET /api/admin/invitations/{id}/rsvp` | Consulta a resposta atual de participantes e acompanhantes |
 | `PUT /api/admin/invitations/{id}/rsvp` | Registra ou corrige a resposta em nome do administrador |
 | `GET /api/admin/rsvp/dashboard` | Consulta totais e convites com busca, estado e paginação |
+| `GET /api/admin/rsvp/deadline` | Consulta a data-limite das confirmações públicas |
+| `PUT /api/admin/rsvp/deadline` | Configura a data, o horário e o fuso do prazo público |
 
 O convite exige nome, limite de acompanhantes entre 0 e 100 e ao menos um convidado ativo. Cada
 convidado possui somente um vínculo corrente; remoções encerram o vínculo sem apagar seu histórico.
@@ -113,7 +104,9 @@ seu HMAC-SHA-256 é armazenado. O link original aparece apenas na resposta de at
 se for perdido, deve ser regenerado. A rotação preserva o resumo anterior para auditoria, mas o
 revoga atomicamente. Tokens e links nunca são escritos nos logs.
 
-A correção administrativa do RSVP não é limitada pelo prazo público e exige confirmação explícita
+A confirmação pública pode ser alterada até a data-limite configurada. Depois do prazo, o convidado
+ainda consulta a resposta atual em modo somente leitura. A correção administrativa do RSVP não é
+limitada pelo prazo público e exige confirmação explícita
 para substituir uma resposta existente. Ela aplica os mesmos limites e invariantes do fluxo público,
 mantém a operação idempotente e registra `ADMIN`, o e-mail do administrador e o instante em submissão
 e histórico. O estado corrente é atualizado sem apagar alterações anteriores.
@@ -145,11 +138,6 @@ Remover um acompanhante preserva seu registro como histórico. Repetir o mesmo `
 mesmo conteúdo retorna sucesso sem duplicar registros;
 reutilizá-lo com conteúdo diferente retorna conflito. O histórico registra instante e origem
 `PUBLIC_LINK`, sem armazenar endereço IP ou o código do convite.
-
-A data-limite é configurada no fuso do evento e persistida como instante. Até esse instante, o acesso
-público pode revisar participantes e acompanhantes. Depois dele, a API continua retornando a resposta
-mais recente para consulta, mas rejeita qualquer nova submissão antes de modificar dados; o frontend
-apresenta o convite em modo somente leitura.
 
 Após dez tentativas inválidas pela mesma origem em quinze minutos, novas trocas recebem `429`. O
 limite é mantido em memória no MVP; em uma implantação com múltiplas instâncias ele deverá migrar para

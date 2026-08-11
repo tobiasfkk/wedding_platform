@@ -11,11 +11,11 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.postgresql.PostgreSQLContainer;
@@ -23,7 +23,7 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 @SpringBootTest
 @AutoConfigureMockMvc
 @Testcontainers(disabledWithoutDocker = true)
-class WeddingSettingsIntegrationTest {
+class RsvpDeadlineIntegrationTest {
 
     @Container
     @ServiceConnection
@@ -43,10 +43,9 @@ class WeddingSettingsIntegrationTest {
 
     @Test
     void rejectsAnonymousReadsAndWrites() throws Exception {
-        mockMvc.perform(get("/api/admin/wedding"))
+        mockMvc.perform(get("/api/admin/rsvp/deadline"))
                 .andExpect(status().isUnauthorized());
-
-        mockMvc.perform(put("/api/admin/wedding")
+        mockMvc.perform(put("/api/admin/rsvp/deadline")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(validRequest()))
@@ -55,76 +54,56 @@ class WeddingSettingsIntegrationTest {
 
     @Test
     @WithMockUser(roles = "ADMIN")
-    void persistsValidSettingsAndReturnsThemOnReload() throws Exception {
-        mockMvc.perform(get("/api/admin/wedding"))
+    void persistsTheDeadlineAndReturnsItOnReload() throws Exception {
+        mockMvc.perform(get("/api/admin/rsvp/deadline"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.configured").value(false))
                 .andExpect(jsonPath("$.timeZone").value("America/Sao_Paulo"));
 
-        mockMvc.perform(put("/api/admin/wedding")
+        mockMvc.perform(put("/api/admin/rsvp/deadline")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(validRequest()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.configured").value(true))
-                .andExpect(jsonPath("$.displayName").value("Ana e Bruno"));
+                .andExpect(jsonPath("$.deadlineDate").value("2027-04-08"))
+                .andExpect(jsonPath("$.deadlineTime").value("23:59:00"));
 
-        mockMvc.perform(get("/api/admin/wedding"))
+        mockMvc.perform(get("/api/admin/rsvp/deadline"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.eventDate").value("2027-05-08"))
-                .andExpect(jsonPath("$.eventTime").value("16:00:00"))
-                .andExpect(jsonPath("$.location").value("Espaço Jardim"))
-                .andExpect(jsonPath("$.rsvpDeadlineDate").value("2027-04-08"));
+                .andExpect(jsonPath("$.deadlineDate").value("2027-04-08"));
     }
 
     @Test
     @WithMockUser(roles = "ADMIN")
-    void rejectsRequiredFieldsAndDeadlineAfterTheWedding() throws Exception {
-        mockMvc.perform(put("/api/admin/wedding")
+    void rejectsMissingFieldsAndInvalidTimeZone() throws Exception {
+        mockMvc.perform(put("/api/admin/rsvp/deadline")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                  "displayName": " ",
-                                  "eventDate": "2027-05-08",
-                                  "eventTime": "16:00",
-                                  "location": " ",
-                                  "rsvpDeadlineDate": "2027-05-09",
-                                  "rsvpDeadlineTime": "10:00",
-                                  "timeZone": "America/Sao_Paulo"
-                                }
-                                """))
+                        .content("{\"timeZone\":\"America/Sao_Paulo\"}"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
                 .andExpect(jsonPath("$.errors.length()").value(2));
 
-        mockMvc.perform(put("/api/admin/wedding")
+        mockMvc.perform(put("/api/admin/rsvp/deadline")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
-                                  "displayName": "Ana e Bruno",
-                                  "eventDate": "2027-05-08",
-                                  "eventTime": "16:00",
-                                  "location": "Espaço Jardim",
-                                  "rsvpDeadlineDate": "2027-05-09",
-                                  "rsvpDeadlineTime": "10:00",
-                                  "timeZone": "America/Sao_Paulo"
+                                  "deadlineDate": "2027-04-08",
+                                  "deadlineTime": "23:59",
+                                  "timeZone": "fuso-invalido"
                                 }
                                 """))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.errors[0].field").value("rsvpDeadlineDate"));
+                .andExpect(jsonPath("$.errors[0].field").value("timeZone"));
     }
 
     private String validRequest() {
         return """
                 {
-                  "displayName": "Ana e Bruno",
-                  "eventDate": "2027-05-08",
-                  "eventTime": "16:00",
-                  "location": "Espaço Jardim",
-                  "rsvpDeadlineDate": "2027-04-08",
-                  "rsvpDeadlineTime": "23:59",
+                  "deadlineDate": "2027-04-08",
+                  "deadlineTime": "23:59",
                   "timeZone": "America/Sao_Paulo"
                 }
                 """;

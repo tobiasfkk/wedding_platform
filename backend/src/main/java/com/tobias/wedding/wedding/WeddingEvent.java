@@ -3,9 +3,8 @@ package com.tobias.wedding.wedding;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
-import jakarta.persistence.Version;
+import jakarta.persistence.PreUpdate;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.util.UUID;
@@ -14,76 +13,39 @@ import java.util.UUID;
 @Table(name = "wedding_event", schema = "wedding")
 class WeddingEvent {
 
+    static final UUID INSTALLATION_ID = UUID.fromString("00000000-0000-0000-0000-000000000001");
+
     @Id
     private UUID id;
 
-    @Column(name = "display_name", nullable = false, length = 160)
-    private String displayName;
+    @Column(name = "created_at", nullable = false)
+    private Instant createdAt;
 
-    @Column(name = "starts_at", nullable = false)
-    private Instant startsAt;
-
-    @Column(name = "rsvp_deadline", nullable = false)
+    @Column(name = "rsvp_deadline")
     private Instant rsvpDeadline;
 
     @Column(name = "time_zone", nullable = false, length = 64)
     private String timeZone;
-
-    @Column(nullable = false, length = 300)
-    private String location;
-
-    @Version
-    private long version;
-
-    @Column(name = "created_at", nullable = false)
-    private Instant createdAt;
 
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
     protected WeddingEvent() {}
 
-    private WeddingEvent(
-            String displayName,
-            Instant startsAt,
-            Instant rsvpDeadline,
-            ZoneId timeZone,
-            String location) {
+    private WeddingEvent(UUID id) {
         Instant now = Instant.now();
-        this.id = UUID.randomUUID();
+        this.id = id;
         this.createdAt = now;
         this.updatedAt = now;
-        update(displayName, startsAt, rsvpDeadline, timeZone, location);
+        this.timeZone = RsvpDeadlineService.DEFAULT_TIME_ZONE.getId();
     }
 
-    static WeddingEvent create(
-            String displayName,
-            Instant startsAt,
-            Instant rsvpDeadline,
-            ZoneId timeZone,
-            String location) {
-        return new WeddingEvent(displayName, startsAt, rsvpDeadline, timeZone, location);
+    static WeddingEvent installationContext() {
+        return new WeddingEvent(INSTALLATION_ID);
     }
 
-    void update(
-            String displayName,
-            Instant startsAt,
-            Instant rsvpDeadline,
-            ZoneId timeZone,
-            String location) {
-        this.displayName = displayName.strip();
-        this.startsAt = startsAt;
-        this.rsvpDeadline = rsvpDeadline;
-        this.timeZone = timeZone.getId();
-        this.location = location.strip();
-    }
-
-    String displayName() {
-        return displayName;
-    }
-
-    Instant startsAt() {
-        return startsAt;
+    UUID id() {
+        return id;
     }
 
     Instant rsvpDeadline() {
@@ -94,16 +56,9 @@ class WeddingEvent {
         return ZoneId.of(timeZone);
     }
 
-    String location() {
-        return location;
-    }
-
-    long version() {
-        return version;
-    }
-
-    UUID id() {
-        return id;
+    void updateRsvpDeadline(Instant deadline, ZoneId zoneId) {
+        this.rsvpDeadline = deadline;
+        this.timeZone = zoneId.getId();
     }
 
     @PreUpdate

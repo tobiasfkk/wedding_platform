@@ -8,7 +8,7 @@
 
 ## Contexto
 
-A área administrativa modifica dados pessoais e configurações do evento. O frontend Angular e a API
+A área administrativa modifica dados pessoais, convidados, convites e confirmações. O frontend Angular e a API
 Spring Boot serão aplicações distintas, mas usarão subdomínios do mesmo domínio registrável em
 produção. O MVP não precisa delegar autenticação a terceiros nem expor tokens para outros clientes.
 

@@ -3,8 +3,13 @@
 Aplicação Angular da Wedding Platform para o site público, o fluxo de RSVP e a área
 administrativa.
 
-A área protegida oferece a configuração do casamento em `/admin`, a gestão de convidados em
-`/admin/guests` e a criação, ativação e rotação segura dos links em `/admin/invitations`.
+A área protegida oferece a gestão de convidados em `/admin/guests`, a criação, ativação e rotação
+segura dos links em `/admin/invitations` e a administração das confirmações em `/admin/rsvp`.
+O dashboard de RSVP também permite configurar a data e o horário-limite das confirmações públicas.
+
+O site público é implementado diretamente em `src/app/features/public-site`. Layout, textos,
+imagens e identidade visual são específicos do casamento e versionados com o frontend. Não existe
+editor administrativo, contrato de seções ou carregamento de conteúdo editorial pela API.
 
 ## Requisitos
 
@@ -27,7 +32,7 @@ A aplicação estará disponível em `http://localhost:4200/`.
 
 Rotas iniciais:
 
-- `/`: site público e página de verificação;
+- `/`: site público personalizado;
 - `/rsvp#code=...`: validação segura do convite e entrada na confirmação de presença;
 - `/admin/login`: autenticação administrativa;
 - `/admin`: área administrativa protegida.

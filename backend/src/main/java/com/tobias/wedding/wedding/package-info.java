@@ -1,4 +1,4 @@
 /**
- * Configuração e publicação das informações do casamento.
+ * Contexto técnico da instalação usado para isolar convidados e convites.
  */
 package com.tobias.wedding.wedding;

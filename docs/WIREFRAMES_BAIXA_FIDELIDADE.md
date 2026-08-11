@@ -1,8 +1,8 @@
 # Wedding Platform — Wireframes de baixa fidelidade
 
 > Status: baseline para implementação<br>
-> Versão: 1.0.0<br>
-> Última atualização: 30/07/2026<br>
+> Versão: 2.1.0<br>
+> Última atualização: 11/08/2026<br>
 > Responsável: Tobias Felipe Kiefer
 
 ## 1. Objetivo
@@ -57,11 +57,9 @@ flowchart TD
     RSVP_SUCCESS --> RSVP_PEOPLE
 
     LOGIN[Login administrativo] --> DASH[Dashboard]
-    DASH --> WEDDING[Configuração do casamento]
     DASH --> GUESTS[Convidados]
     DASH --> INVITATIONS[Convites]
     DASH --> RESPONSES[Respostas]
-    WEDDING --> PREVIEW[Prévia do site]
     GUESTS --> GUEST_FORM[Cadastrar/editar convidado]
     INVITATIONS --> INVITATION_FORM[Criar/editar convite]
     INVITATION_FORM --> LINK[Gerar/copiar link]
@@ -93,7 +91,6 @@ Em telas estreitas, o conteúdo ocupa a largura disponível, com margens mínima
 │ Wedding Platform                       [Conta] [Sair]        │
 ├──────────────┬───────────────────────────────────────────────┤
 │ Dashboard    │                                               │
-│ Casamento    │                 Conteúdo                      │
 │ Convidados   │                                               │
 │ Convites     │                                               │
 │ Respostas    │                                               │
@@ -129,7 +126,7 @@ Comportamento:
 - após sucesso, direciona ao dashboard;
 - sessão expirada direciona ao login e explica que é necessário entrar novamente.
 
-Referências: RF-001, RN-EVT-004, RNF-SEC-002, RNF-SEC-003 e RNF-SEC-005.
+Referências: RF-001, RNF-SEC-002, RNF-SEC-003 e RNF-SEC-005.
 
 ### 6.2 Dashboard
 
@@ -158,39 +155,7 @@ Estados:
 
 Referências: RF-013, RN-RSVP-010, RNF-PERF-001 e RNF-PERF-005.
 
-### 6.3 Configuração do casamento
-
-```text
-┌──────────────────────────────────────────────────────────────┐
-│ Configuração do casamento                                   │
-│ Status: Rascunho                          [Visualizar prévia] │
-├──────────────────────────────────────────────────────────────┤
-│ Nome de exibição                                             │
-│ [__________________________________________________________] │
-│                                                              │
-│ Início                    Data-limite do RSVP                 │
-│ [data] [hora]             [data] [hora]                      │
-│                                                              │
-│ Local da cerimônia        Local da recepção                  │
-│ [____________________]    [____________________]             │
-│                                                              │
-│ Informações importantes                                     │
-│ [__________________________________________________________] │
-│                                                              │
-│                         [Cancelar] [Salvar alterações]       │
-└──────────────────────────────────────────────────────────────┘
-```
-
-Comportamento:
-
-- erros aparecem próximos ao campo e em resumo acessível;
-- salvar não publica automaticamente;
-- data-limite posterior ao evento é rejeitada;
-- sair com alterações não salvas exige confirmação.
-
-Referências: RF-002, RF-003, RN-EVT-001 a RN-EVT-004 e RNF-SEC-006.
-
-### 6.4 Lista de convidados
+### 6.3 Lista de convidados
 
 ```text
 ┌──────────────────────────────────────────────────────────────┐
@@ -218,7 +183,7 @@ Cadastre a primeira pessoa para começar a organizar os convites.
 
 Referências: RF-004, RN-INV-002, RN-PRV-001, RN-PRV-004 e RNF-PERF-005.
 
-### 6.5 Cadastro e edição de convidado
+### 6.4 Cadastro e edição de convidado
 
 ```text
 ┌──────────────────────────────────────────────┐
@@ -239,7 +204,7 @@ Referências: RF-004, RN-INV-002, RN-PRV-001, RN-PRV-004 e RNF-PERF-005.
 
 O formulário coleta apenas os dados definidos como necessários. Campos adicionais exigem justificativa de finalidade.
 
-### 6.6 Lista de convites
+### 6.5 Lista de convites
 
 ```text
 ┌──────────────────────────────────────────────────────────────┐
@@ -258,7 +223,7 @@ Menu de ações: editar grupo, copiar link, regenerar link, abrir resposta e ina
 
 Referências: RF-005 a RF-007 e RN-INV-001 a RN-INV-007.
 
-### 6.7 Criação e edição de convite
+### 6.6 Criação e edição de convite
 
 ```text
 ┌──────────────────────────────────────────────────────────────┐
@@ -287,7 +252,7 @@ Validações:
 - limite inteiro maior ou igual a zero;
 - alterações no grupo devem ser salvas de forma consistente.
 
-### 6.8 Link individual
+### 6.7 Link individual
 
 ```text
 ┌──────────────────────────────────────────────┐
@@ -307,11 +272,14 @@ Regenerar abre uma confirmação que descreve o impacto. O novo link só substit
 
 Referências: RF-007, RN-INV-001, RN-INV-005, RN-INV-007 e RNF-SEC-004.
 
-### 6.9 Lista administrativa de respostas
+### 6.8 Lista administrativa de respostas
 
 ```text
 ┌──────────────────────────────────────────────────────────────┐
 │ Respostas                                                    │
+├──────────────────────────────────────────────────────────────┤
+│ Prazo público: [08/04/2027] [23:59] [Salvar prazo]          │
+│ Após o prazo, apenas o administrador pode corrigir respostas│
 ├──────────────────────────────────────────────────────────────┤
 │ [Buscar_______________] [Estado ▾] [Restrição ▾] [Filtrar] │
 ├──────────────────────────────────────────────────────────────┤
@@ -322,7 +290,7 @@ Referências: RF-007, RN-INV-001, RN-INV-005, RN-INV-007 e RNF-SEC-004.
 └──────────────────────────────────────────────────────────────┘
 ```
 
-### 6.10 Detalhe e correção administrativa
+### 6.9 Detalhe e correção administrativa
 
 ```text
 ┌──────────────────────────────────────────────────────────────┐
@@ -344,7 +312,7 @@ Referências: RF-007, RN-INV-001, RN-INV-005, RN-INV-007 e RNF-SEC-004.
 
 Salvar uma correção solicita confirmação, identifica o autor e preserva a versão anterior no histórico.
 
-Referências: RF-013, RF-014, RN-RSVP-006, RN-RSVP-007 e RN-RSVP-010.
+Referências: RF-013, RF-014, RN-RSVP-006, RN-RSVP-007, RN-RSVP-010 e RN-RSVP-011.
 
 ## 7. Fluxo móvel de RSVP
 
@@ -517,28 +485,7 @@ Referências: RN-RSVP-007 a RN-RSVP-009 e RNF-PERF-002.
 
 O protocolo não deve permitir enumeração ou acesso a outro convite.
 
-### 7.8 Prazo encerrado
-
-```text
-┌───────────────────────────────┐
-│ Prazo de confirmação encerrado│
-│                               │
-│ Sua resposta atual:           │
-│ 2 confirmados · 1 recusa      │
-│                               │
-│ Para solicitar uma alteração, │
-│ entre em contato com os       │
-│ responsáveis pelo evento.     │
-│                               │
-│ [Voltar ao site]              │
-└───────────────────────────────┘
-```
-
-Após o prazo, o fluxo público é somente leitura. A alteração continua disponível ao administrador.
-
-Referências: RF-012, RN-RSVP-005 e RN-RSVP-006.
-
-## 8. Site público e prévia
+## 8. Site público personalizado
 
 ```text
 ┌─────────────────────────────────────────────┐
@@ -562,9 +509,11 @@ Referências: RF-012, RN-RSVP-005 e RN-RSVP-006.
 └─────────────────────────────────────────────┘
 ```
 
-A prévia administrativa usa o mesmo componente visual do site e deixa claro que alterações em rascunho ainda não estão públicas.
+Este wireframe representa apenas a hierarquia mínima esperada. A composição real é exclusiva de cada
+casamento e implementada diretamente pelo desenvolvedor frontend. Não existe prévia administrativa,
+editor de seções ou publicação de conteúdo pela aplicação.
 
-Referências: RF-003, RF-015, RN-EVT-001, RN-EVT-002, RN-EVT-005 e RNF-PERF-003.
+Referências: RF-015, ADR 0007 e RNF-PERF-003.
 
 ## 9. Catálogo de estados
 
@@ -578,7 +527,6 @@ Referências: RF-003, RF-015, RN-EVT-001, RN-EVT-002, RN-EVT-005 e RNF-PERF-003.
 | Sucesso | Confirmar de forma inequívoca e indicar a próxima ação possível |
 | Não autorizado | Direcionar ao login administrativo sem expor conteúdo protegido |
 | Código inválido | Usar mensagem genérica e não apresentar dados do convite |
-| Prazo encerrado | Exibir resposta atual em leitura e orientar contato com o administrador |
 | Limite atingido | Impedir nova inclusão e comunicar o limite do convite |
 | Sessão expirada | Preservar retorno seguro e solicitar autenticação novamente |
 
@@ -600,7 +548,6 @@ Referências: RF-003, RF-015, RN-EVT-001, RN-EVT-002, RN-EVT-005 e RNF-PERF-003.
 | Jornada/tela | Requisitos principais | História planejada |
 |---|---|---|
 | Login | RF-001 | #11 |
-| Configuração do casamento | RF-002 e RF-003 | #12 e Fase 2 |
 | Convidados | RF-004 | #13 |
 | Convites e limite | RF-005 e RF-006 | #14 |
 | Link individual | RF-007 | #15 |
@@ -611,17 +558,17 @@ Referências: RF-003, RF-015, RN-EVT-001, RN-EVT-002, RN-EVT-005 e RNF-PERF-003.
 | Alteração da resposta | RF-012 | #20 |
 | Dashboard | RF-013 | #22 |
 | Correção administrativa | RF-014 | #21 |
-| Site público | RF-015 | Fase 2 |
+| Site público | RF-015 | #37 e #57 |
 
 ## 12. Decisões e pendências para implementação
 
 As seguintes decisões podem ser tomadas durante as respectivas histórias sem exigir um protótipo separado:
 
-- biblioteca visual e tokens básicos de espaçamento/tipografia;
+- identidade visual específica do casamento;
 - mecanismo de sessão administrativa;
 - composição exata da navegação em telas estreitas;
 - formato público do protocolo de resposta;
-- conteúdo final e imagens do site;
+- conteúdo final e imagens fornecidos para implementação pelo frontend;
 - necessidade real de um campo de contato no cadastro do convidado;
 - se todos os participantes precisam de resposta explícita ou podem permanecer pendentes no envio.
 
