@@ -29,7 +29,7 @@ class FlywayMigrationIntegrationTest {
                 .validateOnMigrate(true)
                 .load();
 
-        assertThat(flyway.migrate().migrationsExecuted).isEqualTo(11);
+        assertThat(flyway.migrate().migrationsExecuted).isEqualTo(12);
 
         try (Connection connection = POSTGRES.createConnection("");
                 Statement statement = connection.createStatement();
@@ -47,6 +47,13 @@ class FlywayMigrationIntegrationTest {
                                 + "AND table_name IN ('wedding_site', 'site_media')")) {
             assertThat(result.next()).isTrue();
             assertThat(result.getInt(1)).isZero();
+        }
+
+        try (Connection connection = POSTGRES.createConnection("");
+                Statement statement = connection.createStatement();
+                ResultSet result = statement.executeQuery("SELECT COUNT(*) FROM wedding.wedding_event")) {
+            assertThat(result.next()).isTrue();
+            assertThat(result.getInt(1)).isEqualTo(1);
         }
 
         try (Connection connection = POSTGRES.createConnection("");

@@ -38,8 +38,9 @@ Nome do casal, data, horário, local e demais informações do evento existem so
 banco mantém um identificador técnico criado automaticamente para relacionar convidados e convites e
 o prazo do RSVP. Esse prazo é configurado no dashboard de confirmações e não controla conteúdo do site.
 
-As migrações já aplicadas permanecem imutáveis. Uma migration posterior remove as tabelas e colunas
-obsoletas, preservando a compatibilidade com bancos locais existentes.
+As migrações já aplicadas permanecem imutáveis. Migrations posteriores removem as tabelas e colunas
+obsoletas e criam o contexto técnico da instalação, preservando a compatibilidade com bancos locais
+existentes e evitando escritas durante consultas.
 
 ## Consequências
 
