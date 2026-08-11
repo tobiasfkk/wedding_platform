@@ -14,7 +14,7 @@ describe('AdminRsvpEditor', () => {
     invitation: {
       groupName: 'Família Exemplo',
       companionLimit: 1,
-      editable: false,
+      editable: true,
       participants: [
         { id: 'guest-1', name: 'Ana', status: 'CONFIRMED' as const },
         { id: 'guest-2', name: 'Bruno', status: 'DECLINED' as const },
@@ -44,7 +44,7 @@ describe('AdminRsvpEditor', () => {
     http.verify();
   });
 
-  it('confirms and saves a correction even when the public deadline is closed', () => {
+  it('confirms and saves an administrative correction', () => {
     vi.spyOn(window, 'confirm').mockReturnValue(true);
     const fixture = TestBed.createComponent(AdminRsvpEditor);
     fixture.detectChanges();

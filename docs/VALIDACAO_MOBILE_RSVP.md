@@ -20,7 +20,7 @@ A suíte usa Chromium real e APIs simuladas para validar de forma determinístic
 - alvos interativos com pelo menos 44 px de altura;
 - edição pelo teclado virtual e bloqueio de acompanhante vazio;
 - foco ao adicionar ou remover acompanhantes e após salvar;
-- prazo encerrado e código inválido;
+- convite inativo e código inválido;
 - screenshots, vídeo e trace quando houver falha.
 
 ## Checklist manual
@@ -29,12 +29,12 @@ A suíte usa Chromium real e APIs simuladas para validar de forma determinístic
 - [ ] iPhone: concluir uma resposta usando Safari e teclado virtual.
 - [ ] Confirmar que zoom de texto do sistema não corta conteúdo essencial.
 - [ ] Alternar orientação durante a edição de um acompanhante.
-- [ ] Conferir carregamento, código inválido, prazo encerrado, erro ao salvar e sucesso.
+- [ ] Conferir carregamento, código inválido, convite inativo, erro ao salvar e sucesso.
 - [x] Executar Lighthouse móvel e registrar Performance maior ou igual a 80.
 
 ## Resultado desta revisão
 
-- Playwright: 7 cenários aprovados em Chromium, incluindo 320, 360, 390 e 430 px.
+- Playwright: cenários aprovados em Chromium, incluindo 320, 360, 390 e 430 px.
 - Lighthouse móvel: **97 em Performance**, executado contra o build de produção local em
   04/08/2026.
 - Android físico: pendente de validação pelo responsável.

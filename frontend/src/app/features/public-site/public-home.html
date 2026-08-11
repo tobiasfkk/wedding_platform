@@ -1,29 +1,16 @@
-@let content = siteContent();
 <article class="wedding-page">
-  <section class="hero" [class.hero--with-photo]="coverPhoto()" aria-labelledby="public-title">
-    @if (coverPhoto(); as cover) {
-      <picture class="hero__photo" aria-hidden="true">
-        <img
-          [src]="cover.src"
-          [attr.srcset]="cover.srcSet"
-          sizes="100vw"
-          alt=""
-          [width]="cover.width"
-          [height]="cover.height"
-          [style.object-position]="objectPosition(cover)"
-          fetchpriority="high"
-          decoding="async"
-        />
-      </picture>
-    }
+  <section class="hero" aria-labelledby="public-title">
     <div class="hero__glow hero__glow--top" aria-hidden="true"></div>
     <div class="hero__glow hero__glow--bottom" aria-hidden="true"></div>
 
     <div class="hero__content">
-      <p class="section-label">{{ content.hero.eyebrow }}</p>
-      <h1 id="public-title">{{ content.hero.title }}</h1>
-      <p class="hero__introduction">{{ content.hero.introduction }}</p>
-      <p class="hero__date">{{ content.hero.dateLabel }}</p>
+      <p class="section-label">Celebração de casamento</p>
+      <h1 id="public-title">Um dia para guardar na memória.</h1>
+      <p class="hero__introduction">
+        Estamos preparando cada detalhe para celebrar o amor ao lado das pessoas que fazem parte da
+        nossa história.
+      </p>
+      <p class="hero__date">Data e nomes serão definidos pelos noivos</p>
 
       <div class="hero__actions" aria-label="Ações principais">
         <a class="button button--light" href="#details">Conhecer os detalhes</a>
@@ -37,188 +24,98 @@
     </a>
   </section>
 
-  @for (section of content.sectionOrder; track section) {
-    @switch (section) {
-      @case ('STORY') {
-        <section id="story" class="story section-shell reveal" aria-labelledby="story-title">
-          <div class="story__copy">
-            <p class="section-label">{{ content.story.eyebrow }}</p>
-            <h2 id="story-title">{{ content.story.title }}</h2>
-            @for (paragraph of content.story.paragraphs; track paragraph) {
-              <p>{{ paragraph }}</p>
-            }
-          </div>
+  <section id="story" class="story section-shell reveal" aria-labelledby="story-title">
+    <div class="story__copy">
+      <p class="section-label">Nossa história</p>
+      <h2 id="story-title">Do encontro ao nosso sim.</h2>
+      <p>
+        Entre conversas demoradas, novos caminhos e muitos planos compartilhados, descobrimos a
+        alegria de construir a vida juntos.
+      </p>
+      <p>
+        Agora queremos dividir o próximo capítulo com quem tornou essa caminhada ainda mais
+        especial.
+      </p>
+    </div>
 
-          @if (photosFor('STORY').length === 0) {
-            <figure class="story__visual">
-              <div
-                class="photo-placeholder"
-                role="img"
-                aria-label="Espaço reservado para uma foto do casal"
-              >
-                <span class="photo-placeholder__monogram" aria-hidden="true">∞</span>
-                <span>A foto favorita de vocês ficará aqui</span>
-              </div>
-              <figcaption>Um capítulo contado por vocês.</figcaption>
-            </figure>
-          }
-        </section>
-        @for (photo of photosFor('STORY'); track photo.id) {
-          <figure class="photo-chapter">
-            <div class="photo-chapter__frame">
-              <img
-                [src]="photo.src"
-                [attr.srcset]="photo.srcSet"
-                sizes="100vw"
-                [alt]="photo.alt"
-                [width]="photo.width"
-                [height]="photo.height"
-                [style.object-position]="objectPosition(photo)"
-                loading="lazy"
-                decoding="async"
-              />
-            </div>
-          </figure>
-        }
-      }
-      @case ('SCHEDULE') {
-        <section id="details" class="details" aria-labelledby="details-title">
-          <div class="section-heading section-shell reveal">
-            <p class="section-label">O grande dia</p>
-            <h2 id="details-title">Onde a nossa história encontra a sua.</h2>
-          </div>
+    <figure class="story__visual">
+      <div
+        class="photo-placeholder"
+        role="img"
+        aria-label="Espaço reservado para uma foto do casal"
+      >
+        <span class="photo-placeholder__monogram" aria-hidden="true">∞</span>
+        <span>A foto favorita de vocês ficará aqui</span>
+      </div>
+      <figcaption>Um capítulo contado por vocês.</figcaption>
+    </figure>
+  </section>
 
-          <div class="moments section-shell">
-            @for (moment of content.schedule; track moment.eyebrow) {
-              <article class="moment-card reveal">
-                <p class="section-label">{{ moment.eyebrow }}</p>
-                <h3>{{ moment.title }}</h3>
-                <dl>
-                  <div>
-                    <dt>Quando</dt>
-                    <dd>{{ moment.time }}</dd>
-                  </div>
-                  @if (content.locationMode === 'SEPARATE') {
-                    <div>
-                      <dt>Onde</dt>
-                      <dd>
-                        <strong>{{ moment.venue }}</strong>
-                        <span>{{ moment.address }}</span>
-                        @if (moment.mapUrl) {
-                          <a
-                            class="map-link"
-                            [href]="moment.mapUrl"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            Abrir no Google Maps
-                          </a>
-                        }
-                      </dd>
-                    </div>
-                  }
-                </dl>
-              </article>
-            }
-          </div>
-          @if (content.locationMode === 'SHARED') {
-            @if (content.schedule[0]; as sharedMoment) {
-              <article class="shared-location-card section-shell reveal">
-                <p class="section-label">Um só lugar</p>
-                <h3>{{ sharedMoment.venue }}</h3>
-                <p>{{ sharedMoment.address }}</p>
-                @if (sharedMoment.mapUrl) {
-                  <a
-                    class="map-link"
-                    [href]="sharedMoment.mapUrl"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    Abrir no Google Maps
-                  </a>
-                }
-              </article>
-            }
-          }
-        </section>
-        @for (photo of photosFor('SCHEDULE'); track photo.id) {
-          <figure class="photo-chapter">
-            <div class="photo-chapter__frame">
-              <img
-                [src]="photo.src"
-                [attr.srcset]="photo.srcSet"
-                sizes="100vw"
-                [alt]="photo.alt"
-                [width]="photo.width"
-                [height]="photo.height"
-                [style.object-position]="objectPosition(photo)"
-                loading="lazy"
-                decoding="async"
-              />
-            </div>
-          </figure>
-        }
-      }
-      @case ('NOTICES') {
-        <section class="notes section-shell reveal" aria-labelledby="notes-title">
+  <section id="details" class="details" aria-labelledby="details-title">
+    <div class="section-heading section-shell reveal">
+      <p class="section-label">O grande dia</p>
+      <h2 id="details-title">Onde a nossa história encontra a sua.</h2>
+    </div>
+
+    <div class="moments section-shell">
+      <article class="moment-card reveal">
+        <p class="section-label">01 · Cerimônia</p>
+        <h3>O nosso sim</h3>
+        <dl>
           <div>
-            <p class="section-label">Antes de sair de casa</p>
-            <h2 id="notes-title">Informações importantes</h2>
+            <dt>Quando</dt>
+            <dd>Horário a confirmar</dd>
           </div>
-          <ol>
-            @for (notice of content.notices; track notice; let index = $index) {
-              <li>
-                <span aria-hidden="true">0{{ index + 1 }}</span>
-                <p>{{ notice }}</p>
-              </li>
-            }
-          </ol>
-        </section>
-        @for (photo of photosFor('NOTICES'); track photo.id) {
-          <figure class="photo-chapter">
-            <div class="photo-chapter__frame">
-              <img
-                [src]="photo.src"
-                [attr.srcset]="photo.srcSet"
-                sizes="100vw"
-                [alt]="photo.alt"
-                [width]="photo.width"
-                [height]="photo.height"
-                [style.object-position]="objectPosition(photo)"
-                loading="lazy"
-                decoding="async"
-              />
-            </div>
-          </figure>
-        }
-      }
-      @case ('RSVP') {
-        <section class="rsvp-callout reveal" aria-labelledby="rsvp-title">
-          <div class="rsvp-callout__content">
-            <p class="section-label">{{ content.rsvp.eyebrow }}</p>
-            <h2 id="rsvp-title">{{ content.rsvp.title }}</h2>
-            <p>{{ content.rsvp.description }}</p>
-            <a class="button button--light" routerLink="/rsvp">Responder ao convite</a>
+        </dl>
+      </article>
+      <article class="moment-card reveal">
+        <p class="section-label">02 · Recepção</p>
+        <h3>Vamos celebrar</h3>
+        <dl>
+          <div>
+            <dt>Quando</dt>
+            <dd>Após a cerimônia</dd>
           </div>
-        </section>
-        @for (photo of photosFor('RSVP'); track photo.id) {
-          <figure class="photo-chapter">
-            <div class="photo-chapter__frame">
-              <img
-                [src]="photo.src"
-                [attr.srcset]="photo.srcSet"
-                sizes="100vw"
-                [alt]="photo.alt"
-                [width]="photo.width"
-                [height]="photo.height"
-                [style.object-position]="objectPosition(photo)"
-                loading="lazy"
-                decoding="async"
-              />
-            </div>
-          </figure>
-        }
-      }
-    }
-  }
+        </dl>
+      </article>
+    </div>
+
+    <article class="shared-location-card section-shell reveal">
+      <p class="section-label">Local</p>
+      <h3>Local da celebração</h3>
+      <p>O endereço será incluído diretamente na versão aprovada do site.</p>
+    </article>
+  </section>
+
+  <section class="notes section-shell reveal" aria-labelledby="notes-title">
+    <div>
+      <p class="section-label">Antes de sair de casa</p>
+      <h2 id="notes-title">Informações importantes</h2>
+    </div>
+    <ol>
+      <li>
+        <span aria-hidden="true">01</span>
+        <p>Chegue com antecedência para aproveitar cada momento com tranquilidade.</p>
+      </li>
+      <li>
+        <span aria-hidden="true">02</span>
+        <p>Consulte seu convite individual para confirmar quem participará com você.</p>
+      </li>
+      <li>
+        <span aria-hidden="true">03</span>
+        <p>Novas informações serão incluídas nesta página conforme a data se aproxima.</p>
+      </li>
+    </ol>
+  </section>
+
+  <section class="rsvp-callout reveal" aria-labelledby="rsvp-title">
+    <div class="rsvp-callout__content">
+      <p class="section-label">Confirmação de presença</p>
+      <h2 id="rsvp-title">Sua presença faz parte desta história.</h2>
+      <p>
+        Use o link individual recebido com o convite para informar quem poderá celebrar conosco.
+      </p>
+      <a class="button button--light" routerLink="/rsvp">Responder ao convite</a>
+    </div>
+  </section>
 </article>

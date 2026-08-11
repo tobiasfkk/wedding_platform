@@ -1,71 +1,51 @@
-# Site público e conteúdo
+# Site público personalizado
 
 ## Decisão atual
 
-O site do casamento separa três responsabilidades:
+Cada casamento possui uma experiência pública única, desenhada e implementada diretamente no
+frontend. Layout, conteúdo editorial, imagens, identidade visual, ordem das seções e animações são
+parte do código versionado do casamento e passam pelo mesmo fluxo de revisão, testes e publicação da
+aplicação.
 
-1. **conteúdo:** textos, agenda e referências de mídia;
-2. **estrutura:** hero, história, agenda, avisos e chamada para RSVP;
-3. **tema:** cores, tipografia, espaçamento e movimento.
+Não existe CMS, editor visual, tema selecionável, prévia administrativa ou API de publicação de
+conteúdo. O administrador gerencia somente convidados, convites e RSVP.
 
-O renderizador mobile-first recebe um contrato tipado e é compartilhado pela página pública e pela
-prévia administrativa. O conteúdo inicial serve apenas como modelo para um casamento ainda sem
-rascunho; visitantes nunca recebem essa versão automaticamente.
+## Responsabilidades
 
-## Fluxo administrativo
+### Desenvolvedor frontend
 
-Em `/admin/site`, o administrador pode editar abertura, história, cerimônia, recepção, avisos e
-chamada para RSVP. Também pode adicionar até 10 fotos, escolher onde cada uma aparece, ajustar o
-ponto focal, alterar a ordem das fotos e das seções, visualizar a prévia, salvar o rascunho e
-publicar ou despublicar explicitamente.
+- receber briefing, conteúdo e referências aprovadas pelo cliente;
+- implementar a composição específica em Angular, HTML e SCSS;
+- adicionar imagens otimizadas aos ativos versionados do frontend;
+- integrar as chamadas para RSVP sem acoplar o design à API;
+- validar responsividade, acessibilidade, desempenho e movimento reduzido;
+- publicar mudanças pelo fluxo de entrega do repositório.
 
-Rascunho e publicação possuem versões independentes. Salvar não altera o site dos convidados; ao
-publicar, o backend copia uma versão consistente do rascunho. Alterações posteriores continuam
-privadas até a próxima publicação. Ao despublicar, o rascunho é preservado e o endpoint visitante
-volta a responder como indisponível.
+### Backend
 
-O controle de versão do rascunho rejeita uma gravação baseada em uma versão antiga, evitando que
-duas abas sobrescrevam alterações silenciosamente.
+O backend não conhece seções, temas, textos editoriais, imagens, versões ou dados descritivos do
+evento. Ele permanece responsável por autenticação, convidados, convites e RSVP.
 
-## Locais e mapas
+### Administrador
 
-O conteúdo publicável define explicitamente se cerimônia e recepção compartilham um local ou usam
-locais separados. Cada momento pode ser ocultado, mas ao menos um deve permanecer visível e conter
-nome do local e endereço. Conteúdos anteriores a essa opção continuam sendo interpretados como dois
-locais separados e visíveis.
+O administrador não altera a apresentação pública. Mudanças no design ou conteúdo editorial são
+solicitadas ao desenvolvedor e entregues como uma nova versão do frontend.
 
-O campo geral de localização do casamento serve somente para preencher o primeiro rascunho. Depois
-disso, nome, endereço, visibilidade e link do mapa seguem o mesmo versionamento dos demais conteúdos:
-salvar altera o rascunho e publicar atualiza o que os convidados veem.
+## Estrutura recomendada
 
-Links de mapa são opcionais e aceitam apenas HTTPS em endereços conhecidos do Google Maps. A página
-pública abre o destino em nova aba com isolamento da página de origem. No modo compartilhado, os
-horários de cerimônia e recepção continuam distintos, mas nome, endereço e ação de mapa aparecem uma
-única vez.
+A página específica fica em `frontend/src/app/features/public-site`. Imagens do casamento devem ser
+armazenadas sob `frontend/public`, com nomes descritivos e versões adequadas às larguras utilizadas.
+Não crie schemas genéricos, DTOs de página ou abstrações configuráveis sem uma nova decisão
+arquitetural.
 
-## Imagens locais
+## Critérios permanentes
 
-Fotos serão representadas por metadados com origem, texto alternativo e dimensões. O contrato não
-depende de um provedor específico: arquivos locais podem ser usados durante o desenvolvimento e um
-armazenamento de objetos poderá ser conectado apenas na etapa de lançamento.
+- experiência utilizável a partir de 320 px;
+- navegação por teclado, foco visível, semântica e contraste adequados;
+- conteúdo compreensível com JavaScript de animação indisponível;
+- respeito a `prefers-reduced-motion`;
+- imagens com dimensões declaradas, formatos eficientes e carregamento apropriado;
+- nenhuma dependência de API para renderizar conteúdo editorial.
 
-Por padrão, os arquivos ficam em `.local-data/media` (fora do Git). O diretório pode ser alterado
-pela variável `MEDIA_LOCAL_DIRECTORY`. JPG e PNG são aceitos, com limite de 5 MB e 6000 pixels por
-dimensão.
-
-Uma imagem de rascunho só pode ser lida pela rota administrativa autenticada. A rota pública de
-mídia passa a servi-la apenas quando a versão que a referencia é publicada. O renderizador solicita
-larguras de 480, 768, 1280 ou 1920 pixels conforme a tela; o backend reduz a imagem localmente sem
-alterar o arquivo original.
-
-Uma foto pode ocupar o fundo da abertura. As demais são associadas à história, agenda, avisos ou
-RSVP e aparecem em capítulos de tela cheia durante a rolagem. A ordem é controlada pelo conteúdo,
-e o mesmo resultado é usado na prévia administrativa e na página pública.
-
-## Limites desta etapa
-
-- Não existe edição livre de HTML, CSS ou JavaScript.
-- As seções suportadas possuem estrutura estável e acessível.
-- O construtor visual amplo permanece como estudo futuro na issue #49.
-- Não existe recorte destrutivo: o ponto focal controla o enquadramento responsivo e preserva o
-  arquivo original.
+Esta decisão está registrada no [ADR 0007](adr/0007-sites-personalizados-em-codigo.md) e na issue
+[#57](https://github.com/tobiasfkk/wedding_platform/issues/57).

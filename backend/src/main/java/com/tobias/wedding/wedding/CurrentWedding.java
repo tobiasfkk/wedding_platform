@@ -14,17 +14,12 @@ public class CurrentWedding {
         this.repositories = repositories;
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public UUID requireId() {
         return repositories.getObject().findFirstByOrderByCreatedAtAsc()
                 .map(WeddingEvent::id)
-                .orElseThrow(WeddingNotConfiguredException::new);
-    }
-
-    @Transactional(readOnly = true)
-    public String requireLocation() {
-        return repositories.getObject().findFirstByOrderByCreatedAtAsc()
-                .map(WeddingEvent::location)
-                .orElseThrow(WeddingNotConfiguredException::new);
+                .orElseGet(() -> repositories.getObject()
+                        .saveAndFlush(WeddingEvent.installationContext())
+                        .id());
     }
 }

@@ -7,32 +7,6 @@ import { RouterTestingHarness } from '@angular/router/testing';
 import { apiSecurityInterceptor } from './core/auth/api-security.interceptor';
 import { routes } from './app.routes';
 
-const publishedSite = {
-  content: {
-    hero: {
-      eyebrow: 'Celebração',
-      title: 'Um dia para guardar na memória.',
-      introduction: 'Vamos celebrar juntos.',
-      dateLabel: '8 de maio de 2027',
-    },
-    story: {
-      eyebrow: 'Nossa história',
-      title: 'Do encontro ao sim',
-      paragraphs: ['Nossa história.'],
-      imageId: null,
-      imageAlt: null,
-      imageWidth: null,
-      imageHeight: null,
-    },
-    schedule: [],
-    notices: ['Chegue com antecedência.'],
-    rsvp: { eyebrow: 'RSVP', title: 'Confirme', description: 'Use seu convite.' },
-    sectionOrder: ['STORY', 'SCHEDULE', 'NOTICES', 'RSVP'],
-  },
-  version: 1,
-  publishedAt: '2027-01-01T12:00:00Z',
-};
-
 describe('Application routes', () => {
   let http: HttpTestingController;
 
@@ -49,11 +23,9 @@ describe('Application routes', () => {
 
   afterEach(() => http.verify());
 
-  it('loads the published home', async () => {
+  it('loads the wedding-specific home without requesting event content', async () => {
     const harness = await RouterTestingHarness.create();
     await harness.navigateByUrl('/');
-    http.expectOne('/api/public/site').flush(publishedSite);
-    await new Promise((resolve) => setTimeout(resolve, 0));
 
     expect(harness.routeNativeElement?.querySelector('h1')?.textContent).toContain(
       'Um dia para guardar na memória.',
@@ -113,18 +85,6 @@ describe('Application routes', () => {
       csrfToken: 'csrf-token',
     });
     await navigation;
-    http.expectOne('/api/admin/wedding').flush({
-      configured: false,
-      displayName: '',
-      eventDate: null,
-      eventTime: null,
-      location: '',
-      rsvpDeadlineDate: null,
-      rsvpDeadlineTime: null,
-      timeZone: 'America/Sao_Paulo',
-      version: 0,
-    });
-
     expect(harness.routeNativeElement?.querySelector('h1')?.textContent).toContain('Administração');
   });
 });

@@ -11,13 +11,7 @@ import com.tobias.wedding.invitation.InvitationStateException;
 import com.tobias.wedding.rsvp.RsvpAccessException;
 import com.tobias.wedding.rsvp.RsvpDashboardFilterException;
 import com.tobias.wedding.rsvp.RsvpSubmissionException;
-import com.tobias.wedding.site.SiteMediaNotFoundException;
-import com.tobias.wedding.site.SiteMediaValidationException;
-import com.tobias.wedding.site.WeddingSiteNotPublishedException;
-import com.tobias.wedding.site.WeddingSiteValidationException;
-import com.tobias.wedding.site.WeddingSiteVersionConflictException;
-import com.tobias.wedding.wedding.WeddingNotConfiguredException;
-import com.tobias.wedding.wedding.WeddingSettingsValidationException;
+import com.tobias.wedding.wedding.RsvpDeadlineValidationException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import java.net.URI;
@@ -102,62 +96,6 @@ public class ApiExceptionHandler {
                 "AUTHENTICATION_FAILED"));
     }
 
-    @ExceptionHandler(WeddingSettingsValidationException.class)
-    ResponseEntity<ProblemDetail> handleWeddingSettingsValidation(WeddingSettingsValidationException exception) {
-        ProblemDetail problem = problem(
-                HttpStatus.BAD_REQUEST,
-                VALIDATION_TYPE,
-                "Dados inválidos",
-                "Um ou mais campos são inválidos.",
-                "VALIDATION_ERROR");
-        problem.setProperty("errors", List.of(new ApiFieldError(exception.field(), exception.getMessage())));
-        return ResponseEntity.badRequest().body(problem);
-    }
-
-    @ExceptionHandler(WeddingSiteValidationException.class)
-    ResponseEntity<ProblemDetail> handleWeddingSiteValidation(WeddingSiteValidationException exception) {
-        ProblemDetail problem = problem(
-                HttpStatus.BAD_REQUEST,
-                VALIDATION_TYPE,
-                "Conteúdo inválido",
-                "Revise o conteúdo do site antes de continuar.",
-                "VALIDATION_ERROR");
-        problem.setProperty("errors", List.of(new ApiFieldError(exception.field(), exception.getMessage())));
-        return ResponseEntity.badRequest().body(problem);
-    }
-
-    @ExceptionHandler(SiteMediaValidationException.class)
-    ResponseEntity<ProblemDetail> handleSiteMediaValidation(SiteMediaValidationException exception) {
-        ProblemDetail problem = problem(
-                HttpStatus.BAD_REQUEST,
-                VALIDATION_TYPE,
-                "Imagem inválida",
-                exception.getMessage(),
-                "SITE_MEDIA_INVALID");
-        problem.setProperty("errors", List.of(new ApiFieldError("file", exception.getMessage())));
-        return ResponseEntity.badRequest().body(problem);
-    }
-
-    @ExceptionHandler({WeddingSiteNotPublishedException.class, SiteMediaNotFoundException.class})
-    ResponseEntity<ProblemDetail> handlePublicSiteNotFound(RuntimeException exception) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(problem(
-                HttpStatus.NOT_FOUND,
-                NOT_FOUND_TYPE,
-                "Conteúdo indisponível",
-                exception.getMessage(),
-                "SITE_NOT_PUBLISHED"));
-    }
-
-    @ExceptionHandler(WeddingSiteVersionConflictException.class)
-    ResponseEntity<ProblemDetail> handleWeddingSiteVersionConflict(WeddingSiteVersionConflictException exception) {
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(problem(
-                HttpStatus.CONFLICT,
-                CONFLICT_TYPE,
-                "Rascunho desatualizado",
-                exception.getMessage(),
-                "SITE_DRAFT_VERSION_CONFLICT"));
-    }
-
     @ExceptionHandler(GuestFilterException.class)
     ResponseEntity<ProblemDetail> handleGuestFilter(GuestFilterException exception) {
         ProblemDetail problem = problem(
@@ -178,16 +116,6 @@ public class ApiExceptionHandler {
                 "Convidado não encontrado",
                 exception.getMessage(),
                 "GUEST_NOT_FOUND"));
-    }
-
-    @ExceptionHandler(WeddingNotConfiguredException.class)
-    ResponseEntity<ProblemDetail> handleWeddingNotConfigured(WeddingNotConfiguredException exception) {
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(problem(
-                HttpStatus.CONFLICT,
-                CONFLICT_TYPE,
-                "Casamento não configurado",
-                exception.getMessage(),
-                "WEDDING_NOT_CONFIGURED"));
     }
 
     @ExceptionHandler(InvitationFilterException.class)
@@ -253,6 +181,18 @@ public class ApiExceptionHandler {
                 "Respostas não salvas",
                 exception.getMessage(),
                 "RSVP_SUBMISSION_CONFLICT"));
+    }
+
+    @ExceptionHandler(RsvpDeadlineValidationException.class)
+    ResponseEntity<ProblemDetail> handleRsvpDeadlineValidation(RsvpDeadlineValidationException exception) {
+        ProblemDetail problem = problem(
+                HttpStatus.BAD_REQUEST,
+                VALIDATION_TYPE,
+                "Prazo inválido",
+                exception.getMessage(),
+                "VALIDATION_ERROR");
+        problem.setProperty("errors", List.of(new ApiFieldError(exception.field(), exception.getMessage())));
+        return ResponseEntity.badRequest().body(problem);
     }
 
     @ExceptionHandler({InvitationGuestConflictException.class, GuestSelectionException.class})

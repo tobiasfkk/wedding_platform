@@ -1,6 +1,6 @@
 import { DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
@@ -21,6 +21,40 @@ type StatusFilter = RsvpStatus | 'ALL';
       <p class="lead">
         Acompanhe a situação atual dos convidados e faça correções quando necessário.
       </p>
+
+      <section class="deadline-card" aria-labelledby="deadline-title">
+        <div>
+          <p class="eyebrow">Prazo público</p>
+          <h2 id="deadline-title">Data-limite para confirmação</h2>
+          <p>
+            Após esse momento, convidados podem consultar a resposta, mas somente o administrador
+            pode alterá-la.
+          </p>
+        </div>
+        @if (deadlineLoading()) {
+          <p role="status">Carregando prazo…</p>
+        } @else {
+          <form class="deadline-form" [formGroup]="deadlineForm" (ngSubmit)="saveDeadline()">
+            <label>
+              Data-limite
+              <input type="date" formControlName="deadlineDate" />
+            </label>
+            <label>
+              Horário-limite
+              <input type="time" formControlName="deadlineTime" />
+            </label>
+            <button mat-flat-button type="submit" [disabled]="deadlineSaving()">
+              {{ deadlineSaving() ? 'Salvando…' : 'Salvar prazo' }}
+            </button>
+          </form>
+          <p class="deadline-timezone">Horários em {{ deadlineTimeZone() }}</p>
+          @if (deadlineError()) {
+            <p class="message message--error" role="alert">{{ deadlineError() }}</p>
+          } @else if (deadlineSaved()) {
+            <p class="message message--success" role="status">Prazo atualizado com sucesso.</p>
+          }
+        }
+      </section>
 
       @if (result(); as dashboard) {
         <div class="totals" aria-label="Totais de RSVP">
@@ -156,6 +190,30 @@ type StatusFilter = RsvpStatus | 'ALL';
       gap: 1rem;
       margin-block: 2rem;
     }
+    .deadline-card {
+      display: grid;
+      gap: 1rem;
+      margin-block: 2rem;
+      padding: 1.25rem;
+      border: 1px solid var(--color-border);
+      border-radius: 1rem;
+      background: var(--color-surface);
+    }
+    .deadline-form {
+      display: grid;
+      grid-template-columns: minmax(10rem, 1fr) minmax(9rem, 0.65fr) auto;
+      align-items: end;
+      gap: 1rem;
+    }
+    .deadline-form label {
+      display: grid;
+      gap: 0.4rem;
+      font-weight: 700;
+    }
+    .deadline-timezone {
+      color: var(--color-text-muted);
+      font-size: 0.9rem;
+    }
     .totals article {
       display: grid;
       gap: 0.2rem;
@@ -271,8 +329,13 @@ type StatusFilter = RsvpStatus | 'ALL';
       background: #fff0f1;
       color: #8b2032;
     }
+    .message--success {
+      background: #e8f5ec;
+      color: #286540;
+    }
     @media (max-width: 42rem) {
       .totals,
+      .deadline-form,
       .filters,
       .people {
         grid-template-columns: 1fr;
@@ -283,6 +346,7 @@ type StatusFilter = RsvpStatus | 'ALL';
         flex-direction: column;
       }
       .invitation header a,
+      .deadline-form button,
       .filters button,
       .pagination button {
         width: 100%;
@@ -304,12 +368,22 @@ export class RsvpDashboard {
     query: new FormControl('', { nonNullable: true }),
     status: new FormControl<StatusFilter>('ALL', { nonNullable: true }),
   });
+  readonly deadlineForm = new FormGroup({
+    deadlineDate: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+    deadlineTime: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+  });
   readonly loading = signal(true);
   readonly error = signal<string | null>(null);
   readonly result = signal<RsvpDashboardResponse | null>(null);
+  readonly deadlineLoading = signal(true);
+  readonly deadlineSaving = signal(false);
+  readonly deadlineError = signal<string | null>(null);
+  readonly deadlineSaved = signal(false);
+  readonly deadlineTimeZone = signal('America/Sao_Paulo');
 
   constructor() {
     this.load();
+    this.loadDeadline();
   }
 
   search(): void {
@@ -334,5 +408,52 @@ export class RsvpDashboard {
 
   statusLabel(status: RsvpStatus): string {
     return { CONFIRMED: 'Confirmado', DECLINED: 'Não participará', PENDING: 'Pendente' }[status];
+  }
+
+  saveDeadline(): void {
+    this.deadlineForm.markAllAsTouched();
+    if (this.deadlineForm.invalid || this.deadlineSaving()) {
+      this.deadlineError.set('Informe a data e o horário-limite.');
+      return;
+    }
+    this.deadlineSaving.set(true);
+    this.deadlineError.set(null);
+    this.deadlineSaved.set(false);
+    this.service
+      .saveDeadline({
+        ...this.deadlineForm.getRawValue(),
+        timeZone: this.deadlineTimeZone(),
+      })
+      .pipe(finalize(() => this.deadlineSaving.set(false)))
+      .subscribe({
+        next: (deadline) => {
+          this.applyDeadline(deadline);
+          this.deadlineSaved.set(true);
+        },
+        error: () => this.deadlineError.set('Não foi possível salvar a data-limite do RSVP.'),
+      });
+  }
+
+  private loadDeadline(): void {
+    this.service
+      .loadDeadline()
+      .pipe(finalize(() => this.deadlineLoading.set(false)))
+      .subscribe({
+        next: (deadline) => this.applyDeadline(deadline),
+        error: () => this.deadlineError.set('Não foi possível carregar a data-limite do RSVP.'),
+      });
+  }
+
+  private applyDeadline(deadline: {
+    deadlineDate: string | null;
+    deadlineTime: string | null;
+    timeZone: string;
+  }): void {
+    this.deadlineTimeZone.set(deadline.timeZone);
+    this.deadlineForm.setValue({
+      deadlineDate: deadline.deadlineDate ?? '',
+      deadlineTime: deadline.deadlineTime?.slice(0, 5) ?? '',
+    });
+    this.deadlineForm.markAsPristine();
   }
 }

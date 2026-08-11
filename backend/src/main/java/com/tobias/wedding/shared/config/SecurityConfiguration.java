@@ -35,8 +35,6 @@ public class SecurityConfiguration {
                         .requestMatchers(HttpMethod.GET, "/api/rsvp/session").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/rsvp/access").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/rsvp/responses").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/public/site", "/api/public/site/media/**")
-                        .permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated())
                 .cors(cors -> {})

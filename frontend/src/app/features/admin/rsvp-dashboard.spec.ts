@@ -21,6 +21,12 @@ describe('RsvpDashboard', () => {
   it('shows totals and requests the selected filters', () => {
     const fixture = TestBed.createComponent(RsvpDashboard);
     fixture.detectChanges();
+    http.expectOne('/api/admin/rsvp/deadline').flush({
+      configured: true,
+      deadlineDate: '2027-04-08',
+      deadlineTime: '23:59:00',
+      timeZone: 'America/Sao_Paulo',
+    });
     http
       .expectOne(
         (request) =>
@@ -69,5 +75,48 @@ describe('RsvpDashboard', () => {
       totalElements: 0,
       totalPages: 0,
     });
+  });
+
+  it('configures the public RSVP deadline from the dashboard', () => {
+    const fixture = TestBed.createComponent(RsvpDashboard);
+    fixture.detectChanges();
+    http.expectOne('/api/admin/rsvp/dashboard?query=&status=ALL&page=0&size=20').flush({
+      totals: { confirmed: 0, declined: 0, pending: 0 },
+      items: [],
+      page: 0,
+      size: 20,
+      totalElements: 0,
+      totalPages: 0,
+    });
+    http.expectOne('/api/admin/rsvp/deadline').flush({
+      configured: false,
+      deadlineDate: null,
+      deadlineTime: null,
+      timeZone: 'America/Sao_Paulo',
+    });
+    fixture.detectChanges();
+
+    fixture.componentInstance.deadlineForm.setValue({
+      deadlineDate: '2027-04-08',
+      deadlineTime: '23:59',
+    });
+    fixture.componentInstance.saveDeadline();
+
+    const save = http.expectOne('/api/admin/rsvp/deadline');
+    expect(save.request.method).toBe('PUT');
+    expect(save.request.body).toEqual({
+      deadlineDate: '2027-04-08',
+      deadlineTime: '23:59',
+      timeZone: 'America/Sao_Paulo',
+    });
+    save.flush({
+      configured: true,
+      deadlineDate: '2027-04-08',
+      deadlineTime: '23:59:00',
+      timeZone: 'America/Sao_Paulo',
+    });
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('Prazo atualizado com sucesso');
   });
 });

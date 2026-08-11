@@ -50,17 +50,10 @@ class GuestManagementIntegrationTest {
         weddingId = UUID.randomUUID();
         OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
         jdbcClient.sql("""
-                        INSERT INTO wedding.wedding_event (
-                            id, display_name, starts_at, rsvp_deadline, time_zone, location,
-                            version, created_at, updated_at
-                        ) VALUES (
-                            :id, 'Casamento de teste', :startsAt, :deadline, 'America/Sao_Paulo',
-                            'Local de teste', 0, :now, :now
-                        )
+                        INSERT INTO wedding.wedding_event (id, created_at)
+                        VALUES (:id, :now)
                         """)
                 .param("id", weddingId)
-                .param("startsAt", OffsetDateTime.parse("2027-05-08T19:00:00Z"))
-                .param("deadline", OffsetDateTime.parse("2027-04-08T02:59:00Z"))
                 .param("now", now)
                 .update();
     }

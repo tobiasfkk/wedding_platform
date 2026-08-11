@@ -35,7 +35,7 @@ fragmento do histórico.
 
 A rotação ocorrerá em uma única transação: cria o novo resumo, revoga o anterior e registra data e
 autor. Resumos revogados serão mantidos para auditoria, mas nunca voltarão a autenticar. A validade
-também respeitará estado do convite e data-limite configurada.
+também respeitará o estado ativo ou inativo do convite.
 
 Durante a rotação do `pepper`, a aplicação calculará o HMAC com as versões ativa e anterior e buscará
 ambos os resumos. Convites ainda associados à versão anterior serão regenerados antes de remover o

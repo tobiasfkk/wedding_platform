@@ -21,5 +21,6 @@ Status possíveis: `Proposto`, `Aceito`, `Rejeitado`, `Substituído` e `Obsoleto
 | [0004](0004-estrutura-do-repositorio.md) | Monorepo para aplicação e infraestrutura | Aceito |
 | [0005](0005-interface-e-testes-e2e.md) | Angular Material e Playwright | Aceito |
 | [0006](0006-hospedagem-inicial.md) | Cloudflare Pages e serviços gerenciados na AWS | Aceito |
+| [0007](0007-sites-personalizados-em-codigo.md) | Sites personalizados implementados em código | Aceito |
 
 Use o [template](0000-template.md) para novas decisões.

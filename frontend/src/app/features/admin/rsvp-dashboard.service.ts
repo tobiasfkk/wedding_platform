@@ -30,6 +30,19 @@ export interface RsvpDashboardResponse {
   totalPages: number;
 }
 
+export interface RsvpDeadline {
+  configured: boolean;
+  deadlineDate: string | null;
+  deadlineTime: string | null;
+  timeZone: string;
+}
+
+export interface RsvpDeadlineUpdate {
+  deadlineDate: string;
+  deadlineTime: string;
+  timeZone: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class RsvpDashboardService {
   private readonly http = inject(HttpClient);
@@ -46,5 +59,13 @@ export class RsvpDashboardService {
       .set('page', page)
       .set('size', size);
     return this.http.get<RsvpDashboardResponse>('/api/admin/rsvp/dashboard', { params });
+  }
+
+  loadDeadline(): Observable<RsvpDeadline> {
+    return this.http.get<RsvpDeadline>('/api/admin/rsvp/deadline');
+  }
+
+  saveDeadline(deadline: RsvpDeadlineUpdate): Observable<RsvpDeadline> {
+    return this.http.put<RsvpDeadline>('/api/admin/rsvp/deadline', deadline);
   }
 }

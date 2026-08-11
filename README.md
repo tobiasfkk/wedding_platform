@@ -1,18 +1,20 @@
 # Wedding Platform
 
-Plataforma web para centralizar informações de um casamento, administrar convidados e convites e receber confirmações de presença.
+Plataforma web com um site público exclusivo por casamento, administração de convidados e convites e
+confirmação de presença.
 
 O projeto também é um estudo prático de engenharia de software: requisitos rastreáveis, arquitetura evolutiva, testes automatizados, segurança, observabilidade e entrega contínua serão introduzidos de forma incremental.
 
 ## Status
 
-O produto está na **Fase 1 — MVP de convites e RSVP**. A fundação técnica e arquitetural está
-concluída. A autenticação administrativa por sessão e a configuração dos dados essenciais do
-casamento estão disponíveis.
+Os fluxos de autenticação, convidados, convites e RSVP estão implementados. O site público
+é personalizado diretamente no frontend para cada casamento; clientes e administradores não editam
+layout, conteúdo editorial ou mídia pela aplicação.
 
 ## Documentação
 
 - [Especificação do produto](docs/ESPECIFICACAO_DO_PROJETO.md)
+- [Direção do site público personalizado](docs/SITE_PUBLICO_E_CONTEUDO.md)
 - [Wireframes de baixa fidelidade](docs/WIREFRAMES_BAIXA_FIDELIDADE.md)
 - [Decisões arquiteturais](docs/adr/README.md)
 - [Índice da documentação](docs/README.md)
@@ -50,7 +52,10 @@ O ambiente local usa Docker Compose para disponibilizar o PostgreSQL sem instala
 
 ## Arquitetura planejada
 
-A solução começará como um **monólito modular**, com frontend e infraestrutura mantidos no mesmo repositório. Mensageria e microsserviços somente serão introduzidos quando houver um caso de uso e benefício mensurável.
+A solução usa um **monólito modular** para os dados operacionais e um frontend Angular estático. Cada
+site público é implementado em código conforme o design aprovado, enquanto o backend permanece
+restrito a autenticação, convidados, convites e RSVP. Mensageria e microsserviços somente
+serão introduzidos quando houver um caso de uso e benefício mensurável.
 
 Stack inicial planejada:
 

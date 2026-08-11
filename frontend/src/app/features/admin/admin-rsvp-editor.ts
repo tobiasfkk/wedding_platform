@@ -27,10 +27,7 @@ import { AdminRsvpResponse, AdminRsvpService } from './admin-rsvp.service';
           <header>
             <div>
               <h2>{{ currentInvitation.groupName }}</h2>
-              <p>
-                Registre respostas recebidas por outro canal. A correção administrativa funciona
-                mesmo após a data-limite pública.
-              </p>
+              <p>Registre respostas recebidas por outro canal ou corrija os dados deste convite.</p>
             </div>
             @if (hasExistingResponse()) {
               <span class="status">Resposta existente</span>

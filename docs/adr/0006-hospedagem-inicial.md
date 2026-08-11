@@ -4,7 +4,7 @@
 - **Data:** 2026-08-03
 - **Decisor:** Tobias Felipe Kiefer
 - **Substitui:** não se aplica
-- **Substituído por:** não se aplica
+- **Substituído por:** ADR 0007 somente quanto ao armazenamento de imagens do site
 
 ## Contexto
 
@@ -14,7 +14,7 @@ avaliada pelo custo normal após os créditos. Os usuários estarão majoritaria
 
 ## Opções consideradas
 
-1. Angular no Cloudflare Pages; API no AWS App Runner; PostgreSQL no RDS; imagens no S3.
+1. Angular e seus ativos no Cloudflare Pages; API no AWS App Runner; PostgreSQL no RDS.
 2. Toda a aplicação em uma máquina virtual com Docker Compose.
 3. ECS/Fargate com balanceador desde o início.
 4. Plataformas externas com banco e backend serverless.
@@ -27,14 +27,11 @@ Adotar inicialmente:
 - imagem OCI do Spring Boot no ECR e execução no App Runner com 1 vCPU/2 GB, no máximo três instâncias;
 - PostgreSQL no RDS `db.t4g.micro`, Single-AZ, 20 GB GP3, backups diários criptografados e retenção de
   sete dias;
-- imagens em bucket S3 privado, criptografado, versionado e servido por URLs assinadas ou CloudFront
-  com origem privada;
 - credenciais do banco e `pepper` no AWS Secrets Manager;
 - AWS Budgets e alertas em US$ 10, US$ 25 e US$ 40 de gasto mensal.
 
-App Runner, RDS, ECR, S3 e segredos ficarão em `us-east-1`. O App Runner acessará o RDS privado por VPC
-Connector; acesso ao S3 usará endpoint de VPC quando aplicável, evitando NAT Gateway no desenho
-inicial. A API e o frontend usarão subdomínios do mesmo domínio registrável.
+App Runner, RDS, ECR e segredos ficarão em `us-east-1`. O App Runner acessará o RDS privado por VPC
+Connector. A API e o frontend usarão subdomínios do mesmo domínio registrável.
 
 `us-east-1` foi escolhido porque App Runner não está disponível em `sa-east-1` e porque a faixa de
 preço é menor. Latência Brasil–Virgínia e transferência internacional de dados deverão ser medidas e
@@ -50,7 +47,6 @@ Estimativa em dólares, consultada em 2026-08-03 para 730 horas/mês, tráfego b
 | Cloudflare Pages | Site estático no plano Free | US$ 0 |
 | App Runner | 2 GB provisionados: `2 × 730 × US$ 0,007`, mais CPU ativa baixa | US$ 11–15 |
 | RDS PostgreSQL | `db.t4g.micro`: `730 × US$ 0,016`; GP3: `20 × US$ 0,115` | US$ 13,98 |
-| S3 | Até 5 GB, poucas operações e baixo tráfego | US$ 0,15–1 |
 | Secrets Manager | Três segredos a US$ 0,40 | US$ 1,20 |
 | ECR, CloudWatch e transferência | Imagem pequena, logs limitados e margem de tráfego | US$ 2–10 |
 | **Total esperado** | Sem domínio, impostos ou picos | **US$ 28–40/mês** |
@@ -69,8 +65,7 @@ reduzirão o risco de gasto inesperado.
 - RDS Single-AZ é o primeiro gargalo e não possui failover automático. Antes de uso comercial ou de
   um evento cuja indisponibilidade seja crítica, avaliar Multi-AZ e teste de restauração.
 - RPO inicial é 24 horas e RTO é 4 horas. Restauração será testada ao menos antes de cada lançamento.
-- Imagens crescem independentemente no S3; lifecycle removerá versões antigas conforme a política de
-  retenção.
+- Imagens públicas fazem parte do frontend estático e devem respeitar os limites do Cloudflare Pages.
 
 ## Estratégia de saída e migração
 
@@ -80,8 +75,7 @@ reduzirão o risco de gasto inesperado.
   Kubernetes, máquina virtual ou outro provedor.
 - O banco usa PostgreSQL padrão e Flyway. Saída usa `pg_dump`/`pg_restore`, validação de contagem e
   janela de dupla escrita somente se o downtime aceitável não for suficiente.
-- O acesso a objetos ficará atrás de uma porta da aplicação. Objetos S3 podem ser exportados com
-  checksum e manifesto para armazenamento compatível.
+- Os ativos públicos podem migrar junto com o frontend para qualquer host estático ou CDN.
 - Infraestrutura deverá ser codificada antes da primeira produção para permitir reconstrução e
   rollback reproduzíveis.
 
@@ -90,8 +84,8 @@ reduzirão o risco de gasto inesperado.
 ### Positivas
 
 - Frontend global sem custo fixo e backend com deploy e TLS gerenciados.
-- Banco e objetos usam serviços maduros, backup e criptografia gerenciáveis.
-- Tecnologias portáveis — arquivos estáticos, OCI, PostgreSQL e API S3 — reduzem lock-in.
+- O banco usa serviço gerenciado com backup e criptografia configuráveis.
+- Tecnologias portáveis — arquivos estáticos, OCI e PostgreSQL — reduzem lock-in.
 
 ### Negativas e trade-offs
 
@@ -109,8 +103,7 @@ reduzirão o risco de gasto inesperado.
 | Indisponibilidade do RDS Single-AZ | Backup diário, restauração testada e gatilho explícito para Multi-AZ |
 | Latência para o Brasil | Medir p95 em homologação; migrar API e banco juntos se necessário |
 | Transferência internacional inadequada | Minimização, criptografia, registro da base legal e revisão jurídica/LGPD |
-| Exposição de imagens | Bucket privado, bloqueio de acesso público e URLs/ CDN assinadas |
-| Lock-in | OCI, PostgreSQL padrão, Flyway, adaptador de objetos e infraestrutura como código |
+| Lock-in | Ativos estáticos, OCI, PostgreSQL padrão, Flyway e infraestrutura como código |
 
 ## Critérios de revisão
 
@@ -129,6 +122,5 @@ reduzirão o risco de gasto inesperado.
 - [Regiões do AWS App Runner](https://docs.aws.amazon.com/general/latest/gr/apprunner.html).
 - [Preço do RDS PostgreSQL](https://aws.amazon.com/rds/postgresql/pricing/).
 - [Catálogo oficial do RDS em us-east-1](https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonRDS/current/us-east-1/index.json), SKUs consultados em 2026-08-03.
-- [Preço do S3](https://aws.amazon.com/s3/pricing/).
 - [Preço do Secrets Manager](https://aws.amazon.com/secrets-manager/pricing/).
 - [AWS Free Tier](https://aws.amazon.com/free/free-tier-faqs/).
