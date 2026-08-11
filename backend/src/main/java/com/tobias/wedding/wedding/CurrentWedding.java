@@ -14,12 +14,10 @@ public class CurrentWedding {
         this.repositories = repositories;
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public UUID requireId() {
         return repositories.getObject().findFirstByOrderByCreatedAtAsc()
                 .map(WeddingEvent::id)
-                .orElseGet(() -> repositories.getObject()
-                        .saveAndFlush(WeddingEvent.installationContext())
-                        .id());
+                .orElseThrow(() -> new IllegalStateException("Wedding installation context not found"));
     }
 }
