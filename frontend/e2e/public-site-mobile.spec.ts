@@ -40,11 +40,21 @@ for (const width of [320, 390, 430]) {
     const photoRail = page.locator('.photo-rail');
     await photoRail.scrollIntoViewIfNeeded();
     await expect(photoRail).toBeVisible();
+    const firstPhoto = photoRail.locator('img').first();
+    await expect(firstPhoto).toBeVisible();
+    await expect
+      .poll(() => firstPhoto.evaluate((image) => (image as HTMLImageElement).naturalWidth))
+      .toBeGreaterThan(0);
     const railDimensions = await photoRail.evaluate((element) => ({
       clientWidth: element.clientWidth,
       scrollWidth: element.scrollWidth,
     }));
     expect(railDimensions.scrollWidth).toBeGreaterThan(railDimensions.clientWidth);
+    await photoRail.evaluate((element) => element.scrollTo({ left: element.scrollWidth }));
+    const lastPhoto = photoRail.locator('img').last();
+    await expect
+      .poll(() => lastPhoto.evaluate((image) => (image as HTMLImageElement).naturalWidth))
+      .toBeGreaterThan(0);
 
     const rsvp = page.locator('.rsvp-section');
     await rsvp.scrollIntoViewIfNeeded();

@@ -48,7 +48,7 @@ describe('PublicHome', () => {
 
     expect(animatedElements.length).toBeGreaterThan(20);
     expect(element.querySelectorAll('[data-reveal="line"]')).toHaveLength(3);
-    expect(element.querySelectorAll('[data-reveal="clip"]')).toHaveLength(4);
+    expect(element.querySelectorAll('[data-reveal="clip"]')).toHaveLength(7);
     expect(
       Array.from(animatedElements).every((item) => item.classList.contains('is-visible')),
     ).toBe(true);
@@ -61,7 +61,11 @@ describe('PublicHome', () => {
 
     expect(rail?.getAttribute('tabindex')).toBe('0');
     expect(rail?.getAttribute('aria-label')).toContain('Deslize horizontalmente');
-    expect(element.querySelectorAll('.photo-card')).toHaveLength(4);
+    expect(element.querySelectorAll('.photo-card')).toHaveLength(7);
+    expect(element.querySelectorAll('.photo-card img[loading="lazy"]')).toHaveLength(7);
+    expect(element.querySelector('.photo-card img')?.getAttribute('alt')).toContain(
+      'Tobias e Maria Eduarda',
+    );
   });
 
   it('keeps RSVP in the same page and explains how to use an individual invitation', () => {
