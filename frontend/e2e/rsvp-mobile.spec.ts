@@ -126,7 +126,7 @@ for (const width of [320, 360, 390, 430]) {
       expect((await buttons.nth(index).boundingBox())?.height).toBeGreaterThanOrEqual(44);
     }
 
-    await page.getByRole('button', { name: 'Vou participar' }).first().click();
+    await page.getByRole('button', { name: 'Sim' }).first().click();
     await page.getByRole('button', { name: 'Adicionar' }).click();
     const companion = page.getByLabel('Nome do acompanhante 1');
     await expect(companion).toBeFocused();

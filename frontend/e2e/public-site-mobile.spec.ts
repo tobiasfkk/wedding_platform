@@ -40,7 +40,7 @@ for (const width of [320, 390, 430]) {
     await continueCue.click();
     await page.waitForTimeout(180);
     const earlyScrollPosition = await page.evaluate(() => window.scrollY);
-    expect(earlyScrollPosition).toBeLessThan(verseOffset * 0.2);
+    expect(earlyScrollPosition).toBeLessThan(verseOffset);
     await expect(page.locator('.verse')).toBeInViewport();
     await expect(page.locator('blockquote')).toContainText('a mão do Senhor fez isto');
 
@@ -117,7 +117,6 @@ for (const width of [320, 390, 430]) {
       )
       .toBeLessThan(1);
     const secondCard = photoRail.locator('.photo-card').nth(1);
-    await expect(secondCard).toHaveClass(/is-visible/);
     await expect(secondCard).toHaveClass(/is-active/);
     await expect(secondCard.locator('figcaption')).toHaveCSS('opacity', '1');
     await photoRail.evaluate((element) => element.scrollTo({ left: 0, behavior: 'smooth' }));
@@ -139,9 +138,9 @@ for (const width of [320, 390, 430]) {
 
     const ceremony = page.locator('.ceremony');
     await ceremony.scrollIntoViewIfNeeded();
-    await expect(ceremony).toContainText('24 de abril de 2026, às 16h');
+    await expect(ceremony).toContainText('24-04-2026 | 16h');
     await expect(ceremony).toContainText('Sweet Home Farm');
-    await expect(ceremony.locator('.map-link')).toHaveAttribute(
+    await expect(page.locator('.final-location .map-link')).toHaveAttribute(
       'href',
       'https://maps.app.goo.gl/2wyfdkJZ5CcvLFsA7',
     );

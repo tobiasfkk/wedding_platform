@@ -268,6 +268,9 @@ type SubmissionState = 'idle' | 'saving' | 'saved' | 'error';
     .rsvp-card--centered {
       text-align: center;
     }
+    .rsvp-card button {
+      min-height: 2.75rem;
+    }
     h1,
     h2,
     h3 {
@@ -346,7 +349,6 @@ type SubmissionState = 'idle' | 'saving' | 'saved' | 'error';
     }
     .response-option {
       min-width: 0;
-      min-height: 2.25rem;
       padding: 0.65rem 0.45rem;
       border: 0;
       border-radius: 999px;
