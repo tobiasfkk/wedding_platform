@@ -23,7 +23,7 @@ class InvitationCodeCodecTest {
         assertThat(codec.verificationDigests(first.token()))
                 .containsExactly(new InvitationCodeCodec.CodeDigest(first.digest(), 1));
         assertThat(codec.publicLink(first.token()))
-                .isEqualTo("https://wedding.example/rsvp#code=" + first.token());
+                .isEqualTo("https://wedding.example/#code=" + first.token());
     }
 
     @Test

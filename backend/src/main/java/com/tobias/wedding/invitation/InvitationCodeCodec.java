@@ -45,7 +45,7 @@ class InvitationCodeCodec {
     }
 
     String publicLink(String token) {
-        return properties.publicBaseUrl() + "/rsvp#code=" + token;
+        return properties.publicBaseUrl() + "/#code=" + token;
     }
 
     private boolean isWellFormed(String token) {

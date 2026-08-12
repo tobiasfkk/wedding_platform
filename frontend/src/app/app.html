@@ -1,24 +1,26 @@
 <a class="skip-link" href="#main-content">Ir para o conteúdo principal</a>
 
-<header class="app-header">
-  <a class="brand" routerLink="/" aria-label="Nosso casamento — início">
-    <span class="brand__mark" aria-hidden="true">∞</span>
-    <span>Nosso casamento</span>
-  </a>
-
-  <nav aria-label="Navegação principal">
-    <a routerLink="/" routerLinkActive="is-active" [routerLinkActiveOptions]="{ exact: true }">
-      Início
+@if (showAdministrativeChrome()) {
+  <header class="app-header">
+    <a class="brand" routerLink="/admin" aria-label="Administração do casamento — início">
+      <span class="brand__mark" aria-hidden="true">∞</span>
+      <span>Administração</span>
     </a>
-    <a routerLink="/rsvp" routerLinkActive="is-active">Confirmar presença</a>
-    <a class="admin-link" routerLink="/admin" routerLinkActive="is-active">Área dos noivos</a>
-  </nav>
-</header>
 
-<main id="main-content" tabindex="-1">
+    <nav aria-label="Navegação administrativa">
+      <a routerLink="/admin/guests" routerLinkActive="is-active">Convidados</a>
+      <a routerLink="/admin/invitations" routerLinkActive="is-active">Convites</a>
+      <a routerLink="/admin/rsvp" routerLinkActive="is-active">Respostas</a>
+    </nav>
+  </header>
+}
+
+<main id="main-content" tabindex="-1" [class.main--public]="!showAdministrativeChrome()">
   <router-outlet />
 </main>
 
-<footer>
-  <p>Feito para celebrar o amor.</p>
-</footer>
+@if (showAdministrativeChrome()) {
+  <footer>
+    <p>Wedding Platform</p>
+  </footer>
+}

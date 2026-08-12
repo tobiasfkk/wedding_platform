@@ -26,10 +26,14 @@ describe('Application routes', () => {
   it('loads the wedding-specific home without requesting event content', async () => {
     const harness = await RouterTestingHarness.create();
     await harness.navigateByUrl('/');
+    http.expectOne('/api/rsvp/session').flush({
+      identified: false,
+      invitation: null,
+      csrfToken: 'rsvp-csrf',
+    });
+    await new Promise((resolve) => setTimeout(resolve, 0));
 
-    expect(harness.routeNativeElement?.querySelector('h1')?.textContent).toContain(
-      'Um dia para guardar na memória.',
-    );
+    expect(harness.routeNativeElement?.querySelector('h1')?.textContent).toContain('Maria Eduarda');
   });
 
   it('loads the administrative login', async () => {
@@ -53,7 +57,7 @@ describe('Application routes', () => {
     await new Promise((resolve) => setTimeout(resolve, 0));
 
     expect(harness.routeNativeElement?.querySelector('h1')?.textContent).toContain(
-      'Acesso indisponível',
+      'Este espaço é só seu',
     );
   });
 

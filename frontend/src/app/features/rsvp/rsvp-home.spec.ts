@@ -194,4 +194,21 @@ describe('RsvpHome', () => {
     expect(fixture.nativeElement.querySelector('h1')?.textContent).toContain('Acesso indisponível');
     expect(fixture.nativeElement.textContent).not.toContain('invalid-code');
   });
+
+  it('shows a neutral invitation note when the embedded home has no individual access', () => {
+    window.history.replaceState(null, '', '/');
+    const fixture = TestBed.createComponent(RsvpHome);
+    fixture.componentRef.setInput('embedded', true);
+    fixture.detectChanges();
+    http.expectOne('/api/rsvp/session').flush({
+      identified: false,
+      invitation: null,
+      csrfToken: 'rsvp-csrf',
+    });
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('Este espaço é só seu');
+    expect(fixture.nativeElement.textContent).toContain('Abra o link individual');
+    expect(fixture.nativeElement.querySelector('a[mat-stroked-button]')).toBeNull();
+  });
 });

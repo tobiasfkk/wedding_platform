@@ -1,8 +1,8 @@
 import { DOCUMENT } from '@angular/common';
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { RouterLink } from '@angular/router';
-import { switchMap } from 'rxjs';
+import { of, switchMap } from 'rxjs';
 
 import {
   RsvpAccessService,
@@ -11,7 +11,7 @@ import {
   RsvpStatus,
 } from './rsvp-access.service';
 
-type AccessState = 'loading' | 'success' | 'error' | 'rate-limited';
+type AccessState = 'loading' | 'idle' | 'success' | 'error' | 'rate-limited';
 type SubmissionState = 'idle' | 'saving' | 'saved' | 'error';
 
 @Component({
@@ -20,19 +20,28 @@ type SubmissionState = 'idle' | 'saving' | 'saved' | 'error';
   template: `
     <section
       class="rsvp-shell"
+      [class.rsvp-shell--embedded]="embedded()"
       [attr.aria-busy]="state() === 'loading' || submissionState() === 'saving'"
     >
       @if (state() === 'loading') {
         <div class="rsvp-card rsvp-card--centered" role="status">
           <p class="eyebrow">Confirmação de presença</p>
-          <h1 id="rsvp-state-title" tabindex="-1">Abrindo seu convite</h1>
+          @if (embedded()) {
+            <h3 id="rsvp-state-title" tabindex="-1">Abrindo seu convite</h3>
+          } @else {
+            <h1 id="rsvp-state-title" tabindex="-1">Abrindo seu convite</h1>
+          }
           <p class="lead">Estamos validando o acesso com segurança…</p>
           <span class="loading-indicator" aria-hidden="true"></span>
         </div>
       } @else if (state() === 'success' && invitation(); as currentInvitation) {
         <div class="rsvp-card">
           <p class="eyebrow">Seu convite</p>
-          <h1 id="rsvp-state-title" tabindex="-1">{{ currentInvitation.groupName }}</h1>
+          @if (embedded()) {
+            <h3 id="rsvp-state-title" tabindex="-1">{{ currentInvitation.groupName }}</h3>
+          } @else {
+            <h1 id="rsvp-state-title" tabindex="-1">{{ currentInvitation.groupName }}</h1>
+          }
           <form (submit)="submitFromForm($event)">
             @if (currentInvitation.editable) {
               <p class="lead">Informe a presença de cada pessoa do grupo.</p>
@@ -197,10 +206,26 @@ type SubmissionState = 'idle' | 'saving' | 'saved' | 'error';
             }
           </form>
         </div>
+      } @else if (state() === 'idle') {
+        <div class="rsvp-card rsvp-card--centered rsvp-card--invitation-note">
+          <p class="eyebrow">Seu convite</p>
+          @if (embedded()) {
+            <h3 id="rsvp-state-title" tabindex="-1">Este espaço é só seu.</h3>
+          } @else {
+            <h1 id="rsvp-state-title" tabindex="-1">Este espaço é só seu.</h1>
+          }
+          <p class="lead">
+            Abra o link individual que recebeu para consultar seu grupo e confirmar a presença.
+          </p>
+        </div>
       } @else {
         <div class="rsvp-card rsvp-card--centered">
           <p class="eyebrow">Confirmação de presença</p>
-          <h1 id="rsvp-state-title" tabindex="-1">Acesso indisponível</h1>
+          @if (embedded()) {
+            <h3 id="rsvp-state-title" tabindex="-1">Acesso indisponível</h3>
+          } @else {
+            <h1 id="rsvp-state-title" tabindex="-1">Acesso indisponível</h1>
+          }
           <p class="lead">
             Não foi possível abrir este convite. Confira o link recebido ou fale com os responsáveis
             pelo evento.
@@ -208,7 +233,9 @@ type SubmissionState = 'idle' | 'saving' | 'saved' | 'error';
           @if (state() === 'rate-limited') {
             <p class="supporting-message">Aguarde alguns minutos antes de tentar novamente.</p>
           }
-          <a mat-stroked-button routerLink="/">Voltar ao site</a>
+          @if (!embedded()) {
+            <a mat-stroked-button routerLink="/">Voltar ao site</a>
+          }
         </div>
       }
     </section>
@@ -223,6 +250,10 @@ type SubmissionState = 'idle' | 'saving' | 'saved' | 'error';
       min-height: min(42rem, calc(100dvh - 4rem));
       place-items: center;
     }
+    .rsvp-shell--embedded {
+      min-height: 0;
+      place-items: start stretch;
+    }
     .rsvp-card {
       width: min(100%, 36rem);
       padding: clamp(1.25rem, 6vw, 2.5rem);
@@ -232,11 +263,30 @@ type SubmissionState = 'idle' | 'saving' | 'saved' | 'error';
       background: color-mix(in srgb, var(--color-surface) 94%, transparent);
       box-shadow: 0 1rem 3rem rgb(75 48 38 / 8%);
     }
+    .rsvp-shell--embedded .rsvp-card {
+      width: 100%;
+      max-width: 42rem;
+      margin-inline: auto;
+      border-color: color-mix(in srgb, var(--color-border) 72%, transparent);
+      border-radius: 0.5rem;
+      box-shadow: none;
+    }
     .rsvp-card--centered {
       text-align: center;
     }
-    h1 {
+    h1,
+    h3 {
       font-size: clamp(2.25rem, 12vw, 4.5rem);
+    }
+    h3 {
+      margin: 0;
+      font-family: Georgia, 'Times New Roman', serif;
+      font-weight: 500;
+      line-height: 0.98;
+      letter-spacing: -0.035em;
+    }
+    .rsvp-card--invitation-note {
+      padding-block: clamp(2rem, 8vw, 4rem);
     }
     .lead {
       margin-block-end: 1.5rem;
@@ -458,6 +508,7 @@ type SubmissionState = 'idle' | 'saving' | 'saved' | 'error';
 export class RsvpHome {
   private readonly service = inject(RsvpAccessService);
   private readonly document = inject(DOCUMENT);
+  readonly embedded = input(false);
   readonly state = signal<AccessState>('loading');
   readonly invitation = signal<RsvpInvitation | null>(null);
   readonly submissionState = signal<SubmissionState>('idle');
@@ -472,19 +523,23 @@ export class RsvpHome {
       .pipe(
         switchMap((session) => {
           if (code) return this.service.access(code);
-          if (session.identified && session.invitation) return [session.invitation];
-          throw new Error('Invitation code unavailable');
+          if (session.identified && session.invitation) return of(session.invitation);
+          return of(null);
         }),
       )
       .subscribe({
         next: (invitation) => {
+          if (!invitation) {
+            this.state.set('idle');
+            return;
+          }
           this.applyInvitation(invitation);
           this.state.set('success');
-          this.focusState();
+          if (!this.embedded()) this.focusState();
         },
         error: (error) => {
           this.state.set(error.status === 429 ? 'rate-limited' : 'error');
-          this.focusState();
+          if (!this.embedded()) this.focusState();
         },
       });
   }

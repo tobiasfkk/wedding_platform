@@ -1,19 +1,15 @@
 :host {
-  --wedding-moss-950: #162019;
-  --wedding-moss-900: #1f2d23;
-  --wedding-moss-800: #2d4032;
-  --wedding-moss-700: #405744;
-  --wedding-moss-500: #6e806d;
-  --wedding-sage-200: #dce3d9;
-  --wedding-sage-100: #eef2eb;
-  --wedding-white: #fffef9;
-  --wedding-paper: #f7f6ef;
-  --wedding-ink: #1d241f;
-  --wedding-muted: #5f695f;
+  --paper: #f3eee3;
+  --paper-light: #faf7f0;
+  --paper-deep: #e6ddcc;
+  --forest: #26382d;
+  --forest-soft: #405548;
+  --sage: #9eac9c;
+  --ink: #283029;
+  --muted: #6f746d;
   display: block;
-  margin: calc(-1 * clamp(2rem, 6vw, 5rem)) calc(-1 * clamp(1rem, 5vw, 4rem));
-  color: var(--wedding-ink);
-  background: var(--wedding-white);
+  color: var(--ink);
+  background: var(--paper-light);
 }
 
 .wedding-page {
@@ -21,411 +17,399 @@
 }
 
 .section-shell {
-  width: min(100% - 2rem, 64rem);
+  width: min(calc(100% - 2.5rem), 68rem);
   margin-inline: auto;
 }
 
 .section-label {
   margin: 0;
-  color: var(--wedding-moss-700);
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.18em;
+  color: var(--forest-soft);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.24em;
   line-height: 1.5;
   text-transform: uppercase;
 }
 
 h1,
 h2,
-h3 {
-  text-wrap: balance;
+h3,
+p,
+blockquote,
+figure {
+  margin-block-start: 0;
 }
 
-h1,
 h2 {
+  max-width: 15ch;
+  margin-block: 0.8rem 0;
   font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(2.55rem, 11vw, 5.8rem);
   font-weight: 400;
-  letter-spacing: -0.045em;
-}
-
-h2 {
-  margin: 0.75rem 0 1.5rem;
-  font-size: clamp(2.5rem, 10vw, 5.5rem);
+  letter-spacing: -0.05em;
   line-height: 0.98;
+  text-wrap: balance;
 }
 
 .hero {
   position: relative;
   display: grid;
-  min-height: max(42rem, calc(100svh - 4rem));
-  padding: clamp(5rem, 15vh, 9rem) 1rem 2rem;
-  overflow: hidden;
+  min-height: 100svh;
+  padding: 3rem 1.25rem 2rem;
   place-items: center;
   background:
-    linear-gradient(150deg, rgb(255 255 255 / 4%), transparent 42%), var(--wedding-moss-950);
-  color: var(--wedding-white);
+    radial-gradient(circle at 12% 9%, rgb(255 255 255 / 72%), transparent 26rem),
+    linear-gradient(145deg, var(--paper-light), var(--paper));
   isolation: isolate;
 }
 
-.hero::before {
+.hero::before,
+.hero::after {
   position: absolute;
   z-index: -1;
-  width: min(76vw, 36rem);
-  aspect-ratio: 0.72;
-  border: 1px solid rgb(255 255 255 / 24%);
-  border-radius: 50% 50% 2rem 2rem;
+  width: 9rem;
+  height: 18rem;
+  border: 1px solid color-mix(in srgb, var(--forest) 12%, transparent);
+  border-radius: 100%;
   content: '';
-  rotate: 8deg;
+  opacity: 0.5;
 }
 
-.hero__glow {
-  position: absolute;
-  z-index: -2;
-  width: 18rem;
-  aspect-ratio: 1;
-  border-radius: 50%;
-  background: var(--wedding-moss-700);
-  filter: blur(5rem);
-  opacity: 0.48;
+.hero::before {
+  inset-block-start: -6rem;
+  inset-inline-end: -4rem;
+  rotate: 34deg;
 }
 
-.hero__glow--top {
-  inset-block-start: -8rem;
-  inset-inline-end: -7rem;
-}
-
-.hero__glow--bottom {
-  inset-block-end: -9rem;
-  inset-inline-start: -8rem;
+.hero::after {
+  inset-block-end: -7rem;
+  inset-inline-start: -5rem;
+  rotate: -28deg;
 }
 
 .hero__content {
-  width: min(100%, 51rem);
+  width: min(100%, 62rem);
   text-align: center;
 }
 
-.hero .section-label {
-  color: var(--wedding-sage-200);
-}
-
-.hero h1 {
-  margin: 1.25rem auto;
-  font-size: clamp(3.4rem, 16vw, 7.5rem);
-  line-height: 0.88;
-}
-
-.hero__introduction {
-  max-width: 37rem;
-  margin: 1.75rem auto 0;
-  color: rgb(255 254 249 / 78%);
-  font-size: clamp(1.05rem, 4vw, 1.35rem);
-  line-height: 1.65;
-}
-
-.hero__date {
-  margin: 1.5rem 0 0;
-  font-size: 0.82rem;
-  font-weight: 750;
-  letter-spacing: 0.08em;
+.hero__occasion {
+  margin-block-end: 1.8rem;
+  color: var(--forest-soft);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.38em;
   text-transform: uppercase;
 }
 
-.hero__actions {
-  display: flex;
-  align-items: stretch;
-  justify-content: center;
-  gap: 0.75rem;
-  margin-block-start: 2rem;
+.hero h1 {
+  display: grid;
+  justify-items: center;
+  margin: 0;
+  color: var(--forest);
+  font-family: 'Segoe Script', 'Snell Roundhand', 'URW Chancery L', cursive;
+  font-size: clamp(3.25rem, 15.5vw, 8rem);
+  font-weight: 400;
+  letter-spacing: -0.08em;
+  line-height: 0.93;
+  text-wrap: balance;
 }
 
-.button {
-  display: inline-flex;
-  min-height: 3rem;
-  align-items: center;
-  justify-content: center;
-  padding: 0.8rem 1.15rem;
-  border: 1px solid transparent;
-  border-radius: 999px;
-  font-size: 0.9rem;
-  font-weight: 800;
-  text-align: center;
-  text-decoration: none;
-  transition:
-    background-color 180ms ease,
-    color 180ms ease,
-    transform 180ms ease;
-}
-
-.button:hover {
-  transform: translateY(-2px);
-}
-
-.button--light {
-  background: var(--wedding-white);
-  color: var(--wedding-moss-950);
-}
-
-.button--quiet {
-  border-color: rgb(255 255 255 / 34%);
-  color: var(--wedding-white);
+.hero__ampersand {
+  margin-block: -0.15em -0.05em;
+  color: var(--sage);
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 0.58em;
+  font-style: italic;
 }
 
 .scroll-cue {
   position: absolute;
-  inset-block-end: 1.5rem;
+  inset-block-end: max(1.5rem, env(safe-area-inset-bottom));
   inset-inline-start: 50%;
   display: grid;
   justify-items: center;
-  gap: 0.55rem;
-  color: rgb(255 254 249 / 68%);
-  font-size: 0.68rem;
-  letter-spacing: 0.12em;
+  gap: 0.65rem;
+  color: var(--forest-soft);
+  font-size: 0.63rem;
+  letter-spacing: 0.18em;
   text-decoration: none;
   text-transform: uppercase;
   translate: -50% 0;
+  white-space: nowrap;
 }
 
 .scroll-cue__line {
-  display: block;
   width: 1px;
-  height: 1.8rem;
+  height: 2.5rem;
   background: currentColor;
   transform-origin: top;
-  animation: breathe 1.8s ease-in-out infinite;
+  animation: breathe 2.2s ease-in-out infinite;
+}
+
+.verse {
+  display: grid;
+  min-height: 100svh;
+  padding: 5rem 1.25rem;
+  place-items: center;
+  background: var(--forest);
+  color: var(--paper-light);
+  text-align: center;
+}
+
+.verse__content {
+  width: min(100%, 50rem);
+}
+
+.verse__ornament {
+  display: block;
+  margin-block-end: 2.25rem;
+  color: var(--sage);
+  font-size: 0.85rem;
+}
+
+.verse blockquote {
+  margin-inline: auto;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(2rem, 8vw, 4.4rem);
+  font-weight: 400;
+  letter-spacing: -0.035em;
+  line-height: 1.13;
+  text-wrap: balance;
+}
+
+.verse p {
+  margin-block-end: 0;
+  color: color-mix(in srgb, var(--paper-light) 68%, transparent);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
 }
 
 .story {
   display: grid;
-  gap: 3rem;
-  padding-block: clamp(5rem, 14vw, 9rem);
+  gap: 2.75rem;
+  padding-block: clamp(6rem, 22vw, 11rem);
 }
 
-.story__copy > p:not(.section-label) {
+.story__copy {
   max-width: 36rem;
-  margin: 1rem 0 0;
-  color: var(--wedding-muted);
-  font-size: clamp(1rem, 3vw, 1.18rem);
-  line-height: 1.75;
 }
 
-.story__visual {
-  margin: 0;
+.story__copy p {
+  margin-block-end: 1.2rem;
+  color: var(--muted);
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(1.08rem, 4.3vw, 1.38rem);
+  line-height: 1.78;
 }
 
-.story__visual img,
-.photo-placeholder {
-  display: block;
-  width: 100%;
-  aspect-ratio: 4 / 5;
-  border-radius: 50vw 50vw 1.25rem 1.25rem;
-  object-fit: cover;
+.memories {
+  padding-block: clamp(5.5rem, 18vw, 9rem);
+  background: var(--paper);
 }
 
-.photo-placeholder {
+.memories__heading > p:last-child {
+  max-width: 31rem;
+  margin-block: 1.5rem 0;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.photo-rail {
   display: grid;
-  align-content: center;
-  justify-items: center;
+  grid-auto-columns: minmax(15.5rem, 78vw);
+  grid-auto-flow: column;
   gap: 1rem;
-  padding: 2rem;
-  background:
-    radial-gradient(circle at 70% 22%, rgb(255 255 255 / 62%), transparent 25%),
-    linear-gradient(145deg, var(--wedding-sage-100), var(--wedding-sage-200));
-  color: var(--wedding-moss-700);
-  font-size: 0.8rem;
-  font-weight: 750;
-  letter-spacing: 0.08em;
-  text-align: center;
-  text-transform: uppercase;
+  margin-block-start: 3rem;
+  padding-inline: max(1.25rem, calc((100vw - 68rem) / 2));
+  padding-block-end: 1rem;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  scroll-padding-inline: 1.25rem;
+  scroll-snap-type: inline mandatory;
+  scrollbar-color: var(--sage) transparent;
+  scrollbar-width: thin;
 }
 
-.photo-placeholder__monogram {
-  font-family: Georgia, serif;
-  font-size: clamp(4rem, 20vw, 8rem);
-  font-weight: 400;
-  line-height: 1;
+.photo-rail:focus-visible {
+  outline-offset: -0.25rem;
 }
 
-.story__visual figcaption {
-  margin-block-start: 0.75rem;
-  color: var(--wedding-muted);
-  font-family: Georgia, serif;
-  font-size: 0.9rem;
-  font-style: italic;
-  text-align: center;
-}
-
-.details {
-  padding-block: clamp(5rem, 14vw, 9rem);
-  background: var(--wedding-paper);
-}
-
-.section-heading {
-  margin-block-end: 2.5rem;
-}
-
-.section-heading h2 {
-  max-width: 48rem;
-}
-
-.moments {
-  display: grid;
-  gap: 1rem;
-}
-
-.moment-card {
+.photo-card {
   min-width: 0;
-  padding: clamp(1.5rem, 6vw, 2.5rem);
-  border: 1px solid var(--wedding-sage-200);
-  border-radius: 1.25rem;
-  background: var(--wedding-white);
+  margin-block-end: 0;
+  scroll-snap-align: start;
 }
 
-.moment-card:only-child {
-  grid-column: 1 / -1;
-}
-
-.moment-card h3 {
-  margin: 1rem 0 2.5rem;
-  font-family: Georgia, serif;
-  font-size: clamp(2rem, 8vw, 3.5rem);
-  font-weight: 400;
-  line-height: 1;
-}
-
-.moment-card dl,
-.moment-card dd {
-  margin: 0;
-}
-
-.moment-card dl {
+.photo-card__visual {
+  position: relative;
   display: grid;
-  gap: 1.25rem;
+  aspect-ratio: 4 / 5;
+  place-items: end start;
+  overflow: hidden;
+  border-radius: 0.4rem;
+  background: var(--paper-deep);
+  isolation: isolate;
 }
 
-.moment-card dl > div {
+.photo-card__visual::before,
+.photo-card__visual::after {
+  position: absolute;
+  z-index: -1;
+  border-radius: 50%;
+  content: '';
+  filter: blur(0.2rem);
+}
+
+.photo-card__visual::before {
+  inset: 12% auto auto 12%;
+  width: 72%;
+  aspect-ratio: 1;
+  background: rgb(255 255 255 / 38%);
+}
+
+.photo-card__visual::after {
+  inset: auto -15% -8% auto;
+  width: 75%;
+  aspect-ratio: 0.78;
+  background: color-mix(in srgb, var(--forest-soft) 34%, transparent);
+}
+
+.photo-card__visual--two {
+  background: #d6cab8;
+}
+
+.photo-card__visual--three {
+  background: #b8c0b1;
+}
+
+.photo-card__visual--four {
+  background: #d9cfca;
+}
+
+.photo-card__visual span {
+  margin: 1.1rem;
+  color: rgb(255 255 255 / 86%);
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 0.75rem;
+  letter-spacing: 0.18em;
+}
+
+.photo-card figcaption {
+  margin-block-start: 0.85rem;
+  color: var(--forest-soft);
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 0.92rem;
+  font-style: italic;
+}
+
+.ceremony {
+  padding-block: clamp(6rem, 22vw, 11rem);
+  background: var(--paper-light);
+}
+
+.ceremony__content {
   display: grid;
-  grid-template-columns: 4.5rem minmax(0, 1fr);
-  gap: 1rem;
-  padding-block-start: 1rem;
-  border-block-start: 1px solid var(--wedding-sage-200);
 }
 
-.moment-card dt {
-  color: var(--wedding-muted);
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
-.moment-card dd,
-.moment-card dd span {
-  display: grid;
-  gap: 0.3rem;
-}
-
-.shared-location-card {
-  margin-block-start: 1rem;
-  padding: clamp(1.5rem, 6vw, 2.5rem);
-  border-radius: 1.25rem;
-  background: var(--wedding-moss-950);
-  color: var(--wedding-white);
-}
-
-.shared-location-card h3 {
-  margin: 0.75rem 0 0;
-  font-family: Georgia, serif;
-  font-size: clamp(1.8rem, 7vw, 3rem);
-  font-weight: 400;
-}
-
-.shared-location-card > p:not(.section-label) {
-  margin: 0.75rem 0 0;
-  color: rgb(255 254 249 / 76%);
-  line-height: 1.6;
-}
-
-.moment-card dd span {
-  color: var(--wedding-muted);
-  line-height: 1.5;
-}
-
-.notes {
-  display: grid;
-  gap: 2.5rem;
-  padding-block: clamp(5rem, 14vw, 9rem);
-}
-
-.notes ol {
+.ceremony__details {
   display: grid;
   gap: 0;
-  margin: 0;
-  padding: 0;
-  list-style: none;
+  margin-block-start: 2.5rem;
+  border-block: 1px solid var(--paper-deep);
 }
 
-.notes li {
+.ceremony__details > div {
   display: grid;
-  grid-template-columns: 2.5rem minmax(0, 1fr);
+  gap: 0.45rem;
+  padding-block: 1.4rem;
+}
+
+.ceremony__details > div + div {
+  border-block-start: 1px solid var(--paper-deep);
+}
+
+.ceremony__details span {
+  color: var(--muted);
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.ceremony__details p {
+  margin-block-end: 0;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(1.25rem, 5vw, 1.7rem);
+}
+
+.map-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   gap: 1rem;
-  padding-block: 1.25rem;
-  border-block-start: 1px solid var(--wedding-sage-200);
-}
-
-.notes li:last-child {
-  border-block-end: 1px solid var(--wedding-sage-200);
-}
-
-.notes li > span {
-  color: var(--wedding-moss-500);
+  margin-block-start: 2rem;
+  padding-block: 1rem;
+  border-block-end: 1px solid var(--forest);
+  color: var(--forest);
   font-size: 0.75rem;
-  font-weight: 800;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-decoration: none;
+  text-transform: uppercase;
 }
 
-.notes li p {
-  margin: 0;
-  color: var(--wedding-muted);
-  line-height: 1.65;
+.rsvp-section {
+  padding-block: clamp(6rem, 20vw, 10rem);
+  background: var(--paper);
 }
 
-.rsvp-callout {
+.rsvp-section__heading > p:last-child {
+  max-width: 34rem;
+  margin-block: 1.5rem 0;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.rsvp-section__flow {
+  margin-block-start: 3rem;
+}
+
+.wedding-footer {
   display: grid;
-  min-height: 80svh;
-  padding: 5rem 1rem;
-  place-items: center;
-  background:
-    radial-gradient(circle at 50% 115%, var(--wedding-moss-700), transparent 48%),
-    var(--wedding-moss-950);
-  color: var(--wedding-white);
+  min-height: 50svh;
+  padding: 5rem 1.25rem;
+  place-content: center;
+  background: var(--forest);
+  color: var(--paper-light);
   text-align: center;
 }
 
-.rsvp-callout__content {
-  width: min(100%, 48rem);
+.wedding-footer p {
+  margin-block-end: 0.7rem;
+  color: color-mix(in srgb, var(--paper-light) 68%, transparent);
+  font-family: Georgia, 'Times New Roman', serif;
+  font-style: italic;
 }
 
-.rsvp-callout .section-label {
-  color: var(--wedding-sage-200);
-}
-
-.rsvp-callout p:not(.section-label) {
-  max-width: 36rem;
-  margin: 0 auto 2rem;
-  color: rgb(255 254 249 / 74%);
-  font-size: 1.05rem;
-  line-height: 1.7;
+.wedding-footer strong {
+  font-family: 'Segoe Script', 'Snell Roundhand', 'URW Chancery L', cursive;
+  font-size: clamp(2.3rem, 10vw, 5rem);
+  font-weight: 400;
+  letter-spacing: -0.06em;
 }
 
 .reveal {
   animation: reveal linear both;
-  animation-range: entry 8% cover 32%;
+  animation-range: entry 8% cover 30%;
   animation-timeline: view();
 }
 
 @keyframes reveal {
   from {
     opacity: 0;
-    transform: translateY(2rem);
+    transform: translateY(1.75rem);
   }
   to {
     opacity: 1;
@@ -436,69 +420,55 @@ h2 {
 @keyframes breathe {
   0%,
   100% {
-    opacity: 0.35;
-    transform: scaleY(0.45);
+    opacity: 0.25;
+    transform: scaleY(0.35);
   }
   50% {
-    opacity: 1;
+    opacity: 0.9;
     transform: scaleY(1);
   }
 }
 
 @media (min-width: 48rem) {
-  .section-shell {
-    width: min(100% - 5rem, 64rem);
-  }
-
   .story {
-    grid-template-columns: minmax(0, 1fr) minmax(18rem, 0.72fr);
-    align-items: center;
-    gap: clamp(3rem, 8vw, 7rem);
+    grid-template-columns: minmax(0, 0.9fr) minmax(24rem, 1fr);
+    align-items: start;
+    gap: clamp(4rem, 10vw, 9rem);
   }
 
-  .story__copy:only-child {
-    grid-column: 1 / -1;
-    max-width: 48rem;
+  .photo-rail {
+    grid-auto-columns: minmax(20rem, 36vw);
+    gap: 1.5rem;
   }
 
-  .moments {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .ceremony__content {
+    grid-template-columns: minmax(0, 1fr) minmax(18rem, 0.65fr);
+    column-gap: 6rem;
   }
 
-  .notes {
-    grid-template-columns: minmax(0, 0.85fr) minmax(24rem, 1fr);
-    gap: clamp(3rem, 8vw, 7rem);
-  }
-}
-
-@media (max-width: 30rem) {
-  :host {
-    margin: -1rem;
+  .ceremony__content > .section-label,
+  .ceremony__content > h2 {
+    grid-column: 1;
   }
 
-  .hero {
-    min-height: calc(100svh - 1rem);
-    padding-block-start: 4rem;
+  .ceremony__details,
+  .map-link {
+    grid-column: 2;
   }
 
-  .hero__actions {
-    flex-direction: column;
-  }
-
-  .scroll-cue {
-    display: none;
+  .ceremony__details {
+    grid-row: 1 / span 2;
+    margin-block-start: 0;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .button,
   .reveal,
   .scroll-cue__line {
     animation: none;
-    transition: none;
   }
 
-  .button:hover {
-    transform: none;
+  .photo-rail {
+    scroll-behavior: auto;
   }
 }

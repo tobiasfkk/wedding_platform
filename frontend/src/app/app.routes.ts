@@ -5,13 +5,13 @@ import { adminGuard } from './core/auth/admin.guard';
 export const routes: Routes = [
   {
     path: '',
-    title: 'Wedding Platform',
+    title: 'Casamento Maria Eduarda e Tobias',
     loadComponent: () =>
       import('./features/public-site/public-home').then((component) => component.PublicHome),
   },
   {
     path: 'rsvp',
-    title: 'RSVP | Wedding Platform',
+    title: 'Confirmação de presença | Maria Eduarda e Tobias',
     loadComponent: () =>
       import('./features/rsvp/rsvp-home').then((component) => component.RsvpHome),
   },

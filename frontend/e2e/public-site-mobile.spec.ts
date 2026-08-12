@@ -1,5 +1,13 @@
 import { expect, Page, test } from '@playwright/test';
 
+async function mockAnonymousRsvp(page: Page): Promise<void> {
+  await page.route('**/api/rsvp/session', (route) =>
+    route.fulfill({
+      json: { identified: false, invitation: null, csrfToken: 'public-rsvp-csrf' },
+    }),
+  );
+}
+
 async function expectNoHorizontalOverflow(page: Page): Promise<void> {
   const dimensions = await page.evaluate(() => ({
     scrollWidth: document.documentElement.scrollWidth,
@@ -13,30 +21,41 @@ async function expectNoHorizontalOverflow(page: Page): Promise<void> {
 }
 
 for (const width of [320, 390, 430]) {
-  test(`keeps the public wedding experience usable at ${width}px`, async ({ page }) => {
+  test(`keeps the single-page wedding journey usable at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 800 });
+    await mockAnonymousRsvp(page);
     await page.goto('/');
 
-    await expect(page.getByRole('heading', { level: 1 })).toContainText(
-      'Um dia para guardar na memória',
-    );
+    await expect(page.locator('.app-header')).toHaveCount(0);
+    await expect(page.getByRole('heading', { level: 1 })).toContainText('Maria Eduarda');
+    await expect(page.getByRole('heading', { level: 1 })).toContainText('Tobias');
+    await expect(page.locator('.hero a')).toHaveCount(1);
+    await expect(page.locator('.hero button')).toHaveCount(0);
     await expectNoHorizontalOverflow(page);
 
-    const sharedLocation = page.locator('.shared-location-card');
-    await sharedLocation.scrollIntoViewIfNeeded();
-    await expect(sharedLocation).toBeVisible();
-    await expect(sharedLocation).toContainText('Local da celebração');
+    await page.getByRole('link', { name: 'Continuar para o versículo' }).click();
+    await expect(page.locator('.verse')).toBeInViewport();
+    await expect(page.locator('blockquote')).toContainText('a mão do Senhor fez isto');
 
-    const rsvpAction = page.getByRole('link', { name: 'Responder ao convite' });
-    await rsvpAction.scrollIntoViewIfNeeded();
-    await expect(rsvpAction).toBeVisible();
-    expect((await rsvpAction.boundingBox())?.height).toBeGreaterThanOrEqual(44);
+    const photoRail = page.locator('.photo-rail');
+    await photoRail.scrollIntoViewIfNeeded();
+    await expect(photoRail).toBeVisible();
+    const railDimensions = await photoRail.evaluate((element) => ({
+      clientWidth: element.clientWidth,
+      scrollWidth: element.scrollWidth,
+    }));
+    expect(railDimensions.scrollWidth).toBeGreaterThan(railDimensions.clientWidth);
+
+    const rsvp = page.locator('.rsvp-section');
+    await rsvp.scrollIntoViewIfNeeded();
+    await expect(rsvp).toContainText('Abra o link individual que recebeu');
     await expectNoHorizontalOverflow(page);
   });
 }
 
 test('removes non-essential movement when the visitor prefers reduced motion', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
+  await mockAnonymousRsvp(page);
   await page.goto('/');
 
   const animationNames = await page
@@ -44,5 +63,7 @@ test('removes non-essential movement when the visitor prefers reduced motion', a
     .evaluateAll((elements) => elements.map((element) => getComputedStyle(element).animationName));
 
   expect(animationNames.every((animationName) => animationName === 'none')).toBe(true);
-  await expect(page.getByRole('heading', { name: 'Informações importantes' })).toBeVisible();
+  await expect(
+    page.getByRole('heading', { name: 'Esperamos você para o nosso sim.' }),
+  ).toBeVisible();
 });

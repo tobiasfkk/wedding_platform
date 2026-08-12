@@ -7,6 +7,12 @@ frontend. Layout, conteúdo editorial, imagens, identidade visual, ordem das se�
 parte do código versionado do casamento e passam pelo mesmo fluxo de revisão, testes e publicação da
 aplicação.
 
+Para Maria Eduarda e Tobias, a experiência é mobile-first e contínua: abertura editorial sem
+cabeçalho, versículo, história, galeria horizontal, cerimônia e confirmação personalizada convivem
+na mesma página. O próximo item da galeria permanece parcialmente visível para sugerir o gesto
+lateral, sem levar o visitante a outra tela. A futura experiência de presentes financeiros será
+acrescentada ao final dessa jornada sem transformar o site em um conjunto de páginas.
+
 Não existe CMS, editor visual, tema selecionável, prévia administrativa ou API de publicação de
 conteúdo. O administrador gerencia somente convidados, convites e RSVP.
 

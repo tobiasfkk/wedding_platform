@@ -7,9 +7,11 @@ A área protegida oferece a gestão de convidados em `/admin/guests`, a criaçã
 segura dos links em `/admin/invitations` e a administração das confirmações em `/admin/rsvp`.
 O dashboard de RSVP também permite configurar a data e o horário-limite das confirmações públicas.
 
-O site público é implementado diretamente em `src/app/features/public-site`. Layout, textos,
-imagens e identidade visual são específicos do casamento e versionados com o frontend. Não existe
-editor administrativo, contrato de seções ou carregamento de conteúdo editorial pela API.
+O site público é uma experiência mobile-first em página única, implementada diretamente em
+`src/app/features/public-site`. Layout, textos, imagens e identidade visual são específicos do
+casamento e versionados com o frontend. Não existe editor administrativo, contrato de seções ou
+carregamento de conteúdo editorial pela API. A confirmação personalizada é incorporada ao final da
+home; `/rsvp` permanece disponível somente para compatibilidade com links anteriores.
 
 ## Requisitos
 
@@ -33,7 +35,8 @@ A aplicação estará disponível em `http://localhost:4200/`.
 Rotas iniciais:
 
 - `/`: site público personalizado;
-- `/rsvp#code=...`: validação segura do convite e entrada na confirmação de presença;
+- `/#code=...`: site público e confirmação personalizada no mesmo fluxo;
+- `/rsvp#code=...`: rota legada compatível com convites anteriores;
 - `/admin/login`: autenticação administrativa;
 - `/admin`: área administrativa protegida.
 
