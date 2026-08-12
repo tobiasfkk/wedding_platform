@@ -36,7 +36,11 @@ for (const width of [320, 390, 430]) {
     await expect(continueCue).toHaveCSS('opacity', '1');
     await expectNoHorizontalOverflow(page);
 
+    const verseOffset = await page.locator('.verse').evaluate((element) => element.offsetTop);
     await continueCue.click();
+    await page.waitForTimeout(180);
+    const earlyScrollPosition = await page.evaluate(() => window.scrollY);
+    expect(earlyScrollPosition).toBeLessThan(verseOffset * 0.2);
     await expect(page.locator('.verse')).toBeInViewport();
     await expect(page.locator('blockquote')).toContainText('a mão do Senhor fez isto');
 
@@ -67,7 +71,7 @@ for (const width of [320, 390, 430]) {
     await expect(firstCard.locator('.photo-card__visual')).toHaveCSS('border-radius', '24px');
     const caption = firstCard.locator('figcaption');
     await expect(caption).toHaveCSS('position', 'absolute');
-    await expect(caption).toHaveCSS('font-weight', '400');
+    await expect(caption).toHaveCSS('font-weight', '700');
     await expect(caption).not.toHaveCSS('text-shadow', 'none');
     await expect(caption).toHaveCSS('opacity', '1');
     await expect(photoRail.locator('.photo-card').nth(1)).toHaveClass(/is-visible/);
@@ -88,8 +92,14 @@ for (const width of [320, 390, 430]) {
     const secondCard = photoRail.locator('.photo-card').nth(1);
     await expect(photoRail).toHaveClass(/is-forward/);
     await expect(secondCard).toHaveClass(/is-caption-active/);
-    await expect(secondCard.locator('figcaption')).toHaveCSS('transition-delay', '0.22s');
+    await expect(secondCard.locator('figcaption')).toHaveCSS('transition-delay', '0.06s');
     await expect(secondCard.locator('figcaption')).toHaveCSS('opacity', '1');
+    await photoRail.evaluate((element) => element.scrollTo({ left: 0, behavior: 'smooth' }));
+    await expect.poll(() => photoRail.evaluate((element) => element.scrollLeft)).toBeLessThan(1);
+    await expect(photoRail).toHaveClass(/is-backward/);
+    await expect(firstCard).toHaveClass(/is-caption-active/);
+    await expect(firstCard.locator('figcaption')).toHaveCSS('transition-duration', '0s');
+    await expect(firstCard.locator('figcaption')).toHaveCSS('opacity', '1');
     await photoRail.evaluate((element) => element.scrollTo({ left: element.scrollWidth }));
     const lastPhoto = photoRail.locator('img').last();
     await expect

@@ -314,7 +314,7 @@ h2 {
   margin: 0;
   color: var(--paper-light);
   font-size: clamp(1.25rem, 5.8vw, 1.8rem);
-  font-weight: 400;
+  font-weight: 700;
   letter-spacing: -0.025em;
   line-height: 1.08;
   opacity: 0;
@@ -334,7 +334,11 @@ h2 {
 .photo-card.is-visible.is-caption-active figcaption {
   opacity: 1;
   transform: none;
-  transition-delay: 220ms;
+  transition-delay: 60ms;
+}
+
+.photo-rail.is-backward .photo-card.is-visible.is-caption-active figcaption {
+  transition: none;
 }
 
 .ceremony {

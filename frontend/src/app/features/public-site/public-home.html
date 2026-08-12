@@ -11,7 +11,12 @@
       </h1>
     </div>
 
-    <a class="scroll-cue" href="#verse" aria-label="Continuar para o versículo">
+    <a
+      class="scroll-cue"
+      href="#verse"
+      aria-label="Continuar para o versículo"
+      (click)="onContinueStory($event)"
+    >
       <span>Continue a nossa história</span>
       <span class="scroll-cue__line" aria-hidden="true"></span>
     </a>
