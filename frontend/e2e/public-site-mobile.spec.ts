@@ -74,6 +74,28 @@ for (const width of [320, 390, 430]) {
     await expect(caption).toHaveCSS('font-weight', '700');
     await expect(caption).not.toHaveCSS('text-shadow', 'none');
     await expect(caption).toHaveCSS('opacity', '1');
+    await expect(caption).toHaveCSS('transform', 'none');
+    await expect(caption).toHaveCSS('transition-duration', '0s');
+    const coupledMovement = await photoRail.evaluate((element) => {
+      const card = element.querySelector<HTMLElement>('.photo-card')!;
+      const cardCaption = card.querySelector<HTMLElement>('figcaption')!;
+      const cardStart = card.getBoundingClientRect().left;
+      const captionStart = cardCaption.getBoundingClientRect().left;
+      const originalSnapType = element.style.scrollSnapType;
+      element.style.scrollSnapType = 'none';
+      element.scrollLeft = 64;
+      const cardEnd = card.getBoundingClientRect().left;
+      const captionEnd = cardCaption.getBoundingClientRect().left;
+      element.scrollLeft = 0;
+      element.style.scrollSnapType = originalSnapType;
+      return {
+        cardDistance: cardEnd - cardStart,
+        captionDistance: captionEnd - captionStart,
+      };
+    });
+    expect(Math.abs(coupledMovement.cardDistance - coupledMovement.captionDistance)).toBeLessThan(
+      0.5,
+    );
     await expect(photoRail.locator('.photo-card').nth(1)).toHaveClass(/is-visible/);
     await photoRail.evaluate((element) => element.scrollTo({ left: 230, behavior: 'smooth' }));
     await expect
@@ -90,14 +112,9 @@ for (const width of [320, 390, 430]) {
       )
       .toBeLessThan(1);
     const secondCard = photoRail.locator('.photo-card').nth(1);
-    await expect(photoRail).toHaveClass(/is-forward/);
-    await expect(secondCard).toHaveClass(/is-caption-active/);
-    await expect(secondCard.locator('figcaption')).toHaveCSS('transition-delay', '0.03s');
     await expect(secondCard.locator('figcaption')).toHaveCSS('opacity', '1');
     await photoRail.evaluate((element) => element.scrollTo({ left: 0, behavior: 'smooth' }));
     await expect.poll(() => photoRail.evaluate((element) => element.scrollLeft)).toBeLessThan(1);
-    await expect(photoRail).toHaveClass(/is-backward/);
-    await expect(firstCard).toHaveClass(/is-caption-active/);
     await expect(firstCard.locator('figcaption')).toHaveCSS('transition-duration', '0s');
     await expect(firstCard.locator('figcaption')).toHaveCSS('opacity', '1');
     await expect(firstCard.locator('figcaption')).toHaveCSS('transform', 'none');
@@ -106,7 +123,7 @@ for (const width of [320, 390, 430]) {
       const captionBounds = card.querySelector('figcaption')!.getBoundingClientRect();
       return captionBounds.left - cardBounds.left;
     });
-    expect(returnedCaptionInset).toBeGreaterThan(16);
+    expect(returnedCaptionInset).toBeGreaterThan(28);
     await photoRail.evaluate((element) => element.scrollTo({ left: element.scrollWidth }));
     const lastPhoto = photoRail.locator('img').last();
     await expect

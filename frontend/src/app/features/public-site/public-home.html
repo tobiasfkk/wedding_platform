@@ -71,15 +71,8 @@
       tabindex="0"
       role="region"
       aria-label="Galeria de memórias do casal. Deslize horizontalmente para ver mais fotos."
-      [class.is-forward]="captionDirection() === 'forward'"
-      [class.is-backward]="captionDirection() === 'backward'"
-      (scroll)="onPhotoRailScroll($event)"
     >
-      <figure
-        class="photo-card"
-        appScrollReveal="clip"
-        [class.is-caption-active]="activePhotoIndex() === 0"
-      >
+      <figure class="photo-card" appScrollReveal="clip">
         <div class="photo-card__visual">
           <img
             src="/images/couple/maria-tobias-01.jpg"
@@ -92,12 +85,7 @@
           <figcaption>Entre flores e sorrisos.</figcaption>
         </div>
       </figure>
-      <figure
-        class="photo-card"
-        appScrollReveal="clip"
-        [revealDelay]="120"
-        [class.is-caption-active]="activePhotoIndex() === 1"
-      >
+      <figure class="photo-card" appScrollReveal="clip" [revealDelay]="120">
         <div class="photo-card__visual">
           <img
             src="/images/couple/maria-tobias-02.jpg"
@@ -110,12 +98,7 @@
           <figcaption>A alegria de estarmos juntos.</figcaption>
         </div>
       </figure>
-      <figure
-        class="photo-card"
-        appScrollReveal="clip"
-        [revealDelay]="240"
-        [class.is-caption-active]="activePhotoIndex() === 2"
-      >
+      <figure class="photo-card" appScrollReveal="clip" [revealDelay]="240">
         <div class="photo-card__visual">
           <img
             src="/images/couple/maria-tobias-03.jpg"
@@ -128,12 +111,7 @@
           <figcaption>Nosso jeito de olhar um para o outro.</figcaption>
         </div>
       </figure>
-      <figure
-        class="photo-card"
-        appScrollReveal="clip"
-        [revealDelay]="120"
-        [class.is-caption-active]="activePhotoIndex() === 3"
-      >
+      <figure class="photo-card" appScrollReveal="clip" [revealDelay]="120">
         <div class="photo-card__visual">
           <img
             src="/images/couple/maria-tobias-04.jpg"
@@ -146,12 +124,7 @@
           <figcaption>Memórias que guardamos com carinho.</figcaption>
         </div>
       </figure>
-      <figure
-        class="photo-card"
-        appScrollReveal="clip"
-        [revealDelay]="240"
-        [class.is-caption-active]="activePhotoIndex() === 4"
-      >
+      <figure class="photo-card" appScrollReveal="clip" [revealDelay]="240">
         <div class="photo-card__visual">
           <img
             src="/images/couple/maria-tobias-05.jpg"
@@ -164,12 +137,7 @@
           <figcaption>Cada celebração ao seu lado.</figcaption>
         </div>
       </figure>
-      <figure
-        class="photo-card"
-        appScrollReveal="clip"
-        [revealDelay]="120"
-        [class.is-caption-active]="activePhotoIndex() === 5"
-      >
+      <figure class="photo-card" appScrollReveal="clip" [revealDelay]="120">
         <div class="photo-card__visual">
           <img
             src="/images/couple/maria-tobias-06.jpg"
@@ -182,12 +150,7 @@
           <figcaption>Todos os caminhos nos trouxeram aqui.</figcaption>
         </div>
       </figure>
-      <figure
-        class="photo-card"
-        appScrollReveal="clip"
-        [revealDelay]="240"
-        [class.is-caption-active]="activePhotoIndex() === 6"
-      >
+      <figure class="photo-card" appScrollReveal="clip" [revealDelay]="240">
         <div class="photo-card__visual">
           <img
             src="/images/couple/maria-tobias-07.jpg"

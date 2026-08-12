@@ -1,5 +1,5 @@
 import { DOCUMENT } from '@angular/common';
-import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, inject } from '@angular/core';
 
 import { RsvpHome } from '../rsvp/rsvp-home';
 import { ScrollRevealDirective } from './scroll-reveal.directive';
@@ -16,10 +16,6 @@ export class PublicHome {
   private readonly destroyRef = inject(DestroyRef);
   private storyScrollFrame?: number;
   private previousScrollBehavior?: string;
-  private lastScrollLeft = 0;
-
-  readonly activePhotoIndex = signal(0);
-  readonly captionDirection = signal<'backward' | 'forward'>('forward');
 
   constructor() {
     this.destroyRef.onDestroy(() => this.stopStoryScroll());
@@ -63,33 +59,6 @@ export class PublicHome {
     };
 
     this.storyScrollFrame = view.requestAnimationFrame(animate);
-  }
-
-  onPhotoRailScroll(event: Event): void {
-    const rail = event.currentTarget as HTMLElement;
-    const movement = rail.scrollLeft - this.lastScrollLeft;
-
-    if (Math.abs(movement) > 0.5) {
-      this.captionDirection.set(movement > 0 ? 'forward' : 'backward');
-    }
-
-    this.lastScrollLeft = rail.scrollLeft;
-    this.activateCenteredPhoto(rail);
-  }
-
-  private activateCenteredPhoto(rail: HTMLElement): void {
-    const railCenter = rail.getBoundingClientRect().left + rail.clientWidth / 2;
-    const photos = Array.from(rail.querySelectorAll<HTMLElement>('.photo-card'));
-    const closestPhoto = photos.reduce(
-      (closest, photo, index) => {
-        const bounds = photo.getBoundingClientRect();
-        const distance = Math.abs(bounds.left + bounds.width / 2 - railCenter);
-        return distance < closest.distance ? { distance, index } : closest;
-      },
-      { distance: Number.POSITIVE_INFINITY, index: 0 },
-    );
-
-    this.activePhotoIndex.set(closestPhoto.index);
   }
 
   private stopStoryScroll(): void {
