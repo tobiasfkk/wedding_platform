@@ -60,6 +60,30 @@ for (const width of [320, 390, 430]) {
     }));
     expect(cardLayout.firstWidth).toBeGreaterThan(width * 0.78);
     expect(cardLayout.secondLeft).toBeLessThan(width);
+    await expect(photoRail).toHaveCSS('scroll-snap-type', /mandatory/);
+    const firstCard = photoRail.locator('.photo-card').first();
+    await expect(firstCard).toHaveCSS('scroll-snap-align', 'center');
+    await expect(firstCard).toHaveCSS('scroll-snap-stop', 'always');
+    await expect(firstCard.locator('.photo-card__visual')).toHaveCSS('border-radius', '24px');
+    const caption = firstCard.locator('figcaption');
+    await expect(caption).toHaveCSS('position', 'absolute');
+    await expect(caption).toHaveCSS('font-weight', '700');
+    await expect(caption).toHaveCSS('opacity', '1');
+    await expect(photoRail.locator('.photo-card').nth(1)).toHaveClass(/is-visible/);
+    await photoRail.evaluate((element) => element.scrollTo({ left: 230, behavior: 'smooth' }));
+    await expect
+      .poll(() =>
+        photoRail.locator('.photo-card').evaluateAll((cards) => {
+          const viewportCenter = window.innerWidth / 2;
+          return Math.min(
+            ...cards.map((card) => {
+              const bounds = card.getBoundingClientRect();
+              return Math.abs(bounds.left + bounds.width / 2 - viewportCenter);
+            }),
+          );
+        }),
+      )
+      .toBeLessThan(1);
     await photoRail.evaluate((element) => element.scrollTo({ left: element.scrollWidth }));
     const lastPhoto = photoRail.locator('img').last();
     await expect

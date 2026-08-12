@@ -48,7 +48,7 @@ describe('PublicHome', () => {
     const animatedElements = element.querySelectorAll('.motion-reveal');
 
     expect(animatedElements.length).toBeGreaterThan(20);
-    expect(element.querySelectorAll('[data-reveal="line"]')).toHaveLength(3);
+    expect(element.querySelectorAll('[data-reveal="line"]')).toHaveLength(2);
     expect(element.querySelectorAll('[data-reveal="clip"]')).toHaveLength(7);
     expect(
       Array.from(animatedElements).every((item) => item.classList.contains('is-visible')),
@@ -62,11 +62,12 @@ describe('PublicHome', () => {
 
     expect(rail?.getAttribute('tabindex')).toBe('0');
     expect(rail?.getAttribute('aria-label')).toContain('Deslize horizontalmente');
-    expect(element.querySelector('.gallery-cue')).toBeTruthy();
+    expect(element.querySelector('.gallery-cue')).toBeNull();
     expect(element.textContent).not.toContain(
       'Deslize para o lado e percorra alguns capítulos da nossa história.',
     );
     expect(element.querySelectorAll('.photo-card')).toHaveLength(7);
+    expect(element.querySelectorAll('.photo-card__visual > figcaption')).toHaveLength(7);
     expect(element.querySelectorAll('.photo-card img[loading="lazy"]')).toHaveLength(7);
     expect(element.querySelector('.photo-card img')?.getAttribute('alt')).toContain(
       'Tobias e Maria Eduarda',
@@ -83,6 +84,7 @@ describe('PublicHome', () => {
     expect(ceremony?.textContent).toContain('Sweet Home Farm');
     expect(ceremony?.textContent).toContain('R. Francisco Bueno Franco, 814');
     expect(map?.href).toBe('https://maps.app.goo.gl/2wyfdkJZ5CcvLFsA7');
+    expect(ceremony?.querySelectorAll('.ceremony__details span')).toHaveLength(0);
   });
 
   it('keeps RSVP in the same page and explains how to use an individual invitation', () => {

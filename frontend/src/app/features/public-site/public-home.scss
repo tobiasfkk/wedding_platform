@@ -61,7 +61,7 @@
 }
 
 .motion-reveal[data-reveal='clip'] .photo-card__visual {
-  clip-path: inset(0 0 100% 0 round 0.4rem);
+  clip-path: inset(0 0 100% 0 round 1.5rem);
   transition: clip-path 1200ms cubic-bezier(0.22, 1, 0.36, 1) var(--reveal-delay);
 }
 
@@ -258,37 +258,26 @@ h2 {
   background: var(--paper);
 }
 
-.gallery-cue {
-  position: relative;
-  width: 5.5rem;
-  height: 1px;
-  margin-block-start: 2rem;
-  overflow: hidden;
-  background: color-mix(in srgb, var(--forest) 28%, transparent);
-}
-
-.gallery-cue span {
-  position: absolute;
-  inset: 0 auto 0 0;
-  width: 2rem;
-  background: var(--forest-soft);
-  animation: travel-inline 2.4s cubic-bezier(0.22, 1, 0.36, 1) infinite;
-}
-
 .photo-rail {
+  --photo-width: calc(100vw - 3.75rem);
+  --photo-gutter: calc((100vw - var(--photo-width)) / 2);
   display: grid;
-  grid-auto-columns: calc(100vw - 3.75rem);
+  grid-auto-columns: var(--photo-width);
   grid-auto-flow: column;
   gap: 0.75rem;
-  margin-block-start: 2.25rem;
-  padding-inline: max(1.25rem, calc((100vw - 68rem) / 2));
+  margin-block-start: 2.75rem;
+  padding-inline: var(--photo-gutter);
   padding-block-end: 1rem;
   overflow-x: auto;
   overscroll-behavior-inline: contain;
-  scroll-padding-inline: 1.25rem;
+  scroll-padding-inline: var(--photo-gutter);
   scroll-snap-type: inline mandatory;
-  scrollbar-color: var(--sage) transparent;
-  scrollbar-width: thin;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.photo-rail::-webkit-scrollbar {
+  display: none;
 }
 
 .photo-rail:focus-visible {
@@ -298,15 +287,24 @@ h2 {
 .photo-card {
   min-width: 0;
   margin: 0;
-  scroll-snap-align: start;
+  scroll-snap-align: center;
+  scroll-snap-stop: always;
 }
 
 .photo-card__visual {
   position: relative;
   aspect-ratio: 4 / 5;
   overflow: hidden;
-  border-radius: 0.4rem;
+  border-radius: 1.5rem;
   background: var(--paper-deep);
+}
+
+.photo-card__visual::after {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgb(18 27 21 / 58%), transparent 42%);
+  content: '';
+  pointer-events: none;
 }
 
 .photo-card__visual img {
@@ -317,11 +315,26 @@ h2 {
 }
 
 .photo-card figcaption {
-  margin-block-start: 0.85rem;
-  color: var(--forest-soft);
-  font-family: Georgia, 'Times New Roman', serif;
-  font-size: 0.92rem;
-  font-style: italic;
+  position: absolute;
+  z-index: 1;
+  inset: 1.35rem 1.25rem auto;
+  max-width: 16ch;
+  margin: 0;
+  color: var(--paper-light);
+  font-size: clamp(1.25rem, 5.8vw, 1.8rem);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.08;
+  opacity: 0;
+  transform: translateY(0.75rem);
+  transition:
+    opacity 700ms ease calc(var(--reveal-delay) + 420ms),
+    transform 800ms cubic-bezier(0.22, 1, 0.36, 1) calc(var(--reveal-delay) + 420ms);
+}
+
+.photo-card.is-visible figcaption {
+  opacity: 1;
+  transform: none;
 }
 
 .ceremony {
@@ -335,27 +348,13 @@ h2 {
 
 .ceremony__details {
   display: grid;
-  gap: 0;
+  gap: 1.75rem;
   margin-block-start: 2.5rem;
-  border-block: 1px solid var(--paper-deep);
 }
 
 .ceremony__details > div {
   display: grid;
   gap: 0.45rem;
-  padding-block: 1.4rem;
-}
-
-.ceremony__details > div + div {
-  border-block-start: 1px solid var(--paper-deep);
-}
-
-.ceremony__details span {
-  color: var(--muted);
-  font-size: 0.66rem;
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
 }
 
 .ceremony__details p {
@@ -374,11 +373,10 @@ h2 {
 .map-link {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
+  justify-self: start;
+  gap: 0.7rem;
   margin-block-start: 2rem;
-  padding-block: 1rem;
-  border-block-end: 1px solid var(--forest);
+  padding-block: 0.5rem;
   color: var(--forest);
   font-size: 0.75rem;
   font-weight: 700;
@@ -439,15 +437,6 @@ h2 {
   }
 }
 
-@keyframes travel-inline {
-  from {
-    transform: translateX(-100%);
-  }
-  to {
-    transform: translateX(275%);
-  }
-}
-
 @media (min-width: 48rem) {
   .story {
     grid-template-columns: minmax(0, 0.9fr) minmax(24rem, 1fr);
@@ -456,7 +445,7 @@ h2 {
   }
 
   .photo-rail {
-    grid-auto-columns: minmax(20rem, 36vw);
+    --photo-width: min(36vw, 30rem);
     gap: 1rem;
   }
 
@@ -483,14 +472,14 @@ h2 {
 
 @media (prefers-reduced-motion: reduce) {
   .motion-reveal,
-  .scroll-cue__line,
-  .gallery-cue span {
+  .scroll-cue__line {
     animation: none;
   }
 
-  .gallery-cue span {
+  .photo-card figcaption {
     opacity: 1;
     transform: none;
+    transition: none;
   }
 
   .motion-reveal {
