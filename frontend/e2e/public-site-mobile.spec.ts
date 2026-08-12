@@ -31,20 +31,113 @@ for (const width of [320, 390, 430]) {
     await expect(page.getByRole('heading', { level: 1 })).toContainText('Tobias');
     await expect(page.locator('.hero a')).toHaveCount(1);
     await expect(page.locator('.hero button')).toHaveCount(0);
+    const continueCue = page.getByRole('link', { name: 'Continuar para o versículo' });
+    await expect(continueCue).toBeInViewport();
+    await expect(continueCue).toHaveCSS('opacity', '1');
     await expectNoHorizontalOverflow(page);
 
-    await page.getByRole('link', { name: 'Continuar para o versículo' }).click();
+    const verseOffset = await page.locator('.verse').evaluate((element) => element.offsetTop);
+    await continueCue.click();
+    await page.waitForTimeout(180);
+    const earlyScrollPosition = await page.evaluate(() => window.scrollY);
+    expect(earlyScrollPosition).toBeLessThan(verseOffset * 0.2);
     await expect(page.locator('.verse')).toBeInViewport();
     await expect(page.locator('blockquote')).toContainText('a mão do Senhor fez isto');
 
     const photoRail = page.locator('.photo-rail');
     await photoRail.scrollIntoViewIfNeeded();
     await expect(photoRail).toBeVisible();
+    const firstPhoto = photoRail.locator('img').first();
+    await expect(firstPhoto).toBeVisible();
+    await expect
+      .poll(() => firstPhoto.evaluate((image) => (image as HTMLImageElement).naturalWidth))
+      .toBeGreaterThan(0);
     const railDimensions = await photoRail.evaluate((element) => ({
       clientWidth: element.clientWidth,
       scrollWidth: element.scrollWidth,
     }));
     expect(railDimensions.scrollWidth).toBeGreaterThan(railDimensions.clientWidth);
+    const cardLayout = await photoRail.locator('.photo-card').evaluateAll((cards) => ({
+      firstWidth: cards[0]!.getBoundingClientRect().width,
+      secondLeft: cards[1]!.getBoundingClientRect().left,
+      viewportWidth: window.innerWidth,
+    }));
+    expect(cardLayout.firstWidth).toBeGreaterThan(width * 0.78);
+    expect(cardLayout.secondLeft).toBeLessThan(width);
+    await expect(photoRail).toHaveCSS('scroll-snap-type', /mandatory/);
+    const firstCard = photoRail.locator('.photo-card').first();
+    await expect(firstCard).toHaveCSS('scroll-snap-align', 'center');
+    await expect(firstCard).toHaveCSS('scroll-snap-stop', 'always');
+    await expect(firstCard.locator('.photo-card__visual')).toHaveCSS('border-radius', '24px');
+    const caption = firstCard.locator('figcaption');
+    await expect(caption).toHaveCSS('position', 'absolute');
+    await expect(caption).toHaveCSS('font-weight', '700');
+    await expect(caption).not.toHaveCSS('text-shadow', 'none');
+    await expect(caption).toHaveCSS('opacity', '1');
+    await expect(caption).toHaveCSS('transform', 'none');
+    await expect(caption).toHaveCSS('transition-duration', '0s');
+    const coupledMovement = await photoRail.evaluate((element) => {
+      const card = element.querySelector<HTMLElement>('.photo-card')!;
+      const cardCaption = card.querySelector<HTMLElement>('figcaption')!;
+      const cardStart = card.getBoundingClientRect().left;
+      const captionStart = cardCaption.getBoundingClientRect().left;
+      const originalSnapType = element.style.scrollSnapType;
+      element.style.scrollSnapType = 'none';
+      element.scrollLeft = 64;
+      const cardEnd = card.getBoundingClientRect().left;
+      const captionEnd = cardCaption.getBoundingClientRect().left;
+      element.scrollLeft = 0;
+      element.style.scrollSnapType = originalSnapType;
+      return {
+        cardDistance: cardEnd - cardStart,
+        captionDistance: captionEnd - captionStart,
+      };
+    });
+    expect(Math.abs(coupledMovement.cardDistance - coupledMovement.captionDistance)).toBeLessThan(
+      0.5,
+    );
+    await expect(photoRail.locator('.photo-card').nth(1)).toHaveClass(/is-visible/);
+    await photoRail.evaluate((element) => element.scrollTo({ left: 230, behavior: 'smooth' }));
+    await expect
+      .poll(() =>
+        photoRail.locator('.photo-card').evaluateAll((cards) => {
+          const viewportCenter = window.innerWidth / 2;
+          return Math.min(
+            ...cards.map((card) => {
+              const bounds = card.getBoundingClientRect();
+              return Math.abs(bounds.left + bounds.width / 2 - viewportCenter);
+            }),
+          );
+        }),
+      )
+      .toBeLessThan(1);
+    const secondCard = photoRail.locator('.photo-card').nth(1);
+    await expect(secondCard.locator('figcaption')).toHaveCSS('opacity', '1');
+    await photoRail.evaluate((element) => element.scrollTo({ left: 0, behavior: 'smooth' }));
+    await expect.poll(() => photoRail.evaluate((element) => element.scrollLeft)).toBeLessThan(1);
+    await expect(firstCard.locator('figcaption')).toHaveCSS('transition-duration', '0s');
+    await expect(firstCard.locator('figcaption')).toHaveCSS('opacity', '1');
+    await expect(firstCard.locator('figcaption')).toHaveCSS('transform', 'none');
+    const returnedCaptionInset = await firstCard.evaluate((card) => {
+      const cardBounds = card.getBoundingClientRect();
+      const captionBounds = card.querySelector('figcaption')!.getBoundingClientRect();
+      return captionBounds.left - cardBounds.left;
+    });
+    expect(returnedCaptionInset).toBeGreaterThan(28);
+    await photoRail.evaluate((element) => element.scrollTo({ left: element.scrollWidth }));
+    const lastPhoto = photoRail.locator('img').last();
+    await expect
+      .poll(() => lastPhoto.evaluate((image) => (image as HTMLImageElement).naturalWidth))
+      .toBeGreaterThan(0);
+
+    const ceremony = page.locator('.ceremony');
+    await ceremony.scrollIntoViewIfNeeded();
+    await expect(ceremony).toContainText('24 de abril de 2026, às 16h');
+    await expect(ceremony).toContainText('Sweet Home Farm');
+    await expect(ceremony.locator('.map-link')).toHaveAttribute(
+      'href',
+      'https://maps.app.goo.gl/2wyfdkJZ5CcvLFsA7',
+    );
 
     const rsvp = page.locator('.rsvp-section');
     await rsvp.scrollIntoViewIfNeeded();
@@ -58,12 +151,33 @@ test('removes non-essential movement when the visitor prefers reduced motion', a
   await mockAnonymousRsvp(page);
   await page.goto('/');
 
-  const animationNames = await page
-    .locator('.reveal')
-    .evaluateAll((elements) => elements.map((element) => getComputedStyle(element).animationName));
+  const motionStyles = await page.locator('.motion-reveal').evaluateAll((elements) =>
+    elements.map((element) => ({
+      opacity: getComputedStyle(element).opacity,
+      transitionDuration: getComputedStyle(element).transitionDuration,
+    })),
+  );
 
-  expect(animationNames.every((animationName) => animationName === 'none')).toBe(true);
+  expect(
+    motionStyles.every(
+      ({ opacity, transitionDuration }) => opacity === '1' && transitionDuration === '0s',
+    ),
+  ).toBe(true);
   await expect(
     page.getByRole('heading', { name: 'Esperamos você para o nosso sim.' }),
   ).toBeVisible();
+});
+
+test('reveals staggered content as it enters the mobile viewport', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await mockAnonymousRsvp(page);
+  await page.goto('/');
+
+  const ceremonyHeading = page.locator('#ceremony-title');
+  await expect(ceremonyHeading).not.toHaveClass(/is-visible/);
+
+  await page.locator('.ceremony').evaluate((element) => element.scrollIntoView());
+
+  await expect(ceremonyHeading).toHaveClass(/is-visible/);
+  await expect(ceremonyHeading).toHaveCSS('opacity', '1');
 });
