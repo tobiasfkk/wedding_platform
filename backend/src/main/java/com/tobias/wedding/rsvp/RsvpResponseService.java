@@ -247,7 +247,12 @@ class RsvpResponseService {
                         statuses.getOrDefault(participant.id(), RsvpStatus.PENDING)))
                 .toList();
         return new RsvpInvitationResponse(
-                access.groupName(), access.companionLimit(), editable(access), participants, companions);
+                access.groupName(),
+                access.companionLimit(),
+                editable(access),
+                access.rsvpDeadline(),
+                participants,
+                companions);
     }
 
     private boolean editable(InvitationAccessView access) {

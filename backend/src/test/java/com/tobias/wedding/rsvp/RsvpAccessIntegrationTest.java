@@ -94,6 +94,7 @@ class RsvpAccessIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.groupName").value("Família Exemplo"))
                 .andExpect(jsonPath("$.companionLimit").value(2))
+                .andExpect(jsonPath("$.rsvpDeadline").isNotEmpty())
                 .andExpect(jsonPath("$.participants.length()").value(2))
                 .andExpect(jsonPath("$.participants[?(@.name == 'Ana Exemplo')]").isNotEmpty())
                 .andExpect(jsonPath("$.participants[0].status").value("PENDING"))
@@ -108,6 +109,7 @@ class RsvpAccessIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.identified").value(true))
                 .andExpect(jsonPath("$.invitation.groupName").value("Família Exemplo"))
+                .andExpect(jsonPath("$.invitation.rsvpDeadline").isNotEmpty())
                 .andExpect(jsonPath("$.invitation.participants[0].id").isNotEmpty())
                 .andExpect(jsonPath("$.csrfToken").isNotEmpty());
 
@@ -704,10 +706,11 @@ class RsvpAccessIntegrationTest {
 
     private void createWedding(OffsetDateTime now) {
         jdbcClient.sql("""
-                        INSERT INTO wedding.wedding_event (id, created_at)
-                        VALUES (:id, :now)
+                        INSERT INTO wedding.wedding_event (id, rsvp_deadline, created_at)
+                        VALUES (:id, :deadline, :now)
                         """)
                 .param("id", weddingId)
+                .param("deadline", now.plusDays(30))
                 .param("now", now)
                 .update();
     }

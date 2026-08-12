@@ -68,6 +68,7 @@
 
     <div
       class="photo-rail"
+      appTouchPhotoRail
       tabindex="0"
       role="region"
       aria-label="Galeria de memórias do casal. Deslize horizontalmente para ver mais fotos."
@@ -169,54 +170,82 @@
   <section class="ceremony" aria-labelledby="ceremony-title">
     <div class="ceremony__content section-shell">
       <p class="section-label" appScrollReveal="up">A cerimônia</p>
-      <h2 id="ceremony-title" appScrollReveal="up" [revealDelay]="100">
-        Esperamos você para o nosso sim.
-      </h2>
+      <h2 id="ceremony-title" appScrollReveal="up" [revealDelay]="100">O nosso sim.</h2>
 
       <div class="ceremony__details" appScrollReveal="up" [revealDelay]="200">
         <div appScrollReveal="up" [revealDelay]="260">
-          <p><time datetime="2026-04-24T16:00:00-03:00">24 de abril de 2026, às 16h</time></p>
+          <p><time datetime="2026-04-24T16:00:00-03:00">24-04-2026 | 16h</time></p>
         </div>
         <div appScrollReveal="up" [revealDelay]="360">
           <p>Sweet Home Farm</p>
-          <address>R. Francisco Bueno Franco, 814 — Campo Alegre, SC, 89294-000</address>
+          <address>Rua Francisco Bueno Franco, 814 - Campo Alegre, SC, 89294-000</address>
         </div>
       </div>
-
-      <a
-        class="map-link"
-        href="https://maps.app.goo.gl/2wyfdkJZ5CcvLFsA7"
-        target="_blank"
-        rel="noopener noreferrer"
-        appScrollReveal="up"
-        [revealDelay]="460"
-      >
-        <span>Abrir no Google Maps</span>
-        <span aria-hidden="true">↗</span>
-      </a>
     </div>
   </section>
 
   <section id="confirmacao" class="rsvp-section" aria-labelledby="rsvp-section-title">
-    <div class="rsvp-section__heading section-shell">
-      <p class="section-label" appScrollReveal="up">Confirmação de presença</p>
-      <h2 id="rsvp-section-title" appScrollReveal="up" [revealDelay]="100">
-        Celebre este dia conosco.
-      </h2>
-      <p appScrollReveal="up" [revealDelay]="220">
-        Seu convite individual apresenta as pessoas do seu grupo e as opções disponíveis.
-      </p>
-      <span
-        class="section-rule"
-        aria-hidden="true"
-        appScrollReveal="line"
-        [revealDelay]="320"
-      ></span>
-    </div>
-    <div class="section-shell rsvp-section__flow" appScrollReveal="up" [revealDelay]="160">
-      <app-rsvp-home [embedded]="true" />
+    <div class="rsvp-section__layout section-shell">
+      <div class="rsvp-section__heading">
+        <p class="section-label" appScrollReveal="up">Confirmação de presença</p>
+        <h2 id="rsvp-section-title" appScrollReveal="up" [revealDelay]="100">
+          Confirme sua presença.
+        </h2>
+        <p class="rsvp-section__intro" appScrollReveal="up" [revealDelay]="200">
+          Será uma alegria ter você conosco. Responda por cada pessoa incluída no convite.
+        </p>
+      </div>
+      <div class="rsvp-section__flow" appScrollReveal="up" [revealDelay]="280">
+        <app-rsvp-home [embedded]="true" (responsesSaved)="onResponsesSaved()" />
+      </div>
     </div>
   </section>
+
+  <section id="presentes" class="gift-section" aria-labelledby="gift-title">
+    <div class="gift-section__content section-shell">
+      <p class="section-label" appScrollReveal="up">Presentes</p>
+      <h2 id="gift-title" appScrollReveal="up" [revealDelay]="100">
+        Um gesto para o nosso novo começo.
+      </h2>
+      <p class="gift-section__message" appScrollReveal="up" [revealDelay]="200">
+        Sua presença é o nosso maior presente. Se desejar nos presentear, preparamos este espaço
+        para tornar tudo mais simples.
+      </p>
+
+      <div class="pix-details" appScrollReveal="up" [revealDelay]="300">
+        <span class="pix-details__label">Pix</span>
+        @if (pixKey; as key) {
+          <strong>{{ key }}</strong>
+          <button class="pix-copy" type="button" (click)="copyPixKey()">
+            {{ pixCopyState() === 'copied' ? 'Chave copiada' : 'Copiar chave Pix' }}
+          </button>
+          @if (pixCopyState() === 'error') {
+            <p role="alert">Não foi possível copiar. Selecione a chave acima.</p>
+          }
+        } @else {
+          <p>A chave Pix será disponibilizada em breve.</p>
+        }
+      </div>
+    </div>
+  </section>
+
+  <div class="final-location section-shell">
+    <div class="final-location__copy" appScrollReveal="up">
+      <p class="section-label">Como chegar</p>
+      <p>Depois, é só guardar o caminho para celebrar conosco.</p>
+    </div>
+    <a
+      class="map-link"
+      href="https://maps.app.goo.gl/2wyfdkJZ5CcvLFsA7"
+      target="_blank"
+      rel="noopener noreferrer"
+      appScrollReveal="up"
+      [revealDelay]="100"
+    >
+      <span>Abrir localização</span>
+      <span aria-hidden="true">↗</span>
+    </a>
+  </div>
 
   <footer class="wedding-footer">
     <p appScrollReveal="up">Com carinho,</p>

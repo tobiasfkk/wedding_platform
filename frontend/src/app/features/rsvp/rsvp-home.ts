@@ -1,5 +1,5 @@
 import { DOCUMENT } from '@angular/common';
-import { ChangeDetectionStrategy, Component, inject, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input, output, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { RouterLink } from '@angular/router';
 import { of, switchMap } from 'rxjs';
@@ -25,36 +25,39 @@ type SubmissionState = 'idle' | 'saving' | 'saved' | 'error';
     >
       @if (state() === 'loading') {
         <div class="rsvp-card rsvp-card--centered" role="status">
-          <p class="eyebrow">Confirmação de presença</p>
           @if (embedded()) {
-            <h3 id="rsvp-state-title" tabindex="-1">Abrindo seu convite</h3>
+            <h2 id="rsvp-state-title" tabindex="-1">Abrindo seu convite</h2>
           } @else {
             <h1 id="rsvp-state-title" tabindex="-1">Abrindo seu convite</h1>
           }
-          <p class="lead">Estamos validando o acesso com segurança…</p>
           <span class="loading-indicator" aria-hidden="true"></span>
         </div>
       } @else if (state() === 'success' && invitation(); as currentInvitation) {
-        <div class="rsvp-card">
-          <p class="eyebrow">Seu convite</p>
+        <div class="rsvp-card rsvp-card--invitation">
           @if (embedded()) {
+            <p class="invitation-kicker">Convite para</p>
             <h3 id="rsvp-state-title" tabindex="-1">{{ currentInvitation.groupName }}</h3>
           } @else {
+            <p class="invitation-kicker">Convite para</p>
             <h1 id="rsvp-state-title" tabindex="-1">{{ currentInvitation.groupName }}</h1>
           }
+          @if (deadlineLabel(currentInvitation.rsvpDeadline); as deadline) {
+            <p class="invitation-deadline">
+              Este convite é único. Confirme sua presença até o dia
+              <strong>{{ deadline }}</strong
+              >.
+            </p>
+          } @else {
+            <p class="invitation-deadline">Este convite é único.</p>
+          }
           <form (submit)="submitFromForm($event)">
-            @if (currentInvitation.editable) {
-              <p class="lead">Informe a presença de cada pessoa do grupo.</p>
-            } @else {
+            @if (!currentInvitation.editable) {
               <div class="deadline-notice" role="status">
                 <strong>O prazo de confirmação foi encerrado.</strong>
-                <span>Você ainda pode consultar a resposta mais recente deste convite.</span>
               </div>
             }
 
-            <section class="invitation-summary" aria-labelledby="participants-title">
-              <h2 id="participants-title">Quem vai participar?</h2>
-              <p class="response-guidance">Escolha uma resposta para cada pessoa do convite.</p>
+            <section class="invitation-summary" aria-label="Pessoas deste convite">
               <div class="participant-list">
                 @for (participant of currentInvitation.participants; track participant.id) {
                   <fieldset class="participant-card">
@@ -64,41 +67,39 @@ type SubmissionState = 'idle' | 'saving' | 'saved' | 'error';
                       [attr.aria-label]="'Resposta de ' + participant.name"
                     >
                       <button
-                        mat-stroked-button
+                        class="response-option"
                         type="button"
                         [class.is-selected]="statusOf(participant.id) === 'CONFIRMED'"
                         [attr.aria-pressed]="statusOf(participant.id) === 'CONFIRMED'"
                         [disabled]="!currentInvitation.editable || submissionState() === 'saving'"
                         (click)="setStatus(participant.id, 'CONFIRMED')"
                       >
-                        Vou participar
+                        Sim
                       </button>
                       <button
-                        mat-stroked-button
+                        class="response-option"
                         type="button"
                         [class.is-selected]="statusOf(participant.id) === 'DECLINED'"
                         [attr.aria-pressed]="statusOf(participant.id) === 'DECLINED'"
                         [disabled]="!currentInvitation.editable || submissionState() === 'saving'"
                         (click)="setStatus(participant.id, 'DECLINED')"
                       >
-                        Não vou participar
+                        Não
                       </button>
                       <button
-                        mat-button
+                        class="response-option"
                         type="button"
                         [class.is-selected]="statusOf(participant.id) === 'PENDING'"
                         [attr.aria-pressed]="statusOf(participant.id) === 'PENDING'"
                         [disabled]="!currentInvitation.editable || submissionState() === 'saving'"
                         (click)="setStatus(participant.id, 'PENDING')"
                       >
-                        Decidir depois
+                        Depois
                       </button>
                     </div>
-                    <p class="current-response">{{ statusLabel(statusOf(participant.id)) }}</p>
                   </fieldset>
                 }
               </div>
-              <p class="companion-rule">{{ companionRule(currentInvitation.companionLimit) }}</p>
             </section>
 
             @if (currentInvitation.companionLimit > 0) {
@@ -123,9 +124,7 @@ type SubmissionState = 'idle' | 'saving' | 'saved' | 'error';
                     Adicionar
                   </button>
                 </div>
-                @if (companions().length === 0) {
-                  <p class="empty-companions">Nenhum acompanhante adicionado.</p>
-                } @else {
+                @if (companions().length > 0) {
                   <div class="companion-list">
                     @for (companion of companions(); track companion.id; let index = $index) {
                       <div class="companion-card">
@@ -173,16 +172,21 @@ type SubmissionState = 'idle' | 'saving' | 'saved' | 'error';
               </section>
             }
 
-            @if (currentInvitation.editable) {
-              <button
-                class="save-button"
-                mat-flat-button
-                type="submit"
-                [disabled]="submissionState() === 'saving' || hasInvalidCompanion()"
-              >
-                {{ submissionState() === 'saving' ? 'Salvando…' : 'Salvar respostas' }}
-              </button>
-            }
+            <button
+              class="save-button"
+              type="submit"
+              [disabled]="
+                !currentInvitation.editable ||
+                submissionState() === 'saving' ||
+                hasInvalidCompanion()
+              "
+            >
+              @if (!currentInvitation.editable) {
+                Prazo encerrado
+              } @else {
+                {{ submissionState() === 'saving' ? 'Confirmando…' : 'Confirmar e continuar' }}
+              }
+            </button>
             @if (submissionState() === 'saved') {
               <div
                 id="rsvp-save-result"
@@ -190,8 +194,8 @@ type SubmissionState = 'idle' | 'saving' | 'saved' | 'error';
                 role="status"
                 tabindex="-1"
               >
-                <strong>Respostas salvas.</strong>
-                <span>Você pode revisá-las nesta tela.</span>
+                <strong>Presença confirmada.</strong>
+                <span>Vamos aos presentes…</span>
               </div>
             } @else if (submissionState() === 'error') {
               <div
@@ -208,21 +212,17 @@ type SubmissionState = 'idle' | 'saving' | 'saved' | 'error';
         </div>
       } @else if (state() === 'idle') {
         <div class="rsvp-card rsvp-card--centered rsvp-card--invitation-note">
-          <p class="eyebrow">Seu convite</p>
           @if (embedded()) {
-            <h3 id="rsvp-state-title" tabindex="-1">Este espaço é só seu.</h3>
+            <h2 id="rsvp-state-title" tabindex="-1">Seu convite</h2>
           } @else {
-            <h1 id="rsvp-state-title" tabindex="-1">Este espaço é só seu.</h1>
+            <h1 id="rsvp-state-title" tabindex="-1">Seu convite</h1>
           }
-          <p class="lead">
-            Abra o link individual que recebeu para consultar seu grupo e confirmar a presença.
-          </p>
+          <p class="lead">Abra o link individual que recebeu para confirmar a presença.</p>
         </div>
       } @else {
         <div class="rsvp-card rsvp-card--centered">
-          <p class="eyebrow">Confirmação de presença</p>
           @if (embedded()) {
-            <h3 id="rsvp-state-title" tabindex="-1">Acesso indisponível</h3>
+            <h2 id="rsvp-state-title" tabindex="-1">Acesso indisponível</h2>
           } @else {
             <h1 id="rsvp-state-title" tabindex="-1">Acesso indisponível</h1>
           }
@@ -258,32 +258,53 @@ type SubmissionState = 'idle' | 'saving' | 'saved' | 'error';
       width: min(100%, 36rem);
       padding: clamp(1.25rem, 6vw, 2.5rem);
       overflow-wrap: anywhere;
-      border: 1px solid var(--color-border);
-      border-radius: 1rem;
-      background: color-mix(in srgb, var(--color-surface) 94%, transparent);
-      box-shadow: 0 1rem 3rem rgb(75 48 38 / 8%);
     }
     .rsvp-shell--embedded .rsvp-card {
       width: 100%;
       max-width: 42rem;
-      margin-inline: auto;
-      border-color: color-mix(in srgb, var(--color-border) 72%, transparent);
-      border-radius: 0.5rem;
-      box-shadow: none;
+      margin-inline: 0;
+      padding: 0;
     }
     .rsvp-card--centered {
       text-align: center;
     }
-    h1,
-    h3 {
-      font-size: clamp(2.25rem, 12vw, 4.5rem);
+    .rsvp-card button {
+      min-height: 2.75rem;
     }
+    h1,
+    h2,
     h3 {
       margin: 0;
+      color: var(--color-accent-strong);
       font-family: Georgia, 'Times New Roman', serif;
-      font-weight: 500;
-      line-height: 0.98;
-      letter-spacing: -0.035em;
+      font-size: clamp(2rem, 9vw, 3.8rem);
+      font-weight: 400;
+      line-height: 1;
+      letter-spacing: -0.045em;
+      text-wrap: balance;
+    }
+    .invitation-kicker {
+      margin-block: 0 0.65rem;
+      color: var(--color-accent);
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+    }
+    .rsvp-card--invitation form {
+      margin-block-start: 2.5rem;
+    }
+    .invitation-deadline {
+      max-width: 36rem;
+      margin-block: 1rem 0;
+      color: var(--color-muted);
+      font-family: Georgia, 'Times New Roman', serif;
+      font-size: 1rem;
+      line-height: 1.55;
+    }
+    .invitation-deadline strong {
+      color: var(--color-ink);
+      font-weight: 600;
     }
     .rsvp-card--invitation-note {
       padding-block: clamp(2rem, 8vw, 4rem);
@@ -292,76 +313,80 @@ type SubmissionState = 'idle' | 'saving' | 'saved' | 'error';
       margin-block-end: 1.5rem;
     }
     .deadline-notice {
-      display: grid;
-      gap: 0.25rem;
-      margin-block: 1rem 1.5rem;
-      padding: 1rem;
-      border-radius: 0.75rem;
-      background: var(--color-accent-soft);
+      margin-block-end: 1.75rem;
+      color: var(--color-muted);
+      font-family: Georgia, 'Times New Roman', serif;
+      font-size: 1.05rem;
+      font-weight: 400;
     }
     .rsvp-card--centered .lead {
       margin-inline: auto;
     }
-    .invitation-summary {
-      margin-block: 1.5rem;
-      padding: 1rem;
-      border-radius: 0.75rem;
-      background: var(--color-surface-subtle);
-    }
-    .invitation-summary h2 {
-      margin-block-start: 0;
-      font-family: Georgia, 'Times New Roman', serif;
-      font-weight: 500;
-    }
-    .response-guidance {
-      margin-block: 0 1rem;
-      color: var(--color-muted);
-    }
     .participant-list {
       display: grid;
-      gap: 1rem;
+      border-block: 1px solid var(--color-border);
     }
     .participant-card {
       min-width: 0;
       margin: 0;
-      padding: 1rem;
-      border: 1px solid var(--color-border);
-      border-radius: 0.75rem;
-      background: var(--color-surface);
+      padding: 1.35rem 0 1.5rem;
+      border: 0;
+    }
+    .participant-card + .participant-card {
+      border-block-start: 1px solid var(--color-border);
     }
     .participant-card legend {
-      padding-inline: 0.25rem;
-      font-weight: 800;
+      padding: 0;
+      font-family: Georgia, 'Times New Roman', serif;
+      font-size: 1.3rem;
+      font-weight: 400;
     }
     .response-options {
       display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 0.5rem;
+      padding-block-start: 0.85rem;
     }
-    .response-options button:last-child {
-      grid-column: 1 / -1;
-    }
-    .response-options .is-selected {
-      border-color: var(--color-accent-strong);
-      background: var(--color-accent-soft);
-      color: var(--color-text);
-    }
-    .current-response {
-      margin: 0.75rem 0 0;
-      color: var(--color-muted);
-      font-size: 0.9rem;
+    .response-option {
+      min-width: 0;
+      padding: 0.65rem 0.45rem;
+      border: 0;
+      border-radius: 999px;
+      appearance: none;
+      background: color-mix(in srgb, var(--color-accent-soft) 72%, var(--color-surface));
+      color: var(--color-accent-strong);
+      font: inherit;
+      font-size: 0.7rem;
       font-weight: 700;
+      letter-spacing: 0.08em;
+      line-height: 1.1;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition:
+        background-color 180ms ease,
+        color 180ms ease,
+        transform 180ms ease;
     }
-    .companion-rule,
-    .supporting-message {
-      color: var(--color-muted);
+    .response-option:hover:not([disabled]) {
+      background: color-mix(in srgb, var(--color-accent-soft) 88%, var(--color-surface));
+      transform: translateY(-1px);
     }
-    .companion-rule {
-      margin-block-end: 0;
-      font-weight: 700;
+    .response-option.is-selected {
+      background: var(--color-accent-strong);
+      color: var(--color-surface);
+    }
+    .response-option:focus-visible {
+      outline: 0.18rem solid color-mix(in srgb, var(--color-accent-strong) 35%, transparent);
+      outline-offset: 0.15rem;
+    }
+    .response-option:disabled {
+      cursor: default;
+      opacity: 0.6;
     }
     .companion-section {
-      margin-block: 1.5rem;
+      margin-block-start: 2.5rem;
+      padding-block-start: 2rem;
+      border-block-start: 1px solid var(--color-border);
     }
     .companion-section h2,
     .companion-section p {
@@ -369,7 +394,9 @@ type SubmissionState = 'idle' | 'saving' | 'saved' | 'error';
     }
     .companion-section h2 {
       font-family: Georgia, 'Times New Roman', serif;
-      font-weight: 500;
+      font-size: 1.6rem;
+      font-weight: 400;
+      letter-spacing: -0.03em;
     }
     .companion-heading {
       display: flex;
@@ -377,12 +404,8 @@ type SubmissionState = 'idle' | 'saving' | 'saved' | 'error';
       justify-content: space-between;
       gap: 1rem;
     }
-    .companion-heading p,
-    .empty-companions {
+    .companion-heading p {
       color: var(--color-muted);
-    }
-    .empty-companions {
-      margin-block-start: 1rem !important;
     }
     .companion-list {
       display: grid;
@@ -390,15 +413,17 @@ type SubmissionState = 'idle' | 'saving' | 'saved' | 'error';
       margin-block-start: 1rem;
     }
     .companion-card {
-      padding: 1rem;
-      border: 1px solid var(--color-border);
-      border-radius: 0.75rem;
-      background: var(--color-surface-subtle);
+      padding-block: 1rem;
+      border-block-end: 1px solid var(--color-border);
     }
     .companion-card label {
       display: block;
       margin-block-end: 0.4rem;
-      font-weight: 800;
+      color: var(--color-muted);
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
     }
     .companion-controls {
       display: flex;
@@ -409,11 +434,12 @@ type SubmissionState = 'idle' | 'saving' | 'saved' | 'error';
       min-width: 0;
       min-height: 3rem;
       flex: 1;
-      padding-inline: 0.75rem;
-      border: 1px solid var(--color-border);
-      border-radius: 0.5rem;
-      background: var(--color-surface);
-      color: var(--color-text);
+      padding-inline: 0;
+      border: 0;
+      border-block-end: 1px solid var(--color-border);
+      border-radius: 0;
+      background: transparent;
+      color: var(--color-ink);
       font: inherit;
       scroll-margin-block: 25vh;
     }
@@ -432,24 +458,52 @@ type SubmissionState = 'idle' | 'saving' | 'saved' | 'error';
     }
     .save-button {
       width: 100%;
-      min-height: 3rem;
+      min-height: 0;
+      margin-block-start: 2.5rem;
+      padding: 0.9rem 1.15rem;
+      border: 1px solid var(--color-accent-strong);
+      border-radius: 999px;
+      appearance: none;
+      background: var(--color-accent-strong);
+      box-shadow: 0 0.6rem 1.5rem rgb(38 56 45 / 16%);
+      color: var(--color-surface);
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition:
+        background-color 220ms ease,
+        box-shadow 220ms ease,
+        transform 220ms ease;
+    }
+    .save-button:hover:not([disabled]) {
+      background: color-mix(in srgb, var(--color-accent-strong) 86%, white);
+      box-shadow: 0 0.8rem 1.8rem rgb(38 56 45 / 22%);
+      transform: translateY(-2px);
+    }
+    .save-button:active:not([disabled]) {
+      box-shadow: none;
+      transform: translateY(0);
+    }
+    .save-button:disabled {
+      cursor: default;
+      opacity: 0.52;
     }
     .save-result {
-      display: grid;
-      gap: 0.25rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
       margin-block-start: 1rem;
-      padding: 1rem;
-      border-radius: 0.75rem;
+      font-family: Georgia, 'Times New Roman', serif;
     }
     .save-result:focus-visible {
       outline-offset: -0.25rem;
     }
     .save-result--success {
-      background: color-mix(in srgb, #2e7d32 12%, var(--color-surface));
       color: #1b5e20;
     }
     .save-result--error {
-      background: color-mix(in srgb, #b3261e 10%, var(--color-surface));
       color: #8c1d18;
     }
     .loading-indicator {
@@ -477,29 +531,23 @@ type SubmissionState = 'idle' | 'saving' | 'saved' | 'error';
         place-items: start center;
       }
       .rsvp-card {
-        padding: 1rem;
-        border-radius: 0.75rem;
+        padding-inline: 0;
       }
-      .invitation-summary,
-      .participant-card,
-      .companion-card {
-        padding: 0.875rem;
-      }
-      .rsvp-card button,
       .rsvp-card a {
         width: 100%;
         min-height: 3rem;
       }
-      .response-options {
-        grid-template-columns: 1fr;
-      }
-      .response-options button:last-child {
-        grid-column: auto;
+      .add-companion,
+      .companion-controls button {
+        width: auto;
       }
       .companion-heading,
       .companion-controls {
         align-items: stretch;
         flex-direction: column;
+      }
+      .response-options {
+        gap: 0.35rem;
       }
     }
   `,
@@ -509,6 +557,7 @@ export class RsvpHome {
   private readonly service = inject(RsvpAccessService);
   private readonly document = inject(DOCUMENT);
   readonly embedded = input(false);
+  readonly responsesSaved = output<void>();
   readonly state = signal<AccessState>('loading');
   readonly invitation = signal<RsvpInvitation | null>(null);
   readonly submissionState = signal<SubmissionState>('idle');
@@ -544,15 +593,21 @@ export class RsvpHome {
       });
   }
 
-  companionRule(limit: number): string {
-    if (limit === 0) return 'Este convite é nominal e não inclui acompanhantes.';
-    if (limit === 1) return 'Este convite permite adicionar até 1 acompanhante.';
-    return `Este convite permite adicionar até ${limit} acompanhantes.`;
-  }
-
   companionAvailability(limit: number): string {
     const available = Math.max(0, limit - this.companions().length);
     return available === 1 ? '1 vaga disponível.' : `${available} vagas disponíveis.`;
+  }
+
+  deadlineLabel(deadline: string | null | undefined): string | null {
+    if (!deadline) return null;
+    const date = new Date(deadline);
+    if (Number.isNaN(date.getTime())) return null;
+    return new Intl.DateTimeFormat('pt-BR', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+      timeZone: 'America/Sao_Paulo',
+    }).format(date);
   }
 
   hasInvalidCompanion(): boolean {
@@ -590,12 +645,6 @@ export class RsvpHome {
     return this.draft()[participantId] ?? 'PENDING';
   }
 
-  statusLabel(status: RsvpStatus): string {
-    if (status === 'CONFIRMED') return 'Resposta atual: vai participar';
-    if (status === 'DECLINED') return 'Resposta atual: não vai participar';
-    return 'Resposta atual: pendente';
-  }
-
   setStatus(participantId: string, status: RsvpStatus): void {
     this.draft.update((current) => ({ ...current, [participantId]: status }));
     this.markDraftChanged();
@@ -618,6 +667,7 @@ export class RsvpHome {
         this.pendingOperationId = null;
         this.submissionState.set('saved');
         this.focusSaveResult();
+        this.responsesSaved.emit();
       },
       error: () => {
         this.submissionState.set('error');

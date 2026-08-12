@@ -14,6 +14,7 @@ describe('RsvpHome', () => {
     groupName: 'Família Exemplo',
     companionLimit: 2,
     editable: true,
+    rsvpDeadline: '2027-04-09T02:59:00Z',
     participants: [
       { id: '11111111-1111-1111-1111-111111111111', name: 'Ana Exemplo', status: 'PENDING' },
       { id: '22222222-2222-2222-2222-222222222222', name: 'Bruno Exemplo', status: 'DECLINED' },
@@ -58,7 +59,7 @@ describe('RsvpHome', () => {
 
     expect(fixture.nativeElement.querySelector('h1')?.textContent).toContain('Família Exemplo');
     expect(fixture.nativeElement.textContent).toContain('Ana Exemplo');
-    expect(fixture.nativeElement.textContent).toContain('Resposta atual: não vai participar');
+    expect(fixture.nativeElement.textContent).toContain('8 de abril de 2027');
     expect(fixture.nativeElement.textContent).not.toContain('Outro grupo');
     expect(fixture.nativeElement.querySelectorAll('.participant-card').length).toBe(2);
     expect(fixture.nativeElement.textContent).toContain('2 vagas disponíveis');
@@ -76,9 +77,9 @@ describe('RsvpHome', () => {
     fixture.detectChanges();
 
     const buttons = Array.from<HTMLButtonElement>(fixture.nativeElement.querySelectorAll('button'));
-    buttons.find((button) => button.textContent?.includes('Vou participar'))?.click();
+    buttons.find((button) => button.textContent?.trim() === 'Sim')?.click();
     fixture.detectChanges();
-    buttons.find((button) => button.textContent?.includes('Salvar respostas'))?.click();
+    buttons.find((button) => button.textContent?.includes('Confirmar e continuar'))?.click();
 
     const firstSave = http.expectOne('/api/rsvp/responses');
     const operationId = firstSave.request.body.operationId;
@@ -111,7 +112,7 @@ describe('RsvpHome', () => {
     });
     fixture.detectChanges();
 
-    expect(fixture.nativeElement.textContent).toContain('Respostas salvas.');
+    expect(fixture.nativeElement.textContent).toContain('Presença confirmada.');
   });
 
   it('adds, edits and submits companions without exceeding the invitation limit', () => {
@@ -166,8 +167,10 @@ describe('RsvpHome', () => {
     fixture.detectChanges();
 
     expect(fixture.nativeElement.textContent).toContain('O prazo de confirmação foi encerrado');
-    expect(fixture.nativeElement.textContent).toContain('Resposta atual: não vai participar');
-    expect(fixture.nativeElement.querySelector('.save-button')).toBeNull();
+    expect(fixture.nativeElement.textContent).toContain('Prazo encerrado');
+    expect(
+      (fixture.nativeElement.querySelector('.save-button') as HTMLButtonElement).disabled,
+    ).toBe(true);
     const responseButtons = Array.from<HTMLButtonElement>(
       fixture.nativeElement.querySelectorAll('.response-options button'),
     );
@@ -207,7 +210,7 @@ describe('RsvpHome', () => {
     });
     fixture.detectChanges();
 
-    expect(fixture.nativeElement.textContent).toContain('Este espaço é só seu');
+    expect(fixture.nativeElement.textContent).toContain('Seu convite');
     expect(fixture.nativeElement.textContent).toContain('Abra o link individual');
     expect(fixture.nativeElement.querySelector('a[mat-stroked-button]')).toBeNull();
   });
