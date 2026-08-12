@@ -58,12 +58,33 @@ test('removes non-essential movement when the visitor prefers reduced motion', a
   await mockAnonymousRsvp(page);
   await page.goto('/');
 
-  const animationNames = await page
-    .locator('.reveal')
-    .evaluateAll((elements) => elements.map((element) => getComputedStyle(element).animationName));
+  const motionStyles = await page.locator('.motion-reveal').evaluateAll((elements) =>
+    elements.map((element) => ({
+      opacity: getComputedStyle(element).opacity,
+      transitionDuration: getComputedStyle(element).transitionDuration,
+    })),
+  );
 
-  expect(animationNames.every((animationName) => animationName === 'none')).toBe(true);
+  expect(
+    motionStyles.every(
+      ({ opacity, transitionDuration }) => opacity === '1' && transitionDuration === '0s',
+    ),
+  ).toBe(true);
   await expect(
     page.getByRole('heading', { name: 'Esperamos você para o nosso sim.' }),
   ).toBeVisible();
+});
+
+test('reveals staggered content as it enters the mobile viewport', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await mockAnonymousRsvp(page);
+  await page.goto('/');
+
+  const ceremonyHeading = page.locator('#ceremony-title');
+  await expect(ceremonyHeading).not.toHaveClass(/is-visible/);
+
+  await page.locator('.ceremony').evaluate((element) => element.scrollIntoView());
+
+  await expect(ceremonyHeading).toHaveClass(/is-visible/);
+  await expect(ceremonyHeading).toHaveCSS('opacity', '1');
 });

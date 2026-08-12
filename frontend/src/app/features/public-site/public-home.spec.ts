@@ -41,6 +41,19 @@ describe('PublicHome', () => {
     expect(element.querySelectorAll('.ceremony')).toHaveLength(1);
   });
 
+  it('assigns staggered, accessible motion to individual narrative elements', () => {
+    const fixture = render();
+    const element = fixture.nativeElement as HTMLElement;
+    const animatedElements = element.querySelectorAll('.motion-reveal');
+
+    expect(animatedElements.length).toBeGreaterThan(20);
+    expect(element.querySelectorAll('[data-reveal="line"]')).toHaveLength(3);
+    expect(element.querySelectorAll('[data-reveal="clip"]')).toHaveLength(4);
+    expect(
+      Array.from(animatedElements).every((item) => item.classList.contains('is-visible')),
+    ).toBe(true);
+  });
+
   it('offers a horizontal in-page gallery that reveals additional memories', () => {
     const fixture = render();
     const element = fixture.nativeElement as HTMLElement;

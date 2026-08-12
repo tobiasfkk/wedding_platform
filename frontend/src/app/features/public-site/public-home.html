@@ -1,43 +1,59 @@
 <article class="wedding-page">
   <section class="hero" aria-labelledby="public-title">
     <div class="hero__content">
-      <p class="hero__occasion">Casamento</p>
+      <p class="hero__occasion" appScrollReveal="up">Casamento</p>
       <h1 id="public-title">
-        <span>Maria Eduarda</span>
-        <span class="hero__ampersand" aria-hidden="true">&amp;</span>
-        <span>Tobias</span>
+        <span appScrollReveal="up" [revealDelay]="120">Maria Eduarda</span>
+        <span class="hero__ampersand" aria-hidden="true" appScrollReveal="scale" [revealDelay]="260"
+          >&amp;</span
+        >
+        <span appScrollReveal="up" [revealDelay]="340">Tobias</span>
       </h1>
     </div>
 
-    <a class="scroll-cue" href="#verse" aria-label="Continuar para o versículo">
+    <a
+      class="scroll-cue"
+      href="#verse"
+      aria-label="Continuar para o versículo"
+      appScrollReveal="up"
+      [revealDelay]="700"
+    >
       <span>Continue a nossa história</span>
       <span class="scroll-cue__line" aria-hidden="true"></span>
     </a>
   </section>
 
   <section id="verse" class="verse" aria-labelledby="verse-reference">
-    <div class="verse__content reveal">
-      <span class="verse__ornament" aria-hidden="true">✦</span>
-      <blockquote>
+    <div class="verse__content">
+      <span class="verse__ornament" aria-hidden="true" appScrollReveal="scale">✦</span>
+      <blockquote appScrollReveal="up" [revealDelay]="120">
         “Para que todos vejam, e saibam, e considerem, e juntamente entendam que a mão do Senhor fez
         isto.”
       </blockquote>
-      <p id="verse-reference">Isaías 41:20</p>
+      <p id="verse-reference" appScrollReveal="up" [revealDelay]="280">Isaías 41:20</p>
     </div>
   </section>
 
   <section class="story section-shell" aria-labelledby="story-title">
-    <div class="story__heading reveal">
-      <p class="section-label">Nossa história</p>
-      <h2 id="story-title">Foi Deus quem escreveu cada encontro.</h2>
+    <div class="story__heading">
+      <p class="section-label" appScrollReveal="up">Nossa história</p>
+      <h2 id="story-title" appScrollReveal="up" [revealDelay]="100">
+        Foi Deus quem escreveu cada encontro.
+      </h2>
+      <span
+        class="section-rule"
+        aria-hidden="true"
+        appScrollReveal="line"
+        [revealDelay]="220"
+      ></span>
     </div>
-    <div class="story__copy reveal">
-      <p>
+    <div class="story__copy">
+      <p appScrollReveal="up" [revealDelay]="180">
         A nossa história foi acontecendo com a delicadeza das coisas que chegam para ficar. Entre
         conversas, sonhos compartilhados e a alegria dos dias simples, encontramos um no outro um
         lugar para chamar de lar.
       </p>
-      <p>
+      <p appScrollReveal="up" [revealDelay]="300">
         Agora, diante de Deus e ao lado das pessoas que amamos, começaremos um novo capítulo. Ter
         você conosco torna esse momento ainda mais especial.
       </p>
@@ -45,10 +61,20 @@
   </section>
 
   <section class="memories" aria-labelledby="memories-title">
-    <div class="section-shell memories__heading reveal">
-      <p class="section-label">Um pouco de nós</p>
-      <h2 id="memories-title">Memórias que nos trouxeram até aqui.</h2>
-      <p>Deslize para o lado e percorra alguns capítulos da nossa história.</p>
+    <div class="section-shell memories__heading">
+      <p class="section-label" appScrollReveal="up">Um pouco de nós</p>
+      <h2 id="memories-title" appScrollReveal="up" [revealDelay]="100">
+        Memórias que nos trouxeram até aqui.
+      </h2>
+      <p appScrollReveal="up" [revealDelay]="220">
+        Deslize para o lado e percorra alguns capítulos da nossa história.
+      </p>
+      <span
+        class="section-rule"
+        aria-hidden="true"
+        appScrollReveal="line"
+        [revealDelay]="320"
+      ></span>
     </div>
 
     <div
@@ -57,7 +83,7 @@
       role="region"
       aria-label="Galeria de memórias do casal. Deslize horizontalmente para ver mais fotos."
     >
-      <figure class="photo-card">
+      <figure class="photo-card" appScrollReveal="clip">
         <div
           class="photo-card__visual photo-card__visual--one"
           role="img"
@@ -67,7 +93,7 @@
         </div>
         <figcaption>O começo de tudo.</figcaption>
       </figure>
-      <figure class="photo-card">
+      <figure class="photo-card" appScrollReveal="clip" [revealDelay]="120">
         <div
           class="photo-card__visual photo-card__visual--two"
           role="img"
@@ -77,7 +103,7 @@
         </div>
         <figcaption>Dias simples, memórias inteiras.</figcaption>
       </figure>
-      <figure class="photo-card">
+      <figure class="photo-card" appScrollReveal="clip" [revealDelay]="240">
         <div
           class="photo-card__visual photo-card__visual--three"
           role="img"
@@ -87,7 +113,7 @@
         </div>
         <figcaption>Todos os caminhos nos trouxeram aqui.</figcaption>
       </figure>
-      <figure class="photo-card">
+      <figure class="photo-card" appScrollReveal="clip" [revealDelay]="360">
         <div
           class="photo-card__visual photo-card__visual--four"
           role="img"
@@ -101,16 +127,18 @@
   </section>
 
   <section class="ceremony" aria-labelledby="ceremony-title">
-    <div class="ceremony__content section-shell reveal">
-      <p class="section-label">A cerimônia</p>
-      <h2 id="ceremony-title">Esperamos você para o nosso sim.</h2>
+    <div class="ceremony__content section-shell">
+      <p class="section-label" appScrollReveal="up">A cerimônia</p>
+      <h2 id="ceremony-title" appScrollReveal="up" [revealDelay]="100">
+        Esperamos você para o nosso sim.
+      </h2>
 
-      <div class="ceremony__details">
-        <div>
+      <div class="ceremony__details" appScrollReveal="up" [revealDelay]="200">
+        <div appScrollReveal="up" [revealDelay]="260">
           <span>Quando</span>
           <p>Data e horário em breve</p>
         </div>
-        <div>
+        <div appScrollReveal="up" [revealDelay]="360">
           <span>Onde</span>
           <p>Local da cerimônia em breve</p>
         </div>
@@ -121,6 +149,8 @@
         href="https://www.google.com/maps"
         target="_blank"
         rel="noopener noreferrer"
+        appScrollReveal="up"
+        [revealDelay]="460"
       >
         <span>Ver no Google Maps</span>
         <span aria-hidden="true">↗</span>
@@ -129,18 +159,28 @@
   </section>
 
   <section id="confirmacao" class="rsvp-section" aria-labelledby="rsvp-section-title">
-    <div class="rsvp-section__heading section-shell reveal">
-      <p class="section-label">Confirmação de presença</p>
-      <h2 id="rsvp-section-title">Celebre este dia conosco.</h2>
-      <p>Seu convite individual apresenta as pessoas do seu grupo e as opções disponíveis.</p>
+    <div class="rsvp-section__heading section-shell">
+      <p class="section-label" appScrollReveal="up">Confirmação de presença</p>
+      <h2 id="rsvp-section-title" appScrollReveal="up" [revealDelay]="100">
+        Celebre este dia conosco.
+      </h2>
+      <p appScrollReveal="up" [revealDelay]="220">
+        Seu convite individual apresenta as pessoas do seu grupo e as opções disponíveis.
+      </p>
+      <span
+        class="section-rule"
+        aria-hidden="true"
+        appScrollReveal="line"
+        [revealDelay]="320"
+      ></span>
     </div>
-    <div class="section-shell rsvp-section__flow">
+    <div class="section-shell rsvp-section__flow" appScrollReveal="up" [revealDelay]="160">
       <app-rsvp-home [embedded]="true" />
     </div>
   </section>
 
   <footer class="wedding-footer">
-    <p>Com carinho,</p>
-    <strong>Maria Eduarda &amp; Tobias</strong>
+    <p appScrollReveal="up">Com carinho,</p>
+    <strong appScrollReveal="up" [revealDelay]="120">Maria Eduarda &amp; Tobias</strong>
   </footer>
 </article>
