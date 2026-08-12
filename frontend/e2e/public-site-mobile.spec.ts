@@ -74,29 +74,34 @@ for (const width of [320, 390, 430]) {
     await expect(caption).toHaveCSS('font-weight', '700');
     await expect(caption).not.toHaveCSS('text-shadow', 'none');
     await expect(caption).toHaveCSS('opacity', '1');
-    await expect(caption).toHaveCSS('transform', 'none');
     await expect(caption).toHaveCSS('transition-duration', '0s');
-    const coupledMovement = await photoRail.evaluate((element) => {
+    await expect(firstCard).toHaveClass(/is-active/);
+    const touchLinkedMotion = await photoRail.evaluate(async (element) => {
       const card = element.querySelector<HTMLElement>('.photo-card')!;
       const cardCaption = card.querySelector<HTMLElement>('figcaption')!;
-      const cardStart = card.getBoundingClientRect().left;
-      const captionStart = cardCaption.getBoundingClientRect().left;
+      const image = card.querySelector<HTMLElement>('img')!;
       const originalSnapType = element.style.scrollSnapType;
       element.style.scrollSnapType = 'none';
       element.scrollLeft = 64;
-      const cardEnd = card.getBoundingClientRect().left;
-      const captionEnd = cardCaption.getBoundingClientRect().left;
+      await new Promise<void>((resolve) =>
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+      );
+      const result = {
+        progress: Number.parseFloat(card.style.getPropertyValue('--card-progress')),
+        distance: Number.parseFloat(card.style.getPropertyValue('--card-distance')),
+        captionOpacity: Number.parseFloat(getComputedStyle(cardCaption).opacity),
+        captionTransform: getComputedStyle(cardCaption).transform,
+        imageTransform: getComputedStyle(image).transform,
+      };
       element.scrollLeft = 0;
       element.style.scrollSnapType = originalSnapType;
-      return {
-        cardDistance: cardEnd - cardStart,
-        captionDistance: captionEnd - captionStart,
-      };
+      return result;
     });
-    expect(Math.abs(coupledMovement.cardDistance - coupledMovement.captionDistance)).toBeLessThan(
-      0.5,
-    );
-    await expect(photoRail.locator('.photo-card').nth(1)).toHaveClass(/is-visible/);
+    expect(touchLinkedMotion.progress).toBeLessThan(0);
+    expect(touchLinkedMotion.distance).toBeGreaterThan(0);
+    expect(touchLinkedMotion.captionOpacity).toBeLessThan(1);
+    expect(touchLinkedMotion.captionTransform).not.toBe('none');
+    expect(touchLinkedMotion.imageTransform).not.toBe('none');
     await photoRail.evaluate((element) => element.scrollTo({ left: 230, behavior: 'smooth' }));
     await expect
       .poll(() =>
@@ -112,12 +117,14 @@ for (const width of [320, 390, 430]) {
       )
       .toBeLessThan(1);
     const secondCard = photoRail.locator('.photo-card').nth(1);
+    await expect(secondCard).toHaveClass(/is-visible/);
+    await expect(secondCard).toHaveClass(/is-active/);
     await expect(secondCard.locator('figcaption')).toHaveCSS('opacity', '1');
     await photoRail.evaluate((element) => element.scrollTo({ left: 0, behavior: 'smooth' }));
     await expect.poll(() => photoRail.evaluate((element) => element.scrollLeft)).toBeLessThan(1);
     await expect(firstCard.locator('figcaption')).toHaveCSS('transition-duration', '0s');
     await expect(firstCard.locator('figcaption')).toHaveCSS('opacity', '1');
-    await expect(firstCard.locator('figcaption')).toHaveCSS('transform', 'none');
+    await expect(firstCard).toHaveClass(/is-active/);
     const returnedCaptionInset = await firstCard.evaluate((card) => {
       const cardBounds = card.getBoundingClientRect();
       const captionBounds = card.querySelector('figcaption')!.getBoundingClientRect();
@@ -163,9 +170,7 @@ test('removes non-essential movement when the visitor prefers reduced motion', a
       ({ opacity, transitionDuration }) => opacity === '1' && transitionDuration === '0s',
     ),
   ).toBe(true);
-  await expect(
-    page.getByRole('heading', { name: 'Esperamos você para o nosso sim.' }),
-  ).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'O nosso sim.' })).toBeVisible();
 });
 
 test('reveals staggered content as it enters the mobile viewport', async ({ page }) => {

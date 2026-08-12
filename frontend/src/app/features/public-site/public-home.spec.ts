@@ -48,7 +48,7 @@ describe('PublicHome', () => {
     const animatedElements = element.querySelectorAll('.motion-reveal');
 
     expect(animatedElements.length).toBeGreaterThan(20);
-    expect(element.querySelectorAll('[data-reveal="line"]')).toHaveLength(2);
+    expect(element.querySelectorAll('[data-reveal="line"]')).toHaveLength(1);
     expect(element.querySelectorAll('[data-reveal="clip"]')).toHaveLength(7);
     expect(
       Array.from(animatedElements).every((item) => item.classList.contains('is-visible')),
@@ -68,7 +68,7 @@ describe('PublicHome', () => {
     );
     expect(element.querySelectorAll('.photo-card')).toHaveLength(7);
     expect(element.querySelectorAll('.photo-card__visual > figcaption')).toHaveLength(7);
-    expect(element.querySelectorAll('.photo-card.is-caption-active')).toHaveLength(0);
+    expect(element.querySelectorAll('.photo-card.is-active')).toHaveLength(1);
     expect(element.querySelectorAll('.photo-card img[loading="lazy"]')).toHaveLength(7);
     expect(element.querySelector('.photo-card img')?.getAttribute('alt')).toContain(
       'Tobias e Maria Eduarda',
@@ -79,11 +79,11 @@ describe('PublicHome', () => {
     const fixture = render();
     const element = fixture.nativeElement as HTMLElement;
     const ceremony = element.querySelector('.ceremony');
-    const map = ceremony?.querySelector<HTMLAnchorElement>('.map-link');
+    const map = element.querySelector<HTMLAnchorElement>('.final-location .map-link');
 
-    expect(ceremony?.textContent).toContain('24 de abril de 2026, às 16h');
+    expect(ceremony?.textContent).toContain('24-04-2026 | 16h');
     expect(ceremony?.textContent).toContain('Sweet Home Farm');
-    expect(ceremony?.textContent).toContain('R. Francisco Bueno Franco, 814');
+    expect(ceremony?.textContent).toContain('Rua Francisco Bueno Franco, 814');
     expect(map?.href).toBe('https://maps.app.goo.gl/2wyfdkJZ5CcvLFsA7');
     expect(ceremony?.querySelectorAll('.ceremony__details span')).toHaveLength(0);
   });
@@ -93,7 +93,10 @@ describe('PublicHome', () => {
     const element = fixture.nativeElement as HTMLElement;
 
     expect(element.querySelector('app-rsvp-home')).toBeTruthy();
+    expect(element.textContent).toContain('Confirme sua presença.');
     expect(element.textContent).toContain('Abra o link individual que recebeu');
     expect(element.querySelector('a[href="/rsvp"]')).toBeNull();
+    expect(element.querySelector('#presentes')).toBeTruthy();
+    expect(element.querySelector('.final-location')).toBeTruthy();
   });
 });

@@ -56,9 +56,7 @@ describe('Application routes', () => {
     });
     await new Promise((resolve) => setTimeout(resolve, 0));
 
-    expect(harness.routeNativeElement?.querySelector('h1')?.textContent).toContain(
-      'Este espaço é só seu',
-    );
+    expect(harness.routeNativeElement?.querySelector('h1')?.textContent).toContain('Seu convite');
   });
 
   it('redirects an unauthenticated visitor to the administrative login', async () => {

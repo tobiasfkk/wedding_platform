@@ -1,12 +1,13 @@
 import { DOCUMENT } from '@angular/common';
-import { ChangeDetectionStrategy, Component, DestroyRef, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '@angular/core';
 
 import { RsvpHome } from '../rsvp/rsvp-home';
 import { ScrollRevealDirective } from './scroll-reveal.directive';
+import { TouchPhotoRailDirective } from './touch-photo-rail.directive';
 
 @Component({
   selector: 'app-public-home',
-  imports: [RsvpHome, ScrollRevealDirective],
+  imports: [RsvpHome, ScrollRevealDirective, TouchPhotoRailDirective],
   templateUrl: './public-home.html',
   styleUrl: './public-home.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -16,6 +17,8 @@ export class PublicHome {
   private readonly destroyRef = inject(DestroyRef);
   private storyScrollFrame?: number;
   private previousScrollBehavior?: string;
+  readonly pixKey: string | null = null;
+  readonly pixCopyState = signal<'idle' | 'copied' | 'error'>('idle');
 
   constructor() {
     this.destroyRef.onDestroy(() => this.stopStoryScroll());
@@ -59,6 +62,31 @@ export class PublicHome {
     };
 
     this.storyScrollFrame = view.requestAnimationFrame(animate);
+  }
+
+  onResponsesSaved(): void {
+    const view = this.document.defaultView;
+    if (!view) return;
+    view.setTimeout(() => {
+      this.document.getElementById('presentes')?.scrollIntoView({
+        behavior: view.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+        block: 'start',
+      });
+    }, 180);
+  }
+
+  async copyPixKey(): Promise<void> {
+    const clipboard = this.document.defaultView?.navigator.clipboard;
+    if (!this.pixKey || !clipboard) {
+      this.pixCopyState.set('error');
+      return;
+    }
+    try {
+      await clipboard.writeText(this.pixKey);
+      this.pixCopyState.set('copied');
+    } catch {
+      this.pixCopyState.set('error');
+    }
   }
 
   private stopStoryScroll(): void {
