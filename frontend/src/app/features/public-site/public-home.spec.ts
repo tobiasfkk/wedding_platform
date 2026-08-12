@@ -39,6 +39,7 @@ describe('PublicHome', () => {
     expect(element.querySelector('blockquote')?.textContent).toContain('a mão do Senhor fez isto');
     expect(element.querySelector('.hero .button')).toBeNull();
     expect(element.querySelectorAll('.ceremony')).toHaveLength(1);
+    expect(element.querySelector('.scroll-cue')?.classList.contains('motion-reveal')).toBe(false);
   });
 
   it('assigns staggered, accessible motion to individual narrative elements', () => {
@@ -61,11 +62,27 @@ describe('PublicHome', () => {
 
     expect(rail?.getAttribute('tabindex')).toBe('0');
     expect(rail?.getAttribute('aria-label')).toContain('Deslize horizontalmente');
+    expect(element.querySelector('.gallery-cue')).toBeTruthy();
+    expect(element.textContent).not.toContain(
+      'Deslize para o lado e percorra alguns capítulos da nossa história.',
+    );
     expect(element.querySelectorAll('.photo-card')).toHaveLength(7);
     expect(element.querySelectorAll('.photo-card img[loading="lazy"]')).toHaveLength(7);
     expect(element.querySelector('.photo-card img')?.getAttribute('alt')).toContain(
       'Tobias e Maria Eduarda',
     );
+  });
+
+  it('shows the ceremony date, venue, address and map provided by the couple', () => {
+    const fixture = render();
+    const element = fixture.nativeElement as HTMLElement;
+    const ceremony = element.querySelector('.ceremony');
+    const map = ceremony?.querySelector<HTMLAnchorElement>('.map-link');
+
+    expect(ceremony?.textContent).toContain('24 de abril de 2026, às 16h');
+    expect(ceremony?.textContent).toContain('Sweet Home Farm');
+    expect(ceremony?.textContent).toContain('R. Francisco Bueno Franco, 814');
+    expect(map?.href).toBe('https://maps.app.goo.gl/2wyfdkJZ5CcvLFsA7');
   });
 
   it('keeps RSVP in the same page and explains how to use an individual invitation', () => {

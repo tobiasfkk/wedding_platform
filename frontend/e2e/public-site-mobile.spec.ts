@@ -31,9 +31,12 @@ for (const width of [320, 390, 430]) {
     await expect(page.getByRole('heading', { level: 1 })).toContainText('Tobias');
     await expect(page.locator('.hero a')).toHaveCount(1);
     await expect(page.locator('.hero button')).toHaveCount(0);
+    const continueCue = page.getByRole('link', { name: 'Continuar para o versículo' });
+    await expect(continueCue).toBeInViewport();
+    await expect(continueCue).toHaveCSS('opacity', '1');
     await expectNoHorizontalOverflow(page);
 
-    await page.getByRole('link', { name: 'Continuar para o versículo' }).click();
+    await continueCue.click();
     await expect(page.locator('.verse')).toBeInViewport();
     await expect(page.locator('blockquote')).toContainText('a mão do Senhor fez isto');
 
@@ -50,11 +53,27 @@ for (const width of [320, 390, 430]) {
       scrollWidth: element.scrollWidth,
     }));
     expect(railDimensions.scrollWidth).toBeGreaterThan(railDimensions.clientWidth);
+    const cardLayout = await photoRail.locator('.photo-card').evaluateAll((cards) => ({
+      firstWidth: cards[0]!.getBoundingClientRect().width,
+      secondLeft: cards[1]!.getBoundingClientRect().left,
+      viewportWidth: window.innerWidth,
+    }));
+    expect(cardLayout.firstWidth).toBeGreaterThan(width * 0.78);
+    expect(cardLayout.secondLeft).toBeLessThan(width);
     await photoRail.evaluate((element) => element.scrollTo({ left: element.scrollWidth }));
     const lastPhoto = photoRail.locator('img').last();
     await expect
       .poll(() => lastPhoto.evaluate((image) => (image as HTMLImageElement).naturalWidth))
       .toBeGreaterThan(0);
+
+    const ceremony = page.locator('.ceremony');
+    await ceremony.scrollIntoViewIfNeeded();
+    await expect(ceremony).toContainText('24 de abril de 2026, às 16h');
+    await expect(ceremony).toContainText('Sweet Home Farm');
+    await expect(ceremony.locator('.map-link')).toHaveAttribute(
+      'href',
+      'https://maps.app.goo.gl/2wyfdkJZ5CcvLFsA7',
+    );
 
     const rsvp = page.locator('.rsvp-section');
     await rsvp.scrollIntoViewIfNeeded();
