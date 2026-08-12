@@ -14,7 +14,6 @@ import { ScrollRevealDirective } from './scroll-reveal.directive';
 export class PublicHome {
   private readonly document = inject(DOCUMENT);
   private readonly destroyRef = inject(DestroyRef);
-  private scrollSettleTimer?: ReturnType<typeof setTimeout>;
   private storyScrollFrame?: number;
   private previousScrollBehavior?: string;
   private lastScrollLeft = 0;
@@ -23,10 +22,7 @@ export class PublicHome {
   readonly captionDirection = signal<'backward' | 'forward'>('forward');
 
   constructor() {
-    this.destroyRef.onDestroy(() => {
-      clearTimeout(this.scrollSettleTimer);
-      this.stopStoryScroll();
-    });
+    this.destroyRef.onDestroy(() => this.stopStoryScroll());
   }
 
   onContinueStory(event: MouseEvent): void {
@@ -78,15 +74,7 @@ export class PublicHome {
     }
 
     this.lastScrollLeft = rail.scrollLeft;
-    clearTimeout(this.scrollSettleTimer);
-
-    if (this.captionDirection() === 'backward') {
-      this.activateCenteredPhoto(rail);
-      return;
-    }
-
-    this.activePhotoIndex.set(-1);
-    this.scrollSettleTimer = setTimeout(() => this.activateCenteredPhoto(rail), 60);
+    this.activateCenteredPhoto(rail);
   }
 
   private activateCenteredPhoto(rail: HTMLElement): void {

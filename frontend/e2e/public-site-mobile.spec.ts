@@ -92,7 +92,7 @@ for (const width of [320, 390, 430]) {
     const secondCard = photoRail.locator('.photo-card').nth(1);
     await expect(photoRail).toHaveClass(/is-forward/);
     await expect(secondCard).toHaveClass(/is-caption-active/);
-    await expect(secondCard.locator('figcaption')).toHaveCSS('transition-delay', '0.06s');
+    await expect(secondCard.locator('figcaption')).toHaveCSS('transition-delay', '0.03s');
     await expect(secondCard.locator('figcaption')).toHaveCSS('opacity', '1');
     await photoRail.evaluate((element) => element.scrollTo({ left: 0, behavior: 'smooth' }));
     await expect.poll(() => photoRail.evaluate((element) => element.scrollLeft)).toBeLessThan(1);
@@ -100,6 +100,13 @@ for (const width of [320, 390, 430]) {
     await expect(firstCard).toHaveClass(/is-caption-active/);
     await expect(firstCard.locator('figcaption')).toHaveCSS('transition-duration', '0s');
     await expect(firstCard.locator('figcaption')).toHaveCSS('opacity', '1');
+    await expect(firstCard.locator('figcaption')).toHaveCSS('transform', 'none');
+    const returnedCaptionInset = await firstCard.evaluate((card) => {
+      const cardBounds = card.getBoundingClientRect();
+      const captionBounds = card.querySelector('figcaption')!.getBoundingClientRect();
+      return captionBounds.left - cardBounds.left;
+    });
+    expect(returnedCaptionInset).toBeGreaterThan(16);
     await photoRail.evaluate((element) => element.scrollTo({ left: element.scrollWidth }));
     const lastPhoto = photoRail.locator('img').last();
     await expect
