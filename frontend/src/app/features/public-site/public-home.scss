@@ -77,7 +77,7 @@
 }
 
 .motion-reveal.is-visible[data-reveal='clip'] .photo-card__visual {
-  clip-path: inset(0 0 0 0 round 0.4rem);
+  clip-path: inset(0 0 0 0 round 1.5rem);
 }
 
 h1,
@@ -299,14 +299,6 @@ h2 {
   background: var(--paper-deep);
 }
 
-.photo-card__visual::after {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(180deg, rgb(18 27 21 / 58%), transparent 42%);
-  content: '';
-  pointer-events: none;
-}
-
 .photo-card__visual img {
   display: block;
   width: 100%;
@@ -322,19 +314,27 @@ h2 {
   margin: 0;
   color: var(--paper-light);
   font-size: clamp(1.25rem, 5.8vw, 1.8rem);
-  font-weight: 700;
+  font-weight: 400;
   letter-spacing: -0.025em;
   line-height: 1.08;
   opacity: 0;
-  transform: translateY(0.75rem);
+  text-shadow:
+    0 1px 8px rgb(0 0 0 / 78%),
+    0 3px 22px rgb(0 0 0 / 58%);
+  transform: translateX(1.25rem);
   transition:
-    opacity 700ms ease calc(var(--reveal-delay) + 420ms),
-    transform 800ms cubic-bezier(0.22, 1, 0.36, 1) calc(var(--reveal-delay) + 420ms);
+    opacity 650ms ease,
+    transform 750ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.photo-card.is-visible figcaption {
+.photo-rail.is-backward .photo-card figcaption {
+  transform: translateX(-1.25rem);
+}
+
+.photo-card.is-visible.is-caption-active figcaption {
   opacity: 1;
   transform: none;
+  transition-delay: 220ms;
 }
 
 .ceremony {
@@ -477,8 +477,6 @@ h2 {
   }
 
   .photo-card figcaption {
-    opacity: 1;
-    transform: none;
     transition: none;
   }
 

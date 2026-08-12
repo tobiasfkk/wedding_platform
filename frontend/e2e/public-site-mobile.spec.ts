@@ -67,7 +67,8 @@ for (const width of [320, 390, 430]) {
     await expect(firstCard.locator('.photo-card__visual')).toHaveCSS('border-radius', '24px');
     const caption = firstCard.locator('figcaption');
     await expect(caption).toHaveCSS('position', 'absolute');
-    await expect(caption).toHaveCSS('font-weight', '700');
+    await expect(caption).toHaveCSS('font-weight', '400');
+    await expect(caption).not.toHaveCSS('text-shadow', 'none');
     await expect(caption).toHaveCSS('opacity', '1');
     await expect(photoRail.locator('.photo-card').nth(1)).toHaveClass(/is-visible/);
     await photoRail.evaluate((element) => element.scrollTo({ left: 230, behavior: 'smooth' }));
@@ -84,6 +85,11 @@ for (const width of [320, 390, 430]) {
         }),
       )
       .toBeLessThan(1);
+    const secondCard = photoRail.locator('.photo-card').nth(1);
+    await expect(photoRail).toHaveClass(/is-forward/);
+    await expect(secondCard).toHaveClass(/is-caption-active/);
+    await expect(secondCard.locator('figcaption')).toHaveCSS('transition-delay', '0.22s');
+    await expect(secondCard.locator('figcaption')).toHaveCSS('opacity', '1');
     await photoRail.evaluate((element) => element.scrollTo({ left: element.scrollWidth }));
     const lastPhoto = photoRail.locator('img').last();
     await expect

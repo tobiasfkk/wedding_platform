@@ -68,6 +68,10 @@ describe('PublicHome', () => {
     );
     expect(element.querySelectorAll('.photo-card')).toHaveLength(7);
     expect(element.querySelectorAll('.photo-card__visual > figcaption')).toHaveLength(7);
+    expect(element.querySelectorAll('.photo-card.is-caption-active')).toHaveLength(1);
+    expect(element.querySelector('.photo-card.is-caption-active')).toBe(
+      element.querySelector('.photo-card'),
+    );
     expect(element.querySelectorAll('.photo-card img[loading="lazy"]')).toHaveLength(7);
     expect(element.querySelector('.photo-card img')?.getAttribute('alt')).toContain(
       'Tobias e Maria Eduarda',
