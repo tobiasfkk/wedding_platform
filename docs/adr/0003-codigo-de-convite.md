@@ -28,7 +28,7 @@ O banco armazenará somente `HMAC-SHA-256(pepper, token)`, a versão não secret
 restrição de unicidade. O `pepper` será um segredo versionado fora do banco. O token original será
 exibido uma única vez ao administrador; se for perdido, deverá ser regenerado.
 
-O link usará fragmento, por exemplo `https://site.example/rsvp#code=<token>`, para que o token não seja
+O link usará fragmento, por exemplo `https://site.example/#code=<token>`, para que o token não seja
 enviado ao servidor web ou CDN na URL. O Angular enviará o token uma única vez no corpo de uma
 requisição HTTPS, receberá uma sessão pública limitada ao convite e removerá imediatamente o
 fragmento do histórico.

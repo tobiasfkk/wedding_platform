@@ -74,12 +74,13 @@ O MVP será considerado bem-sucedido quando:
 #### Site público
 
 - Página exclusiva, desenhada e implementada diretamente no frontend.
+- Jornada mobile-first em página única, sem cabeçalho ou menu público nesta composição.
 - Identificação do casal, data e horário do evento.
-- Informações de cerimônia e recepção.
+- Versículo, história, galeria horizontal e informações da cerimônia.
 - Orientações importantes, como traje, estacionamento e contato.
 - Conteúdo editorial, imagens e identidade visual versionados com o código.
 - Layout responsivo e acessível.
-- Acesso à confirmação de presença.
+- Confirmação de presença personalizada integrada à página principal.
 
 #### Administração
 

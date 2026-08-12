@@ -41,7 +41,22 @@ async function mockIdentifiedInvitation(page: Page): Promise<void> {
       },
     });
   });
+  await page.route('**/api/rsvp/access', (route) => route.fulfill({ json: invitation }));
 }
+
+test('opens an individual invitation inside the single-page wedding journey', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 800 });
+  await mockIdentifiedInvitation(page);
+  await page.goto('/#code=individual-secret-code');
+
+  await expect(page).toHaveURL('/');
+  await expect(page.locator('.app-header')).toHaveCount(0);
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('Maria Eduarda');
+  const group = page.getByRole('heading', { name: invitation.groupName });
+  await group.scrollIntoViewIfNeeded();
+  await expect(group).toBeVisible();
+  await expectNoHorizontalOverflow(page);
+});
 
 async function expectNoHorizontalOverflow(page: Page): Promise<void> {
   const dimensions = await page.evaluate(() => {

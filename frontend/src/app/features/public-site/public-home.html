@@ -1,121 +1,146 @@
 <article class="wedding-page">
   <section class="hero" aria-labelledby="public-title">
-    <div class="hero__glow hero__glow--top" aria-hidden="true"></div>
-    <div class="hero__glow hero__glow--bottom" aria-hidden="true"></div>
-
     <div class="hero__content">
-      <p class="section-label">Celebração de casamento</p>
-      <h1 id="public-title">Um dia para guardar na memória.</h1>
-      <p class="hero__introduction">
-        Estamos preparando cada detalhe para celebrar o amor ao lado das pessoas que fazem parte da
-        nossa história.
-      </p>
-      <p class="hero__date">Data e nomes serão definidos pelos noivos</p>
-
-      <div class="hero__actions" aria-label="Ações principais">
-        <a class="button button--light" href="#details">Conhecer os detalhes</a>
-        <a class="button button--quiet" routerLink="/rsvp">Confirmar presença</a>
-      </div>
+      <p class="hero__occasion">Casamento</p>
+      <h1 id="public-title">
+        <span>Maria Eduarda</span>
+        <span class="hero__ampersand" aria-hidden="true">&amp;</span>
+        <span>Tobias</span>
+      </h1>
     </div>
 
-    <a class="scroll-cue" href="#story">
-      <span>Role para descobrir</span>
+    <a class="scroll-cue" href="#verse" aria-label="Continuar para o versículo">
+      <span>Continue a nossa história</span>
       <span class="scroll-cue__line" aria-hidden="true"></span>
     </a>
   </section>
 
-  <section id="story" class="story section-shell reveal" aria-labelledby="story-title">
-    <div class="story__copy">
+  <section id="verse" class="verse" aria-labelledby="verse-reference">
+    <div class="verse__content reveal">
+      <span class="verse__ornament" aria-hidden="true">✦</span>
+      <blockquote>
+        “Para que todos vejam, e saibam, e considerem, e juntamente entendam que a mão do Senhor fez
+        isto.”
+      </blockquote>
+      <p id="verse-reference">Isaías 41:20</p>
+    </div>
+  </section>
+
+  <section class="story section-shell" aria-labelledby="story-title">
+    <div class="story__heading reveal">
       <p class="section-label">Nossa história</p>
-      <h2 id="story-title">Do encontro ao nosso sim.</h2>
+      <h2 id="story-title">Foi Deus quem escreveu cada encontro.</h2>
+    </div>
+    <div class="story__copy reveal">
       <p>
-        Entre conversas demoradas, novos caminhos e muitos planos compartilhados, descobrimos a
-        alegria de construir a vida juntos.
+        A nossa história foi acontecendo com a delicadeza das coisas que chegam para ficar. Entre
+        conversas, sonhos compartilhados e a alegria dos dias simples, encontramos um no outro um
+        lugar para chamar de lar.
       </p>
       <p>
-        Agora queremos dividir o próximo capítulo com quem tornou essa caminhada ainda mais
-        especial.
+        Agora, diante de Deus e ao lado das pessoas que amamos, começaremos um novo capítulo. Ter
+        você conosco torna esse momento ainda mais especial.
       </p>
     </div>
+  </section>
 
-    <figure class="story__visual">
-      <div
-        class="photo-placeholder"
-        role="img"
-        aria-label="Espaço reservado para uma foto do casal"
-      >
-        <span class="photo-placeholder__monogram" aria-hidden="true">∞</span>
-        <span>A foto favorita de vocês ficará aqui</span>
+  <section class="memories" aria-labelledby="memories-title">
+    <div class="section-shell memories__heading reveal">
+      <p class="section-label">Um pouco de nós</p>
+      <h2 id="memories-title">Memórias que nos trouxeram até aqui.</h2>
+      <p>Deslize para o lado e percorra alguns capítulos da nossa história.</p>
+    </div>
+
+    <div
+      class="photo-rail"
+      tabindex="0"
+      role="region"
+      aria-label="Galeria de memórias do casal. Deslize horizontalmente para ver mais fotos."
+    >
+      <figure class="photo-card">
+        <div
+          class="photo-card__visual photo-card__visual--one"
+          role="img"
+          aria-label="Espaço reservado para uma fotografia de Maria Eduarda e Tobias"
+        >
+          <span aria-hidden="true">01</span>
+        </div>
+        <figcaption>O começo de tudo.</figcaption>
+      </figure>
+      <figure class="photo-card">
+        <div
+          class="photo-card__visual photo-card__visual--two"
+          role="img"
+          aria-label="Espaço reservado para uma fotografia espontânea do casal"
+        >
+          <span aria-hidden="true">02</span>
+        </div>
+        <figcaption>Dias simples, memórias inteiras.</figcaption>
+      </figure>
+      <figure class="photo-card">
+        <div
+          class="photo-card__visual photo-card__visual--three"
+          role="img"
+          aria-label="Espaço reservado para uma fotografia de uma viagem do casal"
+        >
+          <span aria-hidden="true">03</span>
+        </div>
+        <figcaption>Todos os caminhos nos trouxeram aqui.</figcaption>
+      </figure>
+      <figure class="photo-card">
+        <div
+          class="photo-card__visual photo-card__visual--four"
+          role="img"
+          aria-label="Espaço reservado para uma fotografia da celebração do noivado"
+        >
+          <span aria-hidden="true">04</span>
+        </div>
+        <figcaption>O nosso sim antes do altar.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="ceremony" aria-labelledby="ceremony-title">
+    <div class="ceremony__content section-shell reveal">
+      <p class="section-label">A cerimônia</p>
+      <h2 id="ceremony-title">Esperamos você para o nosso sim.</h2>
+
+      <div class="ceremony__details">
+        <div>
+          <span>Quando</span>
+          <p>Data e horário em breve</p>
+        </div>
+        <div>
+          <span>Onde</span>
+          <p>Local da cerimônia em breve</p>
+        </div>
       </div>
-      <figcaption>Um capítulo contado por vocês.</figcaption>
-    </figure>
+
+      <a
+        class="map-link"
+        href="https://www.google.com/maps"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        <span>Ver no Google Maps</span>
+        <span aria-hidden="true">↗</span>
+      </a>
+    </div>
   </section>
 
-  <section id="details" class="details" aria-labelledby="details-title">
-    <div class="section-heading section-shell reveal">
-      <p class="section-label">O grande dia</p>
-      <h2 id="details-title">Onde a nossa história encontra a sua.</h2>
-    </div>
-
-    <div class="moments section-shell">
-      <article class="moment-card reveal">
-        <p class="section-label">01 · Cerimônia</p>
-        <h3>O nosso sim</h3>
-        <dl>
-          <div>
-            <dt>Quando</dt>
-            <dd>Horário a confirmar</dd>
-          </div>
-        </dl>
-      </article>
-      <article class="moment-card reveal">
-        <p class="section-label">02 · Recepção</p>
-        <h3>Vamos celebrar</h3>
-        <dl>
-          <div>
-            <dt>Quando</dt>
-            <dd>Após a cerimônia</dd>
-          </div>
-        </dl>
-      </article>
-    </div>
-
-    <article class="shared-location-card section-shell reveal">
-      <p class="section-label">Local</p>
-      <h3>Local da celebração</h3>
-      <p>O endereço será incluído diretamente na versão aprovada do site.</p>
-    </article>
-  </section>
-
-  <section class="notes section-shell reveal" aria-labelledby="notes-title">
-    <div>
-      <p class="section-label">Antes de sair de casa</p>
-      <h2 id="notes-title">Informações importantes</h2>
-    </div>
-    <ol>
-      <li>
-        <span aria-hidden="true">01</span>
-        <p>Chegue com antecedência para aproveitar cada momento com tranquilidade.</p>
-      </li>
-      <li>
-        <span aria-hidden="true">02</span>
-        <p>Consulte seu convite individual para confirmar quem participará com você.</p>
-      </li>
-      <li>
-        <span aria-hidden="true">03</span>
-        <p>Novas informações serão incluídas nesta página conforme a data se aproxima.</p>
-      </li>
-    </ol>
-  </section>
-
-  <section class="rsvp-callout reveal" aria-labelledby="rsvp-title">
-    <div class="rsvp-callout__content">
+  <section id="confirmacao" class="rsvp-section" aria-labelledby="rsvp-section-title">
+    <div class="rsvp-section__heading section-shell reveal">
       <p class="section-label">Confirmação de presença</p>
-      <h2 id="rsvp-title">Sua presença faz parte desta história.</h2>
-      <p>
-        Use o link individual recebido com o convite para informar quem poderá celebrar conosco.
-      </p>
-      <a class="button button--light" routerLink="/rsvp">Responder ao convite</a>
+      <h2 id="rsvp-section-title">Celebre este dia conosco.</h2>
+      <p>Seu convite individual apresenta as pessoas do seu grupo e as opções disponíveis.</p>
+    </div>
+    <div class="section-shell rsvp-section__flow">
+      <app-rsvp-home [embedded]="true" />
     </div>
   </section>
+
+  <footer class="wedding-footer">
+    <p>Com carinho,</p>
+    <strong>Maria Eduarda &amp; Tobias</strong>
+  </footer>
 </article>

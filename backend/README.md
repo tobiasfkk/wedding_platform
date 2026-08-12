@@ -123,8 +123,9 @@ nomes de participantes e acompanhantes são retornados apenas neste endpoint adm
 | `POST /api/rsvp/access` | Troca o código enviado no corpo por uma sessão limitada ao convite |
 | `POST /api/rsvp/responses` | Salva atomicamente participantes e acompanhantes do convite identificado |
 
-O frontend lê o código do fragmento `#code=`, remove-o imediatamente da URL e o envia uma única vez
-no corpo HTTPS. A sessão guarda somente os identificadores internos do convite e da versão do código;
+O link individual abre a página principal em `/#code=...`. O frontend lê o código do fragmento,
+remove-o imediatamente da URL e o envia uma única vez no corpo HTTPS. A sessão guarda somente os
+identificadores internos do convite e da versão do código;
 ela deixa de funcionar se o convite for inativado ou o link for regenerado. A resposta pública contém
 apenas nome do grupo, identificador, nome e estado RSVP dos participantes ativos, limite e lista atual
 de acompanhantes, sem contatos ou dados administrativos. Código aleatório, antigo ou inativo recebe a

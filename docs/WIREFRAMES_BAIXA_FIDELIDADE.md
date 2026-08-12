@@ -488,30 +488,44 @@ O protocolo não deve permitir enumeração ou acesso a outro convite.
 ## 8. Site público personalizado
 
 ```text
-┌─────────────────────────────────────────────┐
-│ Ana & Bruno                      [Confirmar]│
-├─────────────────────────────────────────────┤
-│                                             │
-│             10 · OUT · 2026                 │
-│       Estamos felizes em celebrar...        │
-│                                             │
-│ [         Confirmar presença          ]     │
-├─────────────────────────────────────────────┤
-│ Nossa história                              │
-│ [texto e imagem]                            │
-├─────────────────────────────────────────────┤
-│ Cerimônia               Recepção            │
-│ data · hora · local     data · hora · local │
-│ [Abrir mapa]            [Abrir mapa]        │
-├─────────────────────────────────────────────┤
-│ Informações importantes                     │
-│ traje · estacionamento · contato            │
-└─────────────────────────────────────────────┘
+┌───────────────────────────────┐
+│                               │
+│          Casamento            │
+│  Maria Eduarda & Tobias       │
+│                               │
+│     continue a história       │
+│              │                │
+├───────────────────────────────┤
+│ fundo verde                   │
+│ “Para que todos vejam...”     │
+│               Isaías 41:20    │
+├───────────────────────────────┤
+│ Nossa história                │
+│ texto editorial breve         │
+├───────────────────────────────┤
+│ Memórias                      │
+│ [ foto 1 ][ foto 2 ...        │
+│  galeria horizontal interna   │
+├───────────────────────────────┤
+│ A cerimônia                   │
+│ data · hora · local           │
+│ Ver no Google Maps            │
+├───────────────────────────────┤
+│ Confirmação de presença       │
+│ grupo identificado pelo link  │
+│ participantes · acompanhantes │
+│ respostas · salvar            │
+├───────────────────────────────┤
+│ Com carinho,                  │
+│ Maria Eduarda & Tobias        │
+└───────────────────────────────┘
 ```
 
-Este wireframe representa apenas a hierarquia mínima esperada. A composição real é exclusiva de cada
-casamento e implementada diretamente pelo desenvolvedor frontend. Não existe prévia administrativa,
-editor de seções ou publicação de conteúdo pela aplicação.
+Esta composição não possui cabeçalho público. A primeira interação é somente a indicação de
+continuidade, que leva suavemente ao versículo. A galeria revela parte do próximo item e permanece na
+mesma página. O RSVP individual também é incorporado à jornada, sem navegação para outra tela nos
+novos links de convite. Não existe prévia administrativa, editor de seções ou publicação de conteúdo
+pela aplicação.
 
 Referências: RF-015, ADR 0007 e RNF-PERF-003.
 

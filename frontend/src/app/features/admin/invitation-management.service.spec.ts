@@ -49,12 +49,12 @@ describe('InvitationManagementService', () => {
     service.activate('invitation-id').subscribe();
     const activate = http.expectOne('/api/admin/invitations/invitation-id/activate');
     expect(activate.request.method).toBe('POST');
-    activate.flush({ invitation: {}, link: 'http://localhost:4200/rsvp#code=token' });
+    activate.flush({ invitation: {}, link: 'http://localhost:4200/#code=token' });
 
     service.regenerateLink('invitation-id').subscribe();
     const regenerate = http.expectOne('/api/admin/invitations/invitation-id/regenerate-link');
     expect(regenerate.request.method).toBe('POST');
-    regenerate.flush({ invitation: {}, link: 'http://localhost:4200/rsvp#code=new-token' });
+    regenerate.flush({ invitation: {}, link: 'http://localhost:4200/#code=new-token' });
 
     service.inactivate('invitation-id').subscribe();
     const inactivate = http.expectOne('/api/admin/invitations/invitation-id/inactivate');
