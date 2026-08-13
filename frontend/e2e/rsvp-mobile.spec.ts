@@ -4,6 +4,7 @@ const invitation = {
   groupName: 'Família Exemplo com nome longo',
   companionLimit: 2,
   editable: true,
+  rsvpDeadline: '2026-02-26T02:59:00Z',
   participants: [
     { id: '11111111-1111-1111-1111-111111111111', name: 'Ana Exemplo', status: 'PENDING' },
     { id: '22222222-2222-2222-2222-222222222222', name: 'Bruno Exemplo', status: 'DECLINED' },
@@ -55,6 +56,16 @@ test('opens an individual invitation inside the single-page wedding journey', as
   const group = page.getByRole('heading', { name: invitation.groupName });
   await group.scrollIntoViewIfNeeded();
   await expect(group).toBeVisible();
+  await expect(page.locator('.rsvp-section')).toContainText(
+    'Este convite é individual, favor confirmar a presença do grupo até dia 25/02.',
+  );
+  const spaceBelowSaveButton = await page.evaluate(() => {
+    const section = document.querySelector('.rsvp-section')?.getBoundingClientRect();
+    const button = document.querySelector('#rsvp-save-button')?.getBoundingClientRect();
+    return section && button ? Math.round(section.bottom - button.bottom) : null;
+  });
+  expect(spaceBelowSaveButton).not.toBeNull();
+  expect(spaceBelowSaveButton ?? Number.POSITIVE_INFINITY).toBeLessThanOrEqual(1);
   await expectNoHorizontalOverflow(page);
 });
 
@@ -121,19 +132,40 @@ for (const width of [320, 360, 390, 430]) {
     await expect(page.getByRole('heading', { name: invitation.groupName })).toBeFocused();
     await expectNoHorizontalOverflow(page);
 
-    const buttons = page.locator('.rsvp-card button:not([disabled])');
+    const buttons = page.locator('.rsvp-card button:not(.response-option):not([disabled])');
     for (let index = 0; index < (await buttons.count()); index++) {
       expect((await buttons.nth(index).boundingBox())?.height).toBeGreaterThanOrEqual(44);
     }
+    const responseButtons = page.locator('.response-option:not([disabled])');
+    for (let index = 0; index < (await responseButtons.count()); index++) {
+      const height = (await responseButtons.nth(index).boundingBox())?.height ?? 0;
+      expect(height).toBeGreaterThanOrEqual(22);
+      expect(height).toBeLessThanOrEqual(28);
+    }
 
-    await page.getByRole('button', { name: 'Sim' }).first().click();
+    const firstYes = page.getByRole('button', { name: 'Sim' }).first();
+    const firstLater = page.getByRole('button', { name: 'Depois' }).first();
+    const secondNo = page.getByRole('button', { name: 'Não' }).nth(1);
+    await expect(firstYes).toHaveCSS('background-color', 'rgb(229, 235, 226)');
+    await expect(firstYes).toHaveCSS('border-color', 'rgba(0, 0, 0, 0)');
+    await expect(firstLater).toHaveCSS('background-color', 'rgb(243, 236, 217)');
+    await expect(firstLater).toHaveCSS('border-color', 'rgb(196, 173, 120)');
+    await expect(secondNo).toHaveCSS('background-color', 'rgb(242, 229, 225)');
+    await expect(secondNo).toHaveCSS('border-color', 'rgb(186, 143, 134)');
+
+    await firstYes.click();
+    await expect(firstYes).toHaveCSS('background-color', 'rgb(229, 235, 226)');
+    await expect(firstYes).toHaveCSS('border-color', 'rgb(138, 155, 135)');
+    await expect(firstLater).toHaveCSS('border-color', 'rgba(0, 0, 0, 0)');
+    await expect(firstYes).not.toContainText('✓');
     await page.getByRole('button', { name: 'Adicionar' }).click();
     const companion = page.getByLabel('Nome do acompanhante 1');
     await expect(companion).toBeFocused();
     await companion.fill('Carla Exemplo');
     await companion.press('Enter');
 
-    await expect(page.locator('#rsvp-save-result')).toBeFocused();
+    await expect(page.locator('#rsvp-save-button')).toHaveText(/Tudo certo/);
+    await expect(page.locator('#rsvp-save-button')).toBeFocused();
     await expectNoHorizontalOverflow(page);
   });
 }

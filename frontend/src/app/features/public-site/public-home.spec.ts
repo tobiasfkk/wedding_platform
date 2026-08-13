@@ -81,7 +81,7 @@ describe('PublicHome', () => {
     const ceremony = element.querySelector('.ceremony');
     const map = element.querySelector<HTMLAnchorElement>('.final-location .map-link');
 
-    expect(ceremony?.textContent).toContain('24-04-2026 | 16h');
+    expect(ceremony?.textContent).toContain('24-04-2027 | 16h');
     expect(ceremony?.textContent).toContain('Sweet Home Farm');
     expect(ceremony?.textContent).toContain('Rua Francisco Bueno Franco, 814');
     expect(map?.href).toBe('https://maps.app.goo.gl/2wyfdkJZ5CcvLFsA7');
@@ -93,7 +93,8 @@ describe('PublicHome', () => {
     const element = fixture.nativeElement as HTMLElement;
 
     expect(element.querySelector('app-rsvp-home')).toBeTruthy();
-    expect(element.textContent).toContain('Confirme sua presença.');
+    expect(element.textContent).not.toContain('Confirme sua presença.');
+    expect(element.textContent).not.toContain('Será uma alegria ter você conosco');
     expect(element.textContent).toContain('Abra o link individual que recebeu');
     expect(element.querySelector('a[href="/rsvp"]')).toBeNull();
     expect(element.querySelector('#presentes')).toBeTruthy();

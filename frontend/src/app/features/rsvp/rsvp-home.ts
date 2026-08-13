@@ -35,20 +35,16 @@ type SubmissionState = 'idle' | 'saving' | 'saved' | 'error';
       } @else if (state() === 'success' && invitation(); as currentInvitation) {
         <div class="rsvp-card rsvp-card--invitation">
           @if (embedded()) {
-            <p class="invitation-kicker">Convite para</p>
-            <h3 id="rsvp-state-title" tabindex="-1">{{ currentInvitation.groupName }}</h3>
+            <h2 id="rsvp-state-title" tabindex="-1">{{ currentInvitation.groupName }}</h2>
           } @else {
-            <p class="invitation-kicker">Convite para</p>
             <h1 id="rsvp-state-title" tabindex="-1">{{ currentInvitation.groupName }}</h1>
           }
           @if (deadlineLabel(currentInvitation.rsvpDeadline); as deadline) {
             <p class="invitation-deadline">
-              Este convite é único. Confirme sua presença até o dia
+              Este convite é individual, favor confirmar a presença do grupo até dia
               <strong>{{ deadline }}</strong
               >.
             </p>
-          } @else {
-            <p class="invitation-deadline">Este convite é único.</p>
           }
           <form (submit)="submitFromForm($event)">
             @if (!currentInvitation.editable) {
@@ -61,41 +57,44 @@ type SubmissionState = 'idle' | 'saving' | 'saved' | 'error';
               <div class="participant-list">
                 @for (participant of currentInvitation.participants; track participant.id) {
                   <fieldset class="participant-card">
-                    <legend>{{ participant.name }}</legend>
-                    <div
-                      class="response-options"
-                      [attr.aria-label]="'Resposta de ' + participant.name"
-                    >
-                      <button
-                        class="response-option"
-                        type="button"
-                        [class.is-selected]="statusOf(participant.id) === 'CONFIRMED'"
-                        [attr.aria-pressed]="statusOf(participant.id) === 'CONFIRMED'"
-                        [disabled]="!currentInvitation.editable || submissionState() === 'saving'"
-                        (click)="setStatus(participant.id, 'CONFIRMED')"
+                    <legend class="visually-hidden">{{ participant.name }}</legend>
+                    <div class="participant-content">
+                      <p class="participant-name" aria-hidden="true">{{ participant.name }}</p>
+                      <div
+                        class="response-options"
+                        [attr.aria-label]="'Resposta de ' + participant.name"
                       >
-                        Sim
-                      </button>
-                      <button
-                        class="response-option"
-                        type="button"
-                        [class.is-selected]="statusOf(participant.id) === 'DECLINED'"
-                        [attr.aria-pressed]="statusOf(participant.id) === 'DECLINED'"
-                        [disabled]="!currentInvitation.editable || submissionState() === 'saving'"
-                        (click)="setStatus(participant.id, 'DECLINED')"
-                      >
-                        Não
-                      </button>
-                      <button
-                        class="response-option"
-                        type="button"
-                        [class.is-selected]="statusOf(participant.id) === 'PENDING'"
-                        [attr.aria-pressed]="statusOf(participant.id) === 'PENDING'"
-                        [disabled]="!currentInvitation.editable || submissionState() === 'saving'"
-                        (click)="setStatus(participant.id, 'PENDING')"
-                      >
-                        Depois
-                      </button>
+                        <button
+                          class="response-option response-option--yes"
+                          type="button"
+                          [class.is-selected]="statusOf(participant.id) === 'CONFIRMED'"
+                          [attr.aria-pressed]="statusOf(participant.id) === 'CONFIRMED'"
+                          [disabled]="!currentInvitation.editable || submissionState() === 'saving'"
+                          (click)="setStatus(participant.id, 'CONFIRMED')"
+                        >
+                          Sim
+                        </button>
+                        <button
+                          class="response-option response-option--no"
+                          type="button"
+                          [class.is-selected]="statusOf(participant.id) === 'DECLINED'"
+                          [attr.aria-pressed]="statusOf(participant.id) === 'DECLINED'"
+                          [disabled]="!currentInvitation.editable || submissionState() === 'saving'"
+                          (click)="setStatus(participant.id, 'DECLINED')"
+                        >
+                          Não
+                        </button>
+                        <button
+                          class="response-option response-option--later"
+                          type="button"
+                          [class.is-selected]="statusOf(participant.id) === 'PENDING'"
+                          [attr.aria-pressed]="statusOf(participant.id) === 'PENDING'"
+                          [disabled]="!currentInvitation.editable || submissionState() === 'saving'"
+                          (click)="setStatus(participant.id, 'PENDING')"
+                        >
+                          Depois
+                        </button>
+                      </div>
                     </div>
                   </fieldset>
                 }
@@ -173,6 +172,7 @@ type SubmissionState = 'idle' | 'saving' | 'saved' | 'error';
             }
 
             <button
+              id="rsvp-save-button"
               class="save-button"
               type="submit"
               [disabled]="
@@ -180,23 +180,19 @@ type SubmissionState = 'idle' | 'saving' | 'saved' | 'error';
                 submissionState() === 'saving' ||
                 hasInvalidCompanion()
               "
+              [attr.aria-disabled]="submissionState() === 'saved' ? true : null"
+              [class.is-saved]="submissionState() === 'saved'"
             >
               @if (!currentInvitation.editable) {
                 Prazo encerrado
+              } @else if (submissionState() === 'saved') {
+                Tudo certo <span aria-hidden="true">✓</span>
               } @else {
                 {{ submissionState() === 'saving' ? 'Confirmando…' : 'Confirmar e continuar' }}
               }
             </button>
             @if (submissionState() === 'saved') {
-              <div
-                id="rsvp-save-result"
-                class="save-result save-result--success"
-                role="status"
-                tabindex="-1"
-              >
-                <strong>Presença confirmada.</strong>
-                <span>Vamos aos presentes…</span>
-              </div>
+              <span class="visually-hidden" role="status">Confirmação salva com sucesso.</span>
             } @else if (submissionState() === 'error') {
               <div
                 id="rsvp-save-result"
@@ -272,27 +268,18 @@ type SubmissionState = 'idle' | 'saving' | 'saved' | 'error';
       min-height: 2.75rem;
     }
     h1,
-    h2,
-    h3 {
+    h2 {
       margin: 0;
       color: var(--color-accent-strong);
       font-family: Georgia, 'Times New Roman', serif;
-      font-size: clamp(2rem, 9vw, 3.8rem);
+      font-size: clamp(2.35rem, 10vw, 4.8rem);
       font-weight: 400;
       line-height: 1;
       letter-spacing: -0.045em;
       text-wrap: balance;
     }
-    .invitation-kicker {
-      margin-block: 0 0.65rem;
-      color: var(--color-accent);
-      font-size: 0.68rem;
-      font-weight: 700;
-      letter-spacing: 0.24em;
-      text-transform: uppercase;
-    }
     .rsvp-card--invitation form {
-      margin-block-start: 2.5rem;
+      margin-block-start: 2rem;
     }
     .invitation-deadline {
       max-width: 36rem;
@@ -324,56 +311,84 @@ type SubmissionState = 'idle' | 'saving' | 'saved' | 'error';
     }
     .participant-list {
       display: grid;
-      border-block: 1px solid var(--color-border);
+      gap: 0.85rem;
     }
     .participant-card {
       min-width: 0;
       margin: 0;
-      padding: 1.35rem 0 1.5rem;
+      padding: 0;
       border: 0;
     }
-    .participant-card + .participant-card {
-      border-block-start: 1px solid var(--color-border);
+    .participant-content {
+      position: relative;
+      padding: 0rem 0 0rem 0.8rem;
     }
-    .participant-card legend {
-      padding: 0;
+    .participant-content::before {
+      position: absolute;
+      inset-block: 0;
+      inset-inline-start: 0;
+      width: 1px;
+      background: color-mix(in srgb, var(--color-accent-strong) 32%, var(--color-border));
+      content: '';
+    }
+    .participant-name {
+      margin: 0;
       font-family: Georgia, 'Times New Roman', serif;
-      font-size: 1.3rem;
+      font-size: 1.2rem;
       font-weight: 400;
+      line-height: 1.2;
     }
     .response-options {
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 0.5rem;
-      padding-block-start: 0.85rem;
+      grid-template-columns: repeat(3, minmax(4.5rem, max-content));
+      justify-content: start;
+      gap: 0.35rem;
+      margin-block-start: 0.45rem;
     }
-    .response-option {
+    .rsvp-card .response-option {
       min-width: 0;
-      padding: 0.65rem 0.45rem;
-      border: 0;
+      min-height: 1.5rem;
+      padding: 0.2rem 0.7rem;
+      border: 1px solid transparent;
       border-radius: 999px;
       appearance: none;
-      background: color-mix(in srgb, var(--color-accent-soft) 72%, var(--color-surface));
-      color: var(--color-accent-strong);
+      background-color: transparent;
+      color: var(--color-muted);
       font: inherit;
-      font-size: 0.7rem;
+      font-size: 0.63rem;
       font-weight: 700;
       letter-spacing: 0.08em;
       line-height: 1.1;
       text-transform: uppercase;
       cursor: pointer;
       transition:
+        border-color 180ms ease,
         background-color 180ms ease,
-        color 180ms ease,
-        transform 180ms ease;
+        color 180ms ease;
     }
-    .response-option:hover:not([disabled]) {
-      background: color-mix(in srgb, var(--color-accent-soft) 88%, var(--color-surface));
-      transform: translateY(-1px);
+    .rsvp-card .response-option.response-option--yes {
+      background-color: #e5ebe2;
+      color: #435747;
     }
-    .response-option.is-selected {
-      background: var(--color-accent-strong);
-      color: var(--color-surface);
+    .rsvp-card .response-option.response-option--no {
+      background-color: #f2e5e1;
+      color: #825b54;
+    }
+    .rsvp-card .response-option.response-option--later {
+      background-color: #f3ecd9;
+      color: #78663f;
+    }
+    .response-option:hover:not([disabled]):not(.is-selected) {
+      filter: brightness(0.98) saturate(1.08);
+    }
+    .rsvp-card .response-option.response-option--yes.is-selected {
+      border-color: #8a9b87;
+    }
+    .rsvp-card .response-option.response-option--no.is-selected {
+      border-color: #ba8f86;
+    }
+    .rsvp-card .response-option.response-option--later.is-selected {
+      border-color: #c4ad78;
     }
     .response-option:focus-visible {
       outline: 0.18rem solid color-mix(in srgb, var(--color-accent-strong) 35%, transparent);
@@ -385,8 +400,7 @@ type SubmissionState = 'idle' | 'saving' | 'saved' | 'error';
     }
     .companion-section {
       margin-block-start: 2.5rem;
-      padding-block-start: 2rem;
-      border-block-start: 1px solid var(--color-border);
+      padding-block-start: 1rem;
     }
     .companion-section h2,
     .companion-section p {
@@ -414,7 +428,6 @@ type SubmissionState = 'idle' | 'saving' | 'saved' | 'error';
     }
     .companion-card {
       padding-block: 1rem;
-      border-block-end: 1px solid var(--color-border);
     }
     .companion-card label {
       display: block;
@@ -490,6 +503,25 @@ type SubmissionState = 'idle' | 'saving' | 'saved' | 'error';
       cursor: default;
       opacity: 0.52;
     }
+    .save-button.is-saved {
+      border-color: color-mix(in srgb, var(--color-accent-strong) 68%, var(--color-border));
+      background: color-mix(in srgb, var(--color-accent-strong) 88%, white);
+      box-shadow: none;
+      cursor: default;
+      opacity: 1;
+    }
+    .visually-hidden {
+      position: absolute;
+      inset: 0 auto auto 0;
+      width: 1px;
+      height: 1px;
+      margin: -1px;
+      padding: 0;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+      border: 0;
+      white-space: nowrap;
+    }
     .save-result {
       display: flex;
       flex-wrap: wrap;
@@ -499,9 +531,6 @@ type SubmissionState = 'idle' | 'saving' | 'saved' | 'error';
     }
     .save-result:focus-visible {
       outline-offset: -0.25rem;
-    }
-    .save-result--success {
-      color: #1b5e20;
     }
     .save-result--error {
       color: #8c1d18;
@@ -527,7 +556,6 @@ type SubmissionState = 'idle' | 'saving' | 'saved' | 'error';
     }
     @media (max-width: 30rem) {
       .rsvp-shell {
-        min-height: calc(100dvh - 2rem);
         place-items: start center;
       }
       .rsvp-card {
@@ -603,9 +631,8 @@ export class RsvpHome {
     const date = new Date(deadline);
     if (Number.isNaN(date.getTime())) return null;
     return new Intl.DateTimeFormat('pt-BR', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
+      day: '2-digit',
+      month: '2-digit',
       timeZone: 'America/Sao_Paulo',
     }).format(date);
   }
@@ -652,7 +679,12 @@ export class RsvpHome {
 
   saveResponses(): void {
     const invitation = this.invitation();
-    if (!invitation?.editable || this.submissionState() === 'saving' || this.hasInvalidCompanion())
+    if (
+      !invitation?.editable ||
+      this.submissionState() === 'saving' ||
+      this.submissionState() === 'saved' ||
+      this.hasInvalidCompanion()
+    )
       return;
     this.pendingOperationId ??= globalThis.crypto.randomUUID();
     const operationId = this.pendingOperationId;
@@ -666,8 +698,8 @@ export class RsvpHome {
         this.applyInvitation(response.invitation);
         this.pendingOperationId = null;
         this.submissionState.set('saved');
-        this.focusSaveResult();
-        this.responsesSaved.emit();
+        this.focusAfterRender('rsvp-save-button');
+        this.document.defaultView?.setTimeout(() => this.responsesSaved.emit(), 700);
       },
       error: () => {
         this.submissionState.set('error');

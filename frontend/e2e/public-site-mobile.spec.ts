@@ -138,7 +138,7 @@ for (const width of [320, 390, 430]) {
 
     const ceremony = page.locator('.ceremony');
     await ceremony.scrollIntoViewIfNeeded();
-    await expect(ceremony).toContainText('24-04-2026 | 16h');
+    await expect(ceremony).toContainText('24-04-2027 | 16h');
     await expect(ceremony).toContainText('Sweet Home Farm');
     await expect(page.locator('.final-location .map-link')).toHaveAttribute(
       'href',

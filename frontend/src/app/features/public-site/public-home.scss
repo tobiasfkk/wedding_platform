@@ -1,3 +1,11 @@
+@font-face {
+  font-family: 'Scriptina';
+  src: url('/fonts/scriptina/scriptina.ttf') format('truetype');
+  font-display: swap;
+  font-style: normal;
+  font-weight: 400;
+}
+
 :host {
   --paper: #f3eee3;
   --paper-light: #faf7f0;
@@ -155,11 +163,11 @@ h2 {
   justify-items: center;
   margin: 0;
   color: var(--forest);
-  font-family: 'Segoe Script', 'Snell Roundhand', 'URW Chancery L', cursive;
-  font-size: clamp(3.25rem, 15.5vw, 8rem);
+  font-family: 'Scriptina', 'Segoe Script', 'Snell Roundhand', cursive;
+  font-size: clamp(3.75rem, 18vw, 9rem);
   font-weight: 400;
-  letter-spacing: -0.08em;
-  line-height: 0.93;
+  letter-spacing: 0;
+  line-height: 0.82;
   text-wrap: balance;
 }
 
@@ -429,22 +437,13 @@ h2 {
 }
 
 .rsvp-section {
-  padding-block: clamp(6rem, 20vw, 10rem);
+  padding-block: clamp(5rem, 16vw, 8rem) 0;
   background: var(--paper);
 }
 
 .rsvp-section__layout {
   display: grid;
-  gap: clamp(2.75rem, 8vw, 4.5rem);
-}
-
-.rsvp-section__intro {
-  max-width: 34rem;
-  margin-block: 1.5rem 0;
-  color: var(--muted);
-  font-family: Georgia, 'Times New Roman', serif;
-  font-size: clamp(1.05rem, 4.3vw, 1.3rem);
-  line-height: 1.7;
+  gap: 1.25rem;
 }
 
 .gift-section {
@@ -554,10 +553,11 @@ h2 {
 }
 
 .wedding-footer strong {
-  font-family: 'Segoe Script', 'Snell Roundhand', 'URW Chancery L', cursive;
-  font-size: clamp(2.3rem, 10vw, 5rem);
+  font-family: 'Scriptina', 'Segoe Script', 'Snell Roundhand', cursive;
+  font-size: clamp(3.25rem, 13vw, 6.5rem);
   font-weight: 400;
-  letter-spacing: -0.06em;
+  letter-spacing: 0;
+  line-height: 0.9;
 }
 
 @keyframes breathe {
@@ -602,12 +602,6 @@ h2 {
   .ceremony__details {
     grid-row: 1 / span 2;
     margin-block-start: 0;
-  }
-
-  .rsvp-section__layout {
-    grid-template-columns: minmax(0, 0.8fr) minmax(24rem, 1fr);
-    align-items: start;
-    gap: clamp(4rem, 8vw, 7rem);
   }
 
   .final-location {

@@ -174,7 +174,7 @@
 
       <div class="ceremony__details" appScrollReveal="up" [revealDelay]="200">
         <div appScrollReveal="up" [revealDelay]="260">
-          <p><time datetime="2026-04-24T16:00:00-03:00">24-04-2026 | 16h</time></p>
+          <p><time datetime="2027-04-24T16:00:00-03:00">24-04-2027 | 16h</time></p>
         </div>
         <div appScrollReveal="up" [revealDelay]="360">
           <p>Sweet Home Farm</p>
@@ -187,15 +187,11 @@
   <section id="confirmacao" class="rsvp-section" aria-labelledby="rsvp-section-title">
     <div class="rsvp-section__layout section-shell">
       <div class="rsvp-section__heading">
-        <p class="section-label" appScrollReveal="up">Confirmação de presença</p>
-        <h2 id="rsvp-section-title" appScrollReveal="up" [revealDelay]="100">
-          Confirme sua presença.
-        </h2>
-        <p class="rsvp-section__intro" appScrollReveal="up" [revealDelay]="200">
-          Será uma alegria ter você conosco. Responda por cada pessoa incluída no convite.
+        <p id="rsvp-section-title" class="section-label" appScrollReveal="up">
+          Confirmação de presença
         </p>
       </div>
-      <div class="rsvp-section__flow" appScrollReveal="up" [revealDelay]="280">
+      <div class="rsvp-section__flow" appScrollReveal="up" [revealDelay]="100">
         <app-rsvp-home [embedded]="true" (responsesSaved)="onResponsesSaved()" />
       </div>
     </div>
