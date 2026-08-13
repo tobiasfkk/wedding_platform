@@ -59,7 +59,12 @@ describe('RsvpHome', () => {
 
     expect(fixture.nativeElement.querySelector('h1')?.textContent).toContain('Família Exemplo');
     expect(fixture.nativeElement.textContent).toContain('Ana Exemplo');
-    expect(fixture.nativeElement.textContent).toContain('8 de abril de 2027');
+    const content = fixture.nativeElement.textContent.replace(/\s+/g, ' ');
+    expect(content).toContain(
+      'Este convite é individual, favor confirmar a presença do grupo até dia 08/04.',
+    );
+    expect(content).not.toContain('Convite para');
+    expect(content).not.toContain('Este convite é único');
     expect(fixture.nativeElement.textContent).not.toContain('Outro grupo');
     expect(fixture.nativeElement.querySelectorAll('.participant-card').length).toBe(2);
     expect(fixture.nativeElement.textContent).toContain('2 vagas disponíveis');
@@ -112,7 +117,8 @@ describe('RsvpHome', () => {
     });
     fixture.detectChanges();
 
-    expect(fixture.nativeElement.textContent).toContain('Presença confirmada.');
+    expect(fixture.nativeElement.textContent).toContain('Tudo certo');
+    expect(fixture.nativeElement.textContent).not.toContain('Vamos aos presentes');
   });
 
   it('adds, edits and submits companions without exceeding the invitation limit', () => {

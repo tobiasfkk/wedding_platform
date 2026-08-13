@@ -15,64 +15,25 @@ import { TouchPhotoRailDirective } from './touch-photo-rail.directive';
 export class PublicHome {
   private readonly document = inject(DOCUMENT);
   private readonly destroyRef = inject(DestroyRef);
-  private storyScrollFrame?: number;
+  private pageScrollFrame?: number;
   private previousScrollBehavior?: string;
   readonly pixKey: string | null = null;
   readonly pixCopyState = signal<'idle' | 'copied' | 'error'>('idle');
 
   constructor() {
-    this.destroyRef.onDestroy(() => this.stopStoryScroll());
+    this.destroyRef.onDestroy(() => this.stopPageScroll());
   }
 
   onContinueStory(event: MouseEvent): void {
     event.preventDefault();
     const link = event.currentTarget as HTMLAnchorElement;
     const target = this.document.querySelector<HTMLElement>(link.hash);
-    const view = this.document.defaultView;
-
-    if (!target || !view) return;
-    if (view.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      target.scrollIntoView();
-      return;
-    }
-
-    this.stopStoryScroll();
-    const root = this.document.documentElement;
-    const startPosition = view.scrollY;
-    const targetPosition = target.getBoundingClientRect().top + startPosition;
-    const distance = targetPosition - startPosition;
-    const startedAt = view.performance.now();
-    this.previousScrollBehavior = root.style.scrollBehavior;
-    root.style.scrollBehavior = 'auto';
-    view.history.pushState(null, '', link.hash);
-
-    const animate = (timestamp: number): void => {
-      const progress = Math.min((timestamp - startedAt) / 1300, 1);
-      const easedProgress =
-        progress < 0.5 ? 4 * progress ** 3 : 1 - Math.pow(-2 * progress + 2, 3) / 2;
-      view.scrollTo(0, startPosition + distance * easedProgress);
-
-      if (progress < 1) {
-        this.storyScrollFrame = view.requestAnimationFrame(animate);
-        return;
-      }
-
-      this.storyScrollFrame = undefined;
-      this.restoreScrollBehavior();
-    };
-
-    this.storyScrollFrame = view.requestAnimationFrame(animate);
+    if (target) this.scrollTo(target, link.hash);
   }
 
   onResponsesSaved(): void {
-    const view = this.document.defaultView;
-    if (!view) return;
-    view.setTimeout(() => {
-      this.document.getElementById('presentes')?.scrollIntoView({
-        behavior: view.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
-        block: 'start',
-      });
-    }, 180);
+    const target = this.document.getElementById('presentes');
+    if (target) this.scrollTo(target);
   }
 
   async copyPixKey(): Promise<void> {
@@ -89,11 +50,47 @@ export class PublicHome {
     }
   }
 
-  private stopStoryScroll(): void {
+  private scrollTo(target: HTMLElement, hash?: string): void {
     const view = this.document.defaultView;
-    if (view && this.storyScrollFrame !== undefined) {
-      view.cancelAnimationFrame(this.storyScrollFrame);
-      this.storyScrollFrame = undefined;
+    if (!view) return;
+    if (view.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      target.scrollIntoView();
+      return;
+    }
+
+    this.stopPageScroll();
+    const root = this.document.documentElement;
+    const startPosition = view.scrollY;
+    const targetPosition = target.getBoundingClientRect().top + startPosition;
+    const distance = targetPosition - startPosition;
+    const startedAt = view.performance.now();
+    this.previousScrollBehavior = root.style.scrollBehavior;
+    root.style.scrollBehavior = 'auto';
+    if (hash) view.history.pushState(null, '', hash);
+
+    const animate = (timestamp: number): void => {
+      const progress = Math.min((timestamp - startedAt) / 1300, 1);
+      const easedProgress =
+        progress < 0.5 ? 4 * progress ** 3 : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+      view.scrollTo(0, startPosition + distance * easedProgress);
+
+      if (progress < 1) {
+        this.pageScrollFrame = view.requestAnimationFrame(animate);
+        return;
+      }
+
+      this.pageScrollFrame = undefined;
+      this.restoreScrollBehavior();
+    };
+
+    this.pageScrollFrame = view.requestAnimationFrame(animate);
+  }
+
+  private stopPageScroll(): void {
+    const view = this.document.defaultView;
+    if (view && this.pageScrollFrame !== undefined) {
+      view.cancelAnimationFrame(this.pageScrollFrame);
+      this.pageScrollFrame = undefined;
     }
     this.restoreScrollBehavior();
   }
