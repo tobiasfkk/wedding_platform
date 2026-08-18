@@ -72,7 +72,7 @@ for (const width of [320, 390, 430]) {
       secondLeft: cards[1]!.getBoundingClientRect().left,
       viewportWidth: window.innerWidth,
     }));
-    expect(cardLayout.firstWidth).toBeGreaterThan(width * 0.78);
+    expect(cardLayout.firstWidth).toBeGreaterThanOrEqual(width - 72);
     expect(cardLayout.secondLeft).toBeLessThan(width);
     await expect(photoRail).toHaveCSS('scroll-snap-type', /mandatory/);
     const firstCard = photoRail.locator('.photo-card').first();
