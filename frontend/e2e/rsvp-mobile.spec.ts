@@ -13,6 +13,11 @@ const invitation = {
 };
 
 async function mockIdentifiedInvitation(page: Page): Promise<void> {
+  await page.route('**/api/public/pix', (route) =>
+    route.fulfill({
+      json: { configured: false, key: null, payload: null, recipientName: null },
+    }),
+  );
   await page.route('**/api/rsvp/session', (route) =>
     route.fulfill({
       json: {
@@ -65,7 +70,8 @@ test('opens an individual invitation inside the single-page wedding journey', as
     return section && button ? Math.round(section.bottom - button.bottom) : null;
   });
   expect(spaceBelowSaveButton).not.toBeNull();
-  expect(spaceBelowSaveButton ?? Number.POSITIVE_INFINITY).toBeLessThanOrEqual(1);
+  expect(spaceBelowSaveButton ?? 0).toBeGreaterThanOrEqual(40);
+  expect(spaceBelowSaveButton ?? Number.POSITIVE_INFINITY).toBeLessThanOrEqual(80);
   await expectNoHorizontalOverflow(page);
 });
 
@@ -191,6 +197,23 @@ test('preserves validation and focus while editing companions on a phone', async
   await secondCompanion.fill('Daniel');
   await page.getByRole('button', { name: 'Remover acompanhante 1' }).click();
   await expect(page.getByLabel('Nome do acompanhante 1')).toBeFocused();
+});
+
+test('confirms attendance when randomUUID is unavailable over local HTTP', async ({ page }) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(globalThis.crypto, 'randomUUID', {
+      configurable: true,
+      value: undefined,
+    });
+  });
+  await page.setViewportSize({ width: 390, height: 800 });
+  await mockIdentifiedInvitation(page);
+  await page.goto('/rsvp');
+
+  await page.getByRole('button', { name: 'Sim' }).first().click();
+  await page.getByRole('button', { name: 'Confirmar e continuar' }).click();
+
+  await expect(page.locator('#rsvp-save-button')).toHaveText(/Tudo certo/);
 });
 
 test('keeps invalid links private and usable at the minimum width', async ({ page }) => {

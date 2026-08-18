@@ -4,6 +4,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { RouterLink } from '@angular/router';
 import { of, switchMap } from 'rxjs';
 
+import { createUuid } from '../../core/uuid';
 import {
   RsvpAccessService,
   RsvpCompanion,
@@ -644,7 +645,7 @@ export class RsvpHome {
   addCompanion(): void {
     const invitation = this.invitation();
     if (!invitation?.editable || this.companions().length >= invitation.companionLimit) return;
-    const companion = { id: globalThis.crypto.randomUUID(), name: '' };
+    const companion = { id: createUuid(), name: '' };
     this.companions.update((current) => [...current, companion]);
     this.markDraftChanged();
     this.focusAfterRender(`companion-${companion.id}`);
@@ -686,7 +687,7 @@ export class RsvpHome {
       this.hasInvalidCompanion()
     )
       return;
-    this.pendingOperationId ??= globalThis.crypto.randomUUID();
+    this.pendingOperationId ??= createUuid();
     const operationId = this.pendingOperationId;
     const participants = invitation.participants.map((participant) => ({
       id: participant.id,

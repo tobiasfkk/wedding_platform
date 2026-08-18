@@ -10,7 +10,7 @@ import {
   input,
 } from '@angular/core';
 
-type RevealVariant = 'clip' | 'line' | 'scale' | 'up';
+type RevealVariant = 'line' | 'scale' | 'up';
 
 @Directive({
   selector: '[appScrollReveal]',

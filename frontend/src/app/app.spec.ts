@@ -35,6 +35,6 @@ describe('App', () => {
       (link as HTMLElement).textContent?.trim(),
     );
 
-    expect(links).toEqual(['Convidados', 'Convites', 'Respostas']);
+    expect(links).toEqual(['Convidados', 'Convites', 'Respostas', 'Pix']);
   });
 });
