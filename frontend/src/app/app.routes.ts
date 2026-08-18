@@ -22,6 +22,13 @@ export const routes: Routes = [
       import('./features/admin/admin-login').then((component) => component.AdminLogin),
   },
   {
+    path: 'admin/pix',
+    title: 'Configuração Pix | Wedding Platform',
+    canActivate: [adminGuard],
+    loadComponent: () =>
+      import('./features/admin/pix-settings').then((component) => component.PixSettings),
+  },
+  {
     path: 'admin/rsvp',
     title: 'Respostas de RSVP | Wedding Platform',
     canActivate: [adminGuard],

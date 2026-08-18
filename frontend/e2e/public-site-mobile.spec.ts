@@ -6,6 +6,16 @@ async function mockAnonymousRsvp(page: Page): Promise<void> {
       json: { identified: false, invitation: null, csrfToken: 'public-rsvp-csrf' },
     }),
   );
+  await page.route('**/api/public/pix', (route) =>
+    route.fulfill({
+      json: {
+        configured: true,
+        key: 'pix@example.com',
+        payload: '000201br.gov.bcb.pix6304ABCD',
+        recipientName: 'Maria e Tobias',
+      },
+    }),
+  );
 }
 
 async function expectNoHorizontalOverflow(page: Page): Promise<void> {
@@ -69,6 +79,7 @@ for (const width of [320, 390, 430]) {
     await expect(firstCard).toHaveCSS('scroll-snap-align', 'center');
     await expect(firstCard).toHaveCSS('scroll-snap-stop', 'always');
     await expect(firstCard.locator('.photo-card__visual')).toHaveCSS('border-radius', '24px');
+    await expect(firstCard.locator('.photo-card__visual')).toHaveCSS('box-shadow', 'none');
     const caption = firstCard.locator('figcaption');
     await expect(caption).toHaveCSS('position', 'absolute');
     await expect(caption).toHaveCSS('font-weight', '700');
@@ -140,17 +151,79 @@ for (const width of [320, 390, 430]) {
     await ceremony.scrollIntoViewIfNeeded();
     await expect(ceremony).toContainText('24-04-2027 | 16h');
     await expect(ceremony).toContainText('Sweet Home Farm');
-    await expect(page.locator('.final-location .map-link')).toHaveAttribute(
+    await expect(page.locator('.ceremony .map-link')).toHaveAttribute(
       'href',
       'https://maps.app.goo.gl/2wyfdkJZ5CcvLFsA7',
     );
+    await expect(page.locator('.ceremony .map-link')).toHaveCSS('box-shadow', 'none');
+    await expect(page.locator('.ceremony .map-link')).toHaveCSS('transform', 'none');
 
     const rsvp = page.locator('.rsvp-section');
     await rsvp.scrollIntoViewIfNeeded();
     await expect(rsvp).toContainText('Abra o link individual que recebeu');
     await expectNoHorizontalOverflow(page);
+
+    const gifts = page.locator('.gift-section');
+    await gifts.scrollIntoViewIfNeeded();
+    await expect(gifts.locator('.pix-qr img')).toBeVisible();
+    await expect(gifts.getByRole('button', { name: 'Copiar código Pix' })).toBeVisible();
+    await expectNoHorizontalOverflow(page);
   });
 }
+
+test('navigates to the exact photo selected by its circle or visible edge', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 800 });
+  await mockAnonymousRsvp(page);
+  await page.goto('/');
+
+  const rail = page.locator('.photo-rail');
+  const dots = page.locator('.gallery-dot');
+  await rail.scrollIntoViewIfNeeded();
+  await expect(dots).toHaveCount(7);
+  await expect(dots.nth(0)).toHaveAttribute('aria-current', 'true');
+
+  await dots.nth(1).click();
+  await expect(dots.nth(1)).toHaveAttribute('aria-current', 'true');
+
+  await rail.locator('.photo-card').nth(0).dispatchEvent('click');
+  await expect(dots.nth(0)).toHaveAttribute('aria-current', 'true');
+
+  await rail.locator('.photo-card').nth(1).dispatchEvent('click');
+  await expect(dots.nth(1)).toHaveAttribute('aria-current', 'true');
+});
+
+test('copies the Pix code on local HTTP when Clipboard API is unavailable', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 800 });
+  await page.addInitScript(() => {
+    Object.defineProperty(Navigator.prototype, 'clipboard', {
+      configurable: true,
+      get: () => undefined,
+    });
+  });
+  await mockAnonymousRsvp(page);
+  await page.goto('/');
+
+  const gifts = page.locator('.gift-section');
+  await gifts.scrollIntoViewIfNeeded();
+  const qrBounds = await gifts.locator('.pix-qr img').boundingBox();
+  expect(qrBounds?.width).toBeGreaterThan(280);
+  const qrAlignment = await gifts.locator('.pix-qr').evaluate((qr) => {
+    const bounds = qr.getBoundingClientRect();
+    return Math.abs(bounds.left + bounds.width / 2 - window.innerWidth / 2);
+  });
+  expect(qrAlignment).toBeLessThan(1);
+  await expect(gifts.locator('.pix-details')).toHaveCSS('border-top-width', '0px');
+  const pixLabelsGap = await gifts.locator('.pix-recipient').evaluate((recipient) => ({
+    recipient: getComputedStyle(recipient).rowGap,
+    key: getComputedStyle(document.querySelector('.pix-key')!).rowGap,
+  }));
+  expect(pixLabelsGap.recipient).toBe(pixLabelsGap.key);
+  await expect(gifts.locator('.pix-recipient strong')).toHaveCSS('text-transform', 'none');
+  await gifts.getByRole('button', { name: 'Copiar código Pix' }).click();
+
+  await expect(gifts.getByRole('button', { name: 'Código copiado' })).toBeVisible();
+  await expect(gifts).toContainText('Agora é só colar no aplicativo do banco.');
+});
 
 test('removes non-essential movement when the visitor prefers reduced motion', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
@@ -169,6 +242,7 @@ test('removes non-essential movement when the visitor prefers reduced motion', a
       ({ opacity, transitionDuration }) => opacity === '1' && transitionDuration === '0s',
     ),
   ).toBe(true);
+  await expect(page.locator('.gallery-playback')).toHaveCount(0);
   await expect(page.getByRole('heading', { name: 'O nosso sim.' })).toBeVisible();
 });
 

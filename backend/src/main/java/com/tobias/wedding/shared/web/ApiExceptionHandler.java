@@ -12,6 +12,7 @@ import com.tobias.wedding.rsvp.RsvpAccessException;
 import com.tobias.wedding.rsvp.RsvpDashboardFilterException;
 import com.tobias.wedding.rsvp.RsvpSubmissionException;
 import com.tobias.wedding.wedding.RsvpDeadlineValidationException;
+import com.tobias.wedding.wedding.PixConfigurationValidationException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import java.net.URI;
@@ -192,6 +193,18 @@ public class ApiExceptionHandler {
                 exception.getMessage(),
                 "VALIDATION_ERROR");
         problem.setProperty("errors", List.of(new ApiFieldError(exception.field(), exception.getMessage())));
+        return ResponseEntity.badRequest().body(problem);
+    }
+
+    @ExceptionHandler(PixConfigurationValidationException.class)
+    ResponseEntity<ProblemDetail> handlePixConfigurationValidation(PixConfigurationValidationException exception) {
+        ProblemDetail problem = problem(
+                HttpStatus.BAD_REQUEST,
+                VALIDATION_TYPE,
+                "Configuração Pix inválida",
+                exception.getMessage(),
+                "VALIDATION_ERROR");
+        problem.setProperty("errors", List.of(new ApiFieldError("payload", exception.getMessage())));
         return ResponseEntity.badRequest().body(problem);
     }
 

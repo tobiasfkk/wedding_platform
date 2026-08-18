@@ -145,6 +145,23 @@ limite é mantido em memória no MVP; em uma implantação com múltiplas instâ
 um armazenamento compartilhado. Em produção, cabe à infraestrutura encaminhar o endereço de origem
 confiável, processado por `server.forward-headers-strategy=framework`.
 
+## Configuração do Pix
+
+| Método e rota | Acesso | Resultado |
+|---|---|---|
+| `GET /api/public/pix` | Público | Retorna somente os dados públicos necessários para pagamento |
+| `GET /api/admin/pix` | Administrador | Consulta a configuração atual |
+| `PUT /api/admin/pix` | Administrador com CSRF | Valida e atualiza a configuração |
+
+O cadastro é feito em `/admin/pix`. Informe o nome público do recebedor, a chave opcional que pode
+ser exibida ao convidado e o código completo “Pix Copia e Cola” fornecido pelo banco. O backend valida
+o marcador do BR Code e o CRC16 antes de persistir a configuração em `wedding.wedding_event`.
+
+O QR Code não é armazenado como imagem: o frontend o gera localmente a partir do código validado.
+Assim, não é necessário adicionar o arquivo às fotos estáticas nem manter conteúdo binário no banco.
+Esses campos são dados públicos de pagamento; senhas, tokens bancários e credenciais nunca devem ser
+informados nesse formulário.
+
 ## Perfis e banco local
 
 O perfil `local` é usado por padrão e conecta ao PostgreSQL com os seguintes valores locais:

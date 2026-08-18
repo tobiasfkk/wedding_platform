@@ -3,6 +3,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 
+import { createUuid } from '../../core/uuid';
 import { RsvpCompanion, RsvpInvitation, RsvpStatus } from '../rsvp/rsvp-access.service';
 import { AdminRsvpResponse, AdminRsvpService } from './admin-rsvp.service';
 
@@ -286,7 +287,7 @@ export class AdminRsvpEditor {
   addCompanion(): void {
     const invitation = this.invitation();
     if (!invitation || this.companions().length >= invitation.companionLimit) return;
-    this.companions.update((current) => [...current, { id: crypto.randomUUID(), name: '' }]);
+    this.companions.update((current) => [...current, { id: createUuid(), name: '' }]);
     this.changed();
   }
   setCompanionName(id: string, name: string): void {
@@ -312,7 +313,7 @@ export class AdminRsvpEditor {
       !window.confirm('Substituir a resposta atual? A alteração ficará registrada no histórico.')
     )
       return;
-    this.pendingOperationId ??= crypto.randomUUID();
+    this.pendingOperationId ??= createUuid();
     this.saving.set(true);
     this.message.set(null);
     this.service

@@ -52,7 +52,7 @@
         um lugar para chamar de lar.
       </p>
       <p appScrollReveal="up" [revealDelay]="300">
-        Agora, diante de Deus e ao lado das pessoas que amamos, começaremos um novo capítulo. Ter
+        Agora, diante de Deus, e ao lado das pessoas que amamos, começaremos um novo capítulo. Ter
         você conosco torna esse momento ainda mais especial.
       </p>
     </div>
@@ -69,101 +69,114 @@
     <div
       class="photo-rail"
       appTouchPhotoRail
+      #gallery="touchPhotoRail"
       tabindex="0"
       role="region"
       aria-label="Galeria de memórias do casal. Deslize horizontalmente para ver mais fotos."
     >
-      <figure class="photo-card" appScrollReveal="clip">
+      <figure class="photo-card">
         <div class="photo-card__visual">
           <img
             src="/images/couple/maria-tobias-01.jpg"
             alt="Tobias e Maria Eduarda sorrindo com um buquê de flores ao ar livre"
             width="960"
             height="1280"
-            loading="lazy"
-            decoding="async"
+            loading="eager"
+            decoding="sync"
           />
           <figcaption>Entre flores e sorrisos.</figcaption>
         </div>
       </figure>
-      <figure class="photo-card" appScrollReveal="clip" [revealDelay]="120">
+      <figure class="photo-card">
         <div class="photo-card__visual">
           <img
             src="/images/couple/maria-tobias-02.jpg"
             alt="Maria Eduarda e Tobias abraçados e sorrindo em um jardim"
             width="960"
             height="1280"
-            loading="lazy"
-            decoding="async"
+            loading="eager"
+            decoding="sync"
           />
           <figcaption>A alegria de estarmos juntos.</figcaption>
         </div>
       </figure>
-      <figure class="photo-card" appScrollReveal="clip" [revealDelay]="240">
+      <figure class="photo-card">
         <div class="photo-card__visual">
           <img
             src="/images/couple/maria-tobias-03.jpg"
             alt="Maria Eduarda e Tobias olhando um para o outro em um jardim"
             width="960"
             height="1280"
-            loading="lazy"
-            decoding="async"
+            loading="eager"
+            decoding="sync"
           />
           <figcaption>Nosso jeito de olhar um para o outro.</figcaption>
         </div>
       </figure>
-      <figure class="photo-card" appScrollReveal="clip" [revealDelay]="120">
+      <figure class="photo-card">
         <div class="photo-card__visual">
           <img
             src="/images/couple/maria-tobias-04.jpg"
             alt="Maria Eduarda olhando com carinho para Tobias durante uma celebração"
             width="960"
             height="1280"
-            loading="lazy"
-            decoding="async"
+            loading="eager"
+            decoding="sync"
           />
           <figcaption>Memórias que guardamos com carinho.</figcaption>
         </div>
       </figure>
-      <figure class="photo-card" appScrollReveal="clip" [revealDelay]="240">
+      <figure class="photo-card">
         <div class="photo-card__visual">
           <img
             src="/images/couple/maria-tobias-05.jpg"
             alt="Maria Eduarda e Tobias sorrindo juntos em uma celebração ao ar livre"
             width="960"
             height="1280"
-            loading="lazy"
-            decoding="async"
+            loading="eager"
+            decoding="sync"
           />
           <figcaption>Cada celebração ao seu lado.</figcaption>
         </div>
       </figure>
-      <figure class="photo-card" appScrollReveal="clip" [revealDelay]="120">
+      <figure class="photo-card">
         <div class="photo-card__visual">
           <img
             src="/images/couple/maria-tobias-06.jpg"
             alt="Maria Eduarda e Tobias diante das montanhas ao pôr do sol"
             width="960"
             height="1280"
-            loading="lazy"
-            decoding="async"
+            loading="eager"
+            decoding="sync"
           />
           <figcaption>Todos os caminhos nos trouxeram aqui.</figcaption>
         </div>
       </figure>
-      <figure class="photo-card" appScrollReveal="clip" [revealDelay]="240">
+      <figure class="photo-card">
         <div class="photo-card__visual">
           <img
             src="/images/couple/maria-tobias-07.jpg"
             alt="Maria Eduarda e Tobias abraçados durante uma caminhada em um dia de neblina"
             width="960"
             height="1280"
-            loading="lazy"
-            decoding="async"
+            loading="eager"
+            decoding="sync"
           />
           <figcaption>Nós dois, em qualquer tempo.</figcaption>
         </div>
       </figure>
+    </div>
+    <div class="gallery-pagination" role="group" aria-label="Escolher foto">
+      @for (index of gallery.indexes(); track index) {
+        <button
+          class="gallery-dot"
+          type="button"
+          [class.is-active]="gallery.activeIndex() === index"
+          [attr.aria-current]="gallery.activeIndex() === index ? 'true' : null"
+          [attr.aria-label]="'Mostrar foto ' + (index + 1) + ' de ' + gallery.indexes().length"
+          (click)="gallery.goTo(index)"
+        ></button>
+      }
     </div>
   </section>
 
@@ -176,10 +189,44 @@
         <div appScrollReveal="up" [revealDelay]="260">
           <p><time datetime="2027-04-24T16:00:00-03:00">24-04-2027 | 16h</time></p>
         </div>
-        <div appScrollReveal="up" [revealDelay]="360">
+        <div class="ceremony__countdown" appScrollReveal="up" [revealDelay]="340">
+          @if (countdown().complete) {
+            <p class="countdown__complete" role="timer">Hoje é o nosso grande dia.</p>
+          } @else {
+            <p class="countdown__eyebrow">Faltam</p>
+            <div class="countdown__values" role="timer" [attr.aria-label]="countdownLabel()">
+              <span class="countdown__item">
+                <strong>{{ countdown().days }}</strong>
+                <small>dias</small>
+              </span>
+              <span class="countdown__item">
+                <strong>{{ countdown().hours }}</strong>
+                <small>horas</small>
+              </span>
+              <span class="countdown__item">
+                <strong>{{ countdown().minutes }}</strong>
+                <small>minutos</small>
+              </span>
+              <span class="countdown__item">
+                <strong>{{ countdown().seconds }}</strong>
+                <small>segundos</small>
+              </span>
+            </div>
+          }
+        </div>
+        <div appScrollReveal="up" [revealDelay]="420">
           <p>Sweet Home Farm</p>
           <address>Rua Francisco Bueno Franco, 814 - Campo Alegre, SC, 89294-000</address>
         </div>
+        <a
+          class="map-link"
+          href="https://maps.app.goo.gl/2wyfdkJZ5CcvLFsA7"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <span>Abrir localização</span>
+          <span aria-hidden="true">↗</span>
+        </a>
       </div>
     </div>
   </section>
@@ -199,52 +246,67 @@
 
   <section id="presentes" class="gift-section" aria-labelledby="gift-title">
     <div class="gift-section__content section-shell">
-      <p class="section-label" appScrollReveal="up">Presentes</p>
+      <p id="gift-title" class="section-label" appScrollReveal="up">Presentes</p>
       <h2 id="gift-title" appScrollReveal="up" [revealDelay]="100">
-        Um gesto para o nosso novo começo.
+        Um gesto para o nosso começo.
       </h2>
       <p class="gift-section__message" appScrollReveal="up" [revealDelay]="200">
-        Sua presença é o nosso maior presente. Se desejar nos presentear, preparamos este espaço
-        para tornar tudo mais simples.
+        Se desejar nos presentear, fique à vontade para fazê-lo através do PIX abaixo
       </p>
 
       <div class="pix-details" appScrollReveal="up" [revealDelay]="300">
-        <span class="pix-details__label">Pix</span>
-        @if (pixKey; as key) {
-          <strong>{{ key }}</strong>
-          <button class="pix-copy" type="button" (click)="copyPixKey()">
-            {{ pixCopyState() === 'copied' ? 'Chave copiada' : 'Copiar chave Pix' }}
-          </button>
-          @if (pixCopyState() === 'error') {
-            <p role="alert">Não foi possível copiar. Selecione a chave acima.</p>
+        @if (pix(); as payment) {
+          @if (payment.configured && payment.payload) {
+            <div class="pix-details__content">
+              @if (pixQrCode(); as qrCode) {
+                <figure class="pix-qr">
+                  <img
+                    [src]="qrCode"
+                    alt="QR Code Pix para presentear Maria Eduarda e Tobias"
+                    width="440"
+                    height="440"
+                  />
+                  <figcaption>Escaneie com o aplicativo do seu banco</figcaption>
+                </figure>
+              }
+              <div class="pix-details__copy">
+                @if (payment.recipientName) {
+                  <p class="pix-recipient">
+                    <span class="pix-details__label">Pix para</span>
+                    <strong>{{ payment.recipientName }}</strong>
+                  </p>
+                }
+                @if (payment.key) {
+                  <p class="pix-key"><span>Chave</span>{{ payment.key }}</p>
+                }
+                <button class="pix-copy" type="button" (click)="copyPixCode()">
+                  {{ pixCopyState() === 'copied' ? 'Código copiado' : 'Copiar código Pix' }}
+                </button>
+                @if (pixCopyState() === 'copied') {
+                  <p class="pix-feedback" role="status">Agora é só colar no aplicativo do banco.</p>
+                } @else if (pixCopyState() === 'error') {
+                  <p class="pix-feedback" role="alert">
+                    Não foi possível copiar. Tente novamente pelo navegador.
+                  </p>
+                }
+                @if (pixQrError()) {
+                  <p class="pix-feedback">Use o botão para copiar o código Pix.</p>
+                }
+              </div>
+            </div>
+          } @else {
+            <p>O Pix será disponibilizado em breve.</p>
           }
         } @else {
-          <p>A chave Pix será disponibilizada em breve.</p>
+          <p role="status">Carregando Pix…</p>
         }
       </div>
     </div>
   </section>
 
-  <div class="final-location section-shell">
-    <div class="final-location__copy" appScrollReveal="up">
-      <p class="section-label">Como chegar</p>
-      <p>Depois, é só guardar o caminho para celebrar conosco.</p>
-    </div>
-    <a
-      class="map-link"
-      href="https://maps.app.goo.gl/2wyfdkJZ5CcvLFsA7"
-      target="_blank"
-      rel="noopener noreferrer"
-      appScrollReveal="up"
-      [revealDelay]="100"
-    >
-      <span>Abrir localização</span>
-      <span aria-hidden="true">↗</span>
-    </a>
-  </div>
-
   <footer class="wedding-footer">
-    <p appScrollReveal="up">Com carinho,</p>
-    <strong appScrollReveal="up" [revealDelay]="120">Maria Eduarda &amp; Tobias</strong>
+    <p>Com carinho,</p>
+    <strong>Maria Eduarda e Tobias</strong>
+    <small>Desenvolvido por Tobias Kiefer</small>
   </footer>
 </article>

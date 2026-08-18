@@ -26,6 +26,12 @@ describe('Application routes', () => {
   it('loads the wedding-specific home without requesting event content', async () => {
     const harness = await RouterTestingHarness.create();
     await harness.navigateByUrl('/');
+    http.expectOne('/api/public/pix').flush({
+      configured: false,
+      key: null,
+      payload: null,
+      recipientName: null,
+    });
     http.expectOne('/api/rsvp/session').flush({
       identified: false,
       invitation: null,

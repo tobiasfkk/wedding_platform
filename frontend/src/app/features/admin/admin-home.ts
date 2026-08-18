@@ -21,6 +21,7 @@ import { AuthService } from '../../core/auth/auth.service';
       <a mat-flat-button routerLink="/admin/guests">Gerenciar convidados</a>
       <a mat-flat-button routerLink="/admin/invitations">Gerenciar convites</a>
       <a mat-flat-button routerLink="/admin/rsvp">Consultar respostas de RSVP</a>
+      <a mat-flat-button routerLink="/admin/pix">Configurar Pix</a>
     </section>
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,

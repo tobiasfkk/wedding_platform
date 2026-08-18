@@ -27,6 +27,15 @@ class WeddingEvent {
     @Column(name = "time_zone", nullable = false, length = 64)
     private String timeZone;
 
+    @Column(name = "pix_key", length = 140)
+    private String pixKey;
+
+    @Column(name = "pix_payload", length = 2048)
+    private String pixPayload;
+
+    @Column(name = "pix_recipient_name", length = 160)
+    private String pixRecipientName;
+
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
@@ -56,9 +65,27 @@ class WeddingEvent {
         return ZoneId.of(timeZone);
     }
 
+    String pixKey() {
+        return pixKey;
+    }
+
+    String pixPayload() {
+        return pixPayload;
+    }
+
+    String pixRecipientName() {
+        return pixRecipientName;
+    }
+
     void updateRsvpDeadline(Instant deadline, ZoneId zoneId) {
         this.rsvpDeadline = deadline;
         this.timeZone = zoneId.getId();
+    }
+
+    void updatePixConfiguration(String key, String payload, String recipientName) {
+        this.pixKey = key;
+        this.pixPayload = payload;
+        this.pixRecipientName = recipientName;
     }
 
     @PreUpdate
