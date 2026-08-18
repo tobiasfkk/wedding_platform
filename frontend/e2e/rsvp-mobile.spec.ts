@@ -70,7 +70,8 @@ test('opens an individual invitation inside the single-page wedding journey', as
     return section && button ? Math.round(section.bottom - button.bottom) : null;
   });
   expect(spaceBelowSaveButton).not.toBeNull();
-  expect(spaceBelowSaveButton ?? Number.POSITIVE_INFINITY).toBeLessThanOrEqual(1);
+  expect(spaceBelowSaveButton ?? 0).toBeGreaterThanOrEqual(40);
+  expect(spaceBelowSaveButton ?? Number.POSITIVE_INFINITY).toBeLessThanOrEqual(80);
   await expectNoHorizontalOverflow(page);
 });
 
