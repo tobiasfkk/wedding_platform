@@ -13,10 +13,14 @@
 - [Architecture Decision Records](adr/README.md)
 - [Template de ADR](adr/0000-template.md)
 
+## Qualidade
+
+- [Validação móvel do RSVP](VALIDACAO_MOBILE_RSVP.md)
+- [Validação E2E integrada](VALIDACAO_E2E_INTEGRADA.md)
+
 ## Artefatos planejados
 
 - `api/`: contratos e orientações da API quando necessário;
 - `operations/`: deploy, rollback, backup, restauração e incidentes;
-- `testing/`: estratégias e resultados de verificações não funcionais.
 
 Não duplique o backlog neste diretório. O trabalho executável é mantido nas Issues e no GitHub Project.

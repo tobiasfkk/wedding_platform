@@ -6,6 +6,7 @@
     "start": "ng serve --proxy-config proxy.conf.json",
     "build": "ng build",
     "e2e:mobile": "playwright test e2e",
+    "e2e:integrated": "node scripts/run-integrated-e2e.mjs",
     "e2e:install": "playwright install chromium",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",

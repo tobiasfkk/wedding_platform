@@ -18,6 +18,8 @@ home; `/rsvp` permanece disponível somente para compatibilidade com links anter
 - Node.js 24.15 ou uma versão compatível da linha 24;
 - npm 11 ou 12.
 
+Para a suíte E2E integrada também são necessários Java 21 e Docker com Compose v2.
+
 ## Instalação
 
 ```bash
@@ -51,6 +53,7 @@ links inválidos, antigos e inativos usam o mesmo estado de erro e não expõem 
 npm test -- --watch=false
 npm run e2e:install
 npm run e2e:mobile
+npm run e2e:integrated
 npm run build
 npm run format:check
 ```
@@ -64,6 +67,8 @@ npm run format
 Os testes unitários usam Vitest, conforme o padrão de novos projetos Angular 22. O RSVP também
 possui uma suíte Playwright nas larguras móveis definidas em
 [`docs/VALIDACAO_MOBILE_RSVP.md`](../docs/VALIDACAO_MOBILE_RSVP.md). O
+[teste integrado](../docs/VALIDACAO_E2E_INTEGRADA.md) sobe frontend, API e PostgreSQL reais com um
+único comando e cobre os fluxos críticos sem respostas simuladas. O
 [ADR 0005](../docs/adr/0005-interface-e-testes-e2e.md) registra as decisões de interface e E2E.
 
 ## Estrutura

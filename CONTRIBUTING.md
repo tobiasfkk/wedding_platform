@@ -109,11 +109,15 @@ Execute as mesmas verificações usadas pela integração contínua antes de pub
 npm ci
 npm run check
 npm test -- --watch=false
+npm run e2e:mobile
+npm run e2e:integrated
 npm run build
 ```
 
 No Linux ou macOS, use `./mvnw` no lugar de `.\mvnw.cmd`. O `verify` do backend também executa o
-SpotBugs; o `check` do frontend valida os tipos TypeScript e a formatação.
+SpotBugs; o `check` do frontend valida os tipos TypeScript e a formatação. A suíte integrada requer
+Docker e executa frontend, API e PostgreSQL reais conforme
+[`docs/VALIDACAO_E2E_INTEGRADA.md`](docs/VALIDACAO_E2E_INTEGRADA.md).
 
 ## 7. Definition of Done
 
