@@ -18,9 +18,13 @@
 - [Validação móvel do RSVP](VALIDACAO_MOBILE_RSVP.md)
 - [Validação E2E integrada](VALIDACAO_E2E_INTEGRADA.md)
 
+## Operação
+
+- [Frontend no Cloudflare Pages](operations/FRONTEND_CLOUDFLARE_PAGES.md)
+
 ## Artefatos planejados
 
 - `api/`: contratos e orientações da API quando necessário;
-- `operations/`: deploy, rollback, backup, restauração e incidentes;
+- `operations/`: demais procedimentos de deploy, rollback, backup, restauração e incidentes;
 
 Não duplique o backlog neste diretório. O trabalho executável é mantido nas Issues e no GitHub Project.

@@ -1,0 +1,6 @@
+{
+  "name": "wedding-platform",
+  "pages_build_output_dir": "./dist/wedding-frontend/browser",
+  "compatibility_date": "2026-08-25",
+  "send_metrics": false,
+}
