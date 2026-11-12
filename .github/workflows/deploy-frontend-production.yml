@@ -77,7 +77,14 @@ jobs:
       - name: Verify the published site
         run: |
           set -euo pipefail
-          for url in "https://wedding-platform-24v.pages.dev" "$SITE_URL"; do
+          urls=("https://wedding-platform-24v.pages.dev")
+          # No lançamento, o primeiro deploy acontece antes de o domínio ser conectado ao Pages.
+          if getent hosts "${SITE_URL#https://}" > /dev/null; then
+            urls+=("$SITE_URL")
+          else
+            echo "::warning::$SITE_URL ainda não está no DNS; verificado só o pages.dev."
+          fi
+          for url in "${urls[@]}"; do
             code=000
             for attempt in $(seq 1 18); do
               code=$(curl -s -o index.html -w '%{http_code}' "$url/" || true)

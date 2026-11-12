@@ -2,79 +2,68 @@
 
 Runbook da hospedagem definida no [ADR 0008](../adr/0008-hospedagem-ec2-unica.md): uma EC2 com
 Caddy, Spring Boot e PostgreSQL em Docker Compose. Objetivo do projeto: operar dentro da conta
-gratuita da AWS, sem custo para o proprietário.
+gratuita da AWS, sem custo para o proprietário. A sequência da primeira publicação está em
+[LANCAMENTO](LANCAMENTO.md).
 
-Arquivos versionados em `infrastructure/production/`: `compose.yaml`, `Caddyfile`,
-`.env.production.example` e `scripts/` (`bootstrap-host.sh`, `deploy.sh`, `backup.sh`,
-`restore.sh`).
+## Peças
+
+| Onde | O quê |
+|---|---|
+| `infrastructure/aws/wedding-stack.yaml` | Template CloudFormation: EC2, Elastic IP, security group, bucket de backup, roles e AWS Budgets |
+| `infrastructure/production/` | `compose.yaml`, `Caddyfile` e scripts do host |
+| `.github/workflows/publish-backend-image.yml` | Imagem `linux/arm64` no GHCR após a CI da `main` |
+| `.github/workflows/deploy-backend-production.yml` | Deploy da API via SSM (OIDC, sem SSH) |
+| `.github/workflows/deploy-frontend-production.yml` | Deploy do site no Cloudflare Pages |
+| `.github/workflows/production-smoke-tests.yml` | Testes de fumaça contra o ambiente publicado |
 
 ## Regra de custo
 
-Criar somente: 1 EC2, 1 volume EBS gp3, 1 Elastic IP, 1 repositório ECR, 1 bucket S3, 1 role IAM
-da instância e AWS Budgets. Não criar NAT Gateway, balanceador, RDS, Aurora, ECS/Fargate,
-ElastiCache nem Secrets Manager. Qualquer outro recurso muda o consumo dos créditos.
+O template cria somente: 1 EC2 `t4g` com créditos de CPU **standard** (nunca cobra CPU extra),
+1 volume gp3 de 20 GB, 1 Elastic IP, 1 bucket S3 com expiração de 30 dias, roles IAM e um orçamento
+do AWS Budgets. Imagens ficam no GHCR (gratuito para pacotes públicos) e segredos no Parameter
+Store padrão (gratuito). Não criar NAT Gateway, balanceador, RDS, Aurora, ECS/Fargate, ElastiCache,
+ECR nem Secrets Manager.
 
-## Passo a passo na AWS (ação do proprietário)
+## Segredos
 
-1. Criar a conta no plano Free e ativar MFA no usuário raiz. Região: `sa-east-1`.
-2. Billing > Budgets: criar orçamento com alertas em 50%, 80% e 95% dos créditos, e-mail ativo.
-3. Calcular no AWS Pricing Calculator `t4g.small` + 30 GB gp3 + 1 IPv4 por ~6 meses e registrar o
-   resultado no ADR 0008.
-4. S3: bucket privado `wedding-backups-<sufixo>` com bloqueio de acesso público, criptografia padrão
-   e regra de ciclo de vida que expira objetos em 30 dias.
-5. ECR: repositório privado `wedding-backend` com regra de ciclo de vida mantendo as 5 últimas
-   imagens.
-6. IAM: role `wedding-ec2` para a instância com as políticas gerenciadas
-   `AmazonSSMManagedInstanceCore` e uma política própria com `s3:PutObject`/`s3:GetObject`/`s3:ListBucket`
-   no bucket de backup e `ecr:GetAuthorizationToken` + leitura (`ecr:BatchGetImage`,
-   `ecr:GetDownloadUrlForLayer`) no repositório.
-7. EC2: Amazon Linux 2023 **arm64**, `t4g.small`, volume gp3 de 30 GB criptografado, role
-   `wedding-ec2`, **sem par de chaves**. Security group com entrada apenas nas portas `80` (emissão
-   e renovação do certificado, redirecionamento) e `443`. Sem SSH.
-8. Elastic IP associado à instância.
-9. DNS: registro `A` `api.casamentodudatobi` apontando para o Elastic IP. Hoje o DNS de
-   `tobiaskiefer.com.br` está no Registro.br (`a.auto.dns.br`/`b.auto.dns.br`), não no Cloudflare.
-   Se ele for migrado para o Cloudflare, o registro deve ficar **sem proxy** (nuvem cinza), para o
-   Caddy emitir o certificado e para o IP real chegar à API.
+Gerados uma única vez pelo `configure-env.sh` e guardados como SecureString no Parameter Store:
 
-## Primeira instalação
+| Parâmetro | Uso |
+|---|---|
+| `/wedding/production/postgres-password` | Senha do PostgreSQL |
+| `/wedding/production/invitation-code-pepper` | Pepper dos códigos de convite. Nunca altere depois de enviar os links |
+| `/wedding/production/admin-password` | Senha do administrador inicial (`AdminEmail` do template) |
 
-Acesso: Systems Manager > Session Manager (sem SSH).
+Recriar a EC2 preserva os três: links já enviados continuam válidos. O `.env.production` da
+instância é regenerado a cada deploy e nunca deve ser editado à mão.
 
-```bash
-sudo bash infrastructure/production/scripts/bootstrap-host.sh
-```
+## Como o host funciona
 
-Copie `compose.yaml`, `Caddyfile` e `scripts/` para `/opt/wedding`, crie `/opt/wedding/.env.production`
-a partir do `.env.production.example` (permissão `600`) e preencha os segredos. Dê permissão de
-execução aos scripts. Depois:
-
-```bash
-cd /opt/wedding && sudo ./scripts/deploy.sh <registro>/wedding-backend:<sha>
-```
-
-## Publicar o backend
-
-No computador ou na CI:
-
-```bash
-cd backend && ./mvnw --batch-mode verify
-docker buildx build --platform linux/arm64 -t <registro>/wedding-backend:<sha> --push .
-```
-
-A imagem precisa ser `linux/arm64` porque a `t4g` usa processador Graviton. Na instância, execute
-`deploy.sh` com a nova imagem. Ele faz backup, sobe a versão nova, espera o health check e reverte
-para a imagem anterior se falhar.
+- **Criação:** o user-data grava `/opt/wedding/host.conf` e executa `bootstrap-host.sh`, que instala
+  Docker e Compose (versão e checksum fixados), cria swap de 2 GB, baixa os arquivos de produção,
+  gera o `.env.production` e agenda o backup diário. Log: `/var/log/wedding-bootstrap.log`.
+- **Deploy:** o workflow "Deploy backend" exige CI verde e imagem pública para o commit e envia pela
+  SSM `release.sh <sha> <imagem>`: sincroniza os arquivos daquele commit (`sync-files.sh`),
+  regenera o `.env.production` e executa `deploy.sh`, que faz backup, sobe a nova imagem, espera o
+  health check e reverte para a anterior se falhar.
+- **Acesso administrativo:** EC2 > Connect > Session Manager. Não há SSH nem par de chaves.
 
 ## Frontend
 
 O build de produção do Angular usa `frontend/src/environments/environment.production.ts`, que aponta
 para `https://api.casamentodudatobi.tobiaskiefer.com.br`. Frontend e API ficam no mesmo site
 (`tobiaskiefer.com.br`), então o cookie de sessão `SameSite=Lax` e o CSRF continuam funcionando. O
-backend precisa de `AUTH_ALLOWED_ORIGINS=https://casamentodudatobi.tobiaskiefer.com.br`.
+backend recebe `AUTH_ALLOWED_ORIGINS=https://casamentodudatobi.tobiaskiefer.com.br`.
 
 Previews em `*.pages.dev` usam o mesmo build, mas pertencem a outro site e não conseguem autenticar na
 API de produção. Eles servem apenas para revisão visual.
+
+## DNS
+
+O DNS de `tobiaskiefer.com.br` está no Cloudflare (`heidi`/`keenan.ns.cloudflare.com`), com o
+domínio registrado no Registro.br. O registro `A` `api.casamentodudatobi` aponta para o Elastic IP
+**sem proxy** (nuvem cinza): o Caddy emite o certificado e o IP real do convidado chega ao limite de
+tentativas. O registro do site é criado pelo próprio Pages ao conectar o domínio personalizado.
 
 ## Ensaio de produção local
 
@@ -100,18 +89,24 @@ Diferenças em relação à produção: certificados da CA local, limite de tent
 
 ## Backup e restauração
 
-- `backup.sh` roda por cron às 03:30 UTC, mantém 7 dias em `/opt/wedding/backups` e envia ao S3.
-- Antes de cadastrar convidados reais, teste: `./scripts/restore.sh <dump>` restaura em um banco
-  temporário, mostra contagens por tabela e o remove.
-- `./scripts/restore.sh <dump> --replace-live` substitui o banco de produção após confirmação.
-- RPO de 24 h (um dump por dia) e RTO de 4 h. Faça um backup manual antes de mudanças grandes.
+- `backup.sh` roda por cron às 06:30 UTC (03:30 em Brasília), mantém 7 dias em
+  `/opt/wedding/backups` e envia ao S3, onde os objetos expiram em 30 dias. Também roda antes de
+  cada deploy.
+- `sudo /opt/wedding/scripts/restore.sh <dump>` restaura em um banco temporário, mostra contagens por
+  tabela e o remove. Para baixar um dump do S3:
+  `aws s3 cp s3://<bucket>/postgres/<arquivo>.dump /opt/wedding/backups/`.
+- `sudo /opt/wedding/scripts/restore.sh <dump> --replace-live` substitui o banco de produção após
+  confirmação.
+- RPO de 24 h (um dump por dia) e RTO de 4 h.
 
 ## Monitoramento mínimo
 
-- Configure um monitor externo gratuito (por exemplo UptimeRobot) em
+- Monitor externo gratuito (por exemplo UptimeRobot) em
   `https://api.casamentodudatobi.tobiaskiefer.com.br/api/public/pix`. O `/actuator` é bloqueado no proxy.
-- Acompanhe o saldo de créditos em Billing semanalmente até o casamento.
-- Logs: `docker compose logs --tail 200 api` (rotação de 3 × 10 MB por container).
+- "Production smoke tests" com escopo `readonly` pode rodar a qualquer momento.
+- AWS Budgets com alertas por e-mail; acompanhe os créditos em Billing semanalmente até o casamento.
+- Logs: `sudo docker compose --env-file /opt/wedding/.env.production -f /opt/wedding/compose.yaml logs --tail 200 api`
+  (rotação de 3 × 10 MB por container).
 
 ## Limitações conhecidas
 
