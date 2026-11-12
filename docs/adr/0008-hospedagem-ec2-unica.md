@@ -46,15 +46,15 @@ Adotar a opção 5:
 - somente as portas 443 (HTTPS) e 80 (emissão do certificado e redirecionamento) expostas no
   security group;
 - imagens do backend em um repositório ECR privado na mesma região, lidas pela role da instância;
-- Caddy emite o certificado Let's Encrypt; o registro DNS da API no Cloudflare fica sem proxy, para
-  que o IP real do cliente chegue ao rate limit de login e RSVP;
+- Caddy emite o certificado Let's Encrypt; o registro DNS da API aponta direto para a EC2, sem proxy
+  intermediário, para que o IP real do cliente chegue ao rate limit de login e RSVP;
 - AWS Budgets com alertas de consumo dos créditos em 50%, 80% e 95%.
 
 Não serão criados RDS, Aurora, NAT Gateway, balanceador, ECS, ElastiCache ou outros serviços com
 custo fixo. `t4g.micro` só será considerada se testes de memória mostrarem folga.
 
-A API ficará em `api.casamentoduda.tobiaskiefer.com.br`, com DNS no Cloudflare e o domínio mantido
-no Registro.br. O frontend (`casamentoduda.tobiaskiefer.com.br`) chama essa URL, definida no build de
+A API ficará em `api.casamentodudaetobias.tobiaskiefer.com.br`. O domínio e, hoje, o DNS ficam no
+Registro.br. O frontend (`casamentodudaetobias.tobiaskiefer.com.br`) chama essa URL, definida no build de
 produção do Angular. Os dois estão no mesmo site, então o cookie de sessão `SameSite=Lax` e o CSRF por
 cabeçalho continuam válidos; basta liberar a origem do frontend no CORS. Um proxy `/api` no Cloudflare
 foi descartado por acrescentar uma peça e esconder o IP do cliente do rate limit.
