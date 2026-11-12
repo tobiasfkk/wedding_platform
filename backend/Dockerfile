@@ -7,6 +7,10 @@ FROM eclipse-temurin:21-jre-alpine
 
 ARG JAR_FILE=target/wedding-backend-0.0.1-SNAPSHOT.jar
 
+# Liga a imagem ao repositório público no GHCR (herda a visibilidade pública).
+LABEL org.opencontainers.image.source="https://github.com/tobiasfkk/wedding_platform" \
+      org.opencontainers.image.description="Wedding Platform backend (Spring Boot)"
+
 RUN addgroup -S wedding && adduser -S -G wedding -H -s /sbin/nologin wedding
 
 WORKDIR /app
