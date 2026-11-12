@@ -1,0 +1,90 @@
+name: Deploy frontend
+
+# Publica o site no Cloudflare Pages como produção (branch "main" do projeto wedding-platform).
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+  deployments: write
+
+concurrency:
+  group: production-frontend
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Verify and deploy production
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment:
+      name: production
+      url: https://casamentodudatobi.tobiaskiefer.com.br
+    defaults:
+      run:
+        working-directory: frontend
+    env:
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      SITE_URL: https://casamentodudatobi.tobiaskiefer.com.br
+      API_URL: https://api.casamentodudatobi.tobiaskiefer.com.br
+
+    steps:
+      - name: Only from main
+        if: github.ref != 'refs/heads/main'
+        working-directory: .
+        run: |
+          echo "Deploy de produção só pode ser disparado a partir da main." >&2
+          exit 1
+
+      - name: Require a green CI run for this commit
+        working-directory: .
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          count=$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/ci.yml/runs?head_sha=$GITHUB_SHA&status=success" --jq '.total_count')
+          if [ "$count" -lt 1 ]; then echo "A CI não passou para $GITHUB_SHA." >&2; exit 1; fi
+
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Node.js 24 and npm cache
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "24.15.0"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Check types and formatting
+        run: npm run check
+
+      - name: Run frontend tests
+        run: npm test -- --watch=false
+
+      - name: Build production frontend
+        run: npm run build
+
+      - name: Require the production API URL in the bundle
+        run: grep -rqs "$API_URL" dist/wedding-frontend/browser || { echo "O build não aponta para $API_URL" >&2; exit 1; }
+
+      - name: Deploy Cloudflare Pages production
+        run: npm run deploy:pages -- --branch main --commit-hash "$GITHUB_SHA" --commit-dirty=false
+
+      - name: Verify the published site
+        run: |
+          set -euo pipefail
+          for url in "https://wedding-platform-24v.pages.dev" "$SITE_URL"; do
+            code=000
+            for attempt in $(seq 1 18); do
+              code=$(curl -s -o index.html -w '%{http_code}' "$url/" || true)
+              [ "$code" = 200 ] && grep -q '<app-root' index.html && break
+              echo "$url tentativa $attempt: HTTP $code"; sleep 10
+            done
+            [ "$code" = 200 ] || { echo "$url não serviu o site." >&2; exit 1; }
+            echo "$url OK"
+          done
+          echo "### Site publicado: \`${GITHUB_SHA:0:12}\` em $SITE_URL" >> "$GITHUB_STEP_SUMMARY"

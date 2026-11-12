@@ -1,0 +1,106 @@
+name: Production smoke tests
+
+# Mesmos testes do ensaio local, agora contra o ambiente publicado e com certificados reais.
+#   readonly: não grava dados; pode rodar a qualquer momento.
+#   full: inclui a jornada crítica (cria dados de teste). Recusado depois do lançamento.
+on:
+  workflow_dispatch:
+    inputs:
+      scope:
+        description: Escopo dos testes
+        type: choice
+        options: [readonly, full]
+        default: readonly
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: production-smoke-tests
+  cancel-in-progress: false
+
+jobs:
+  smoke:
+    name: Smoke tests (${{ inputs.scope }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment:
+      name: production
+    defaults:
+      run:
+        working-directory: frontend
+    env:
+      E2E_SCOPE: ${{ inputs.scope }}
+      AWS_INSTANCE_ID: ${{ vars.AWS_INSTANCE_ID }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Configure AWS credentials (OIDC)
+        if: inputs.scope == 'full'
+        uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Refuse to write test data after the launch
+        if: inputs.scope == 'full'
+        run: |
+          command_id=$(aws ssm send-command --instance-ids "$AWS_INSTANCE_ID" \
+            --document-name AWS-RunShellScript --comment "launch marker check" \
+            --parameters 'commands=["test ! -e /opt/wedding/.launched"]' \
+            --query Command.CommandId --output text)
+          status=Pending
+          for _ in $(seq 1 30); do
+            sleep 3
+            status=$(aws ssm get-command-invocation --command-id "$command_id" --instance-id "$AWS_INSTANCE_ID" \
+              --query Status --output text 2>/dev/null || echo Pending)
+            case "$status" in Pending|InProgress|Delayed) continue ;; *) break ;; esac
+          done
+          if [ "$status" != Success ]; then
+            echo "Ambiente já publicado (ou verificação falhou: $status). Use o escopo readonly." >&2
+            exit 1
+          fi
+
+      - name: Load the administrator credentials
+        if: inputs.scope == 'full'
+        env:
+          ADMIN_EMAIL: ${{ vars.ADMIN_EMAIL }}
+        run: |
+          [ -n "$ADMIN_EMAIL" ] || { echo "Defina a variável ADMIN_EMAIL no environment production." >&2; exit 1; }
+          password=$(aws ssm get-parameter --name /wedding/production/admin-password --with-decryption \
+            --query Parameter.Value --output text)
+          echo "::add-mask::$password"
+          {
+            echo "E2E_ADMIN_EMAIL=$ADMIN_EMAIL"
+            echo "E2E_ADMIN_PASSWORD=$password"
+          } >> "$GITHUB_ENV"
+
+      - name: Set up Node.js 24 and npm cache
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "24.15.0"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Install Chromium and WebKit
+        run: npx playwright install --with-deps chromium webkit
+
+      - name: Run smoke tests against production
+        run: npx playwright test --config playwright.production.config.ts
+
+      - name: Preserve diagnostics
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: production-smoke-diagnostics
+          path: |
+            frontend/test-results/playwright-production
+            frontend/playwright-report-production
+          if-no-files-found: ignore
+          retention-days: 7

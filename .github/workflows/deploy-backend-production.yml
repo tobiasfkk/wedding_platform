@@ -1,0 +1,113 @@
+name: Deploy backend
+
+# Publica o backend na EC2 via SSM (sem SSH e sem chaves AWS permanentes: OIDC).
+# Variáveis do environment "production": AWS_REGION, AWS_INSTANCE_ID, AWS_DEPLOY_ROLE_ARN.
+on:
+  workflow_dispatch:
+    inputs:
+      sha:
+        description: Commit da main a publicar (vazio = o mais recente)
+        required: false
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+  id-token: write
+
+concurrency:
+  group: production-backend
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Release on the EC2 instance
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment:
+      name: production
+      url: https://api.casamentodudatobi.tobiaskiefer.com.br/api/public/pix
+    env:
+      SHA: ${{ inputs.sha || github.sha }}
+      IMAGE_REPOSITORY: ghcr.io/${{ github.repository_owner }}/wedding-backend
+      SITE_URL: https://casamentodudatobi.tobiaskiefer.com.br
+      API_URL: https://api.casamentodudatobi.tobiaskiefer.com.br
+      AWS_INSTANCE_ID: ${{ vars.AWS_INSTANCE_ID }}
+
+    steps:
+      - name: Only from main
+        if: github.ref != 'refs/heads/main'
+        run: |
+          echo "Deploy de produção só pode ser disparado a partir da main." >&2
+          exit 1
+
+      - name: Require a green CI run for this commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          count=$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/ci.yml/runs?head_sha=$SHA&status=success" --jq '.total_count')
+          if [ "$count" -lt 1 ]; then echo "A CI não passou para $SHA." >&2; exit 1; fi
+          echo "CI verde para $SHA"
+
+      - name: Require the public image for this commit
+        run: |
+          # Sem login: confirma também que a imagem está pública para a EC2 baixá-la.
+          docker manifest inspect "$IMAGE_REPOSITORY:$SHA" > manifest.json
+          jq -e '.architecture == "arm64" or ([.manifests[]?.platform.architecture] | index("arm64"))' manifest.json > /dev/null \
+            || { echo "A imagem $IMAGE_REPOSITORY:$SHA não é arm64." >&2; exit 1; }
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Run release.sh on the instance
+        run: |
+          script="set -eu
+          curl -fsSL https://raw.githubusercontent.com/$GITHUB_REPOSITORY/$SHA/infrastructure/production/scripts/release.sh -o /root/release.sh
+          bash /root/release.sh $SHA $IMAGE_REPOSITORY:$SHA"
+          jq -n --arg script "$script" '{commands: [$script], executionTimeout: ["1200"]}' > parameters.json
+          command_id=$(aws ssm send-command \
+            --instance-ids "$AWS_INSTANCE_ID" \
+            --document-name AWS-RunShellScript \
+            --comment "deploy ${SHA:0:12}" \
+            --timeout-seconds 600 \
+            --parameters file://parameters.json \
+            --query Command.CommandId --output text)
+          echo "Comando SSM: $command_id"
+
+          status=Pending
+          for _ in $(seq 1 120); do
+            sleep 10
+            status=$(aws ssm get-command-invocation --command-id "$command_id" --instance-id "$AWS_INSTANCE_ID" \
+              --query Status --output text 2>/dev/null || echo Pending)
+            case "$status" in Pending|InProgress|Delayed) continue ;; *) break ;; esac
+          done
+          aws ssm get-command-invocation --command-id "$command_id" --instance-id "$AWS_INSTANCE_ID" \
+            --query '[StandardOutputContent, StandardErrorContent]' --output text
+          echo "Status: $status"
+          [ "$status" = Success ]
+
+      - name: Verify the API from the internet
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 30); do
+            code=$(curl -s -o pix.json -w '%{http_code}' "$API_URL/api/public/pix" || true)
+            [ "$code" = 200 ] && break
+            echo "tentativa $attempt: HTTP $code"; sleep 10
+          done
+          [ "$code" = 200 ] || { echo "A API não respondeu 200 por HTTPS." >&2; exit 1; }
+          jq -e 'has("configured")' pix.json > /dev/null
+
+          actuator=$(curl -s -o /dev/null -w '%{http_code}' "$API_URL/actuator/health")
+          [ "$actuator" = 404 ] || { echo "/actuator exposto (HTTP $actuator)." >&2; exit 1; }
+
+          allowed=$(curl -s -o /dev/null -w '%{http_code}' -X OPTIONS "$API_URL/api/auth/login" \
+            -H "Origin: $SITE_URL" -H 'Access-Control-Request-Method: POST')
+          denied=$(curl -s -o /dev/null -w '%{http_code}' -X OPTIONS "$API_URL/api/auth/login" \
+            -H 'Origin: https://example.com' -H 'Access-Control-Request-Method: POST')
+          if [ "$allowed" != 200 ] || [ "$denied" != 403 ]; then
+            echo "CORS inesperado: site=$allowed outra-origem=$denied" >&2; exit 1
+          fi
+          echo "### API publicada: \`${SHA:0:12}\` em $API_URL" >> "$GITHUB_STEP_SUMMARY"
