@@ -48,6 +48,7 @@ pnpm-debug.log*
 coverage/
 test-results/
 playwright-report/
+playwright-report-rehearsal/
 blob-report/
 *.exec
 

@@ -1,0 +1,7 @@
+# Ensaio local: o Caddyfile de produção, sem alterações, mais o site estático no domínio do frontend
+# (o Cloudflare Pages em produção, emulado pelo `wrangler pages dev`).
+import /etc/caddy/production.Caddyfile
+
+{$SITE_DOMAIN} {
+	reverse_proxy pages:8788
+}

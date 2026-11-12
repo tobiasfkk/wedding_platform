@@ -1,7 +1,10 @@
-import { APIRequestContext, expect, Page, test } from '@playwright/test';
+import { APIRequestContext, expect, Locator, Page, test } from '@playwright/test';
 
-const ADMIN_EMAIL = 'e2e-admin@example.test';
-const ADMIN_PASSWORD = 'e2e-password-change-me';
+const ADMIN_EMAIL = process.env['E2E_ADMIN_EMAIL'] ?? 'e2e-admin@example.test';
+const ADMIN_PASSWORD = process.env['E2E_ADMIN_PASSWORD'] ?? 'e2e-password-change-me';
+// Vazio na suíte integrada (API na mesma origem via proxy). No ensaio de produção, a API fica em
+// outro subdomínio, como em produção.
+const API = process.env['E2E_API_BASE_URL'] ?? '';
 
 interface InvitationFixture {
   id: string;
@@ -57,6 +60,28 @@ async function createAndActivateInvitationThroughInterface(
   return linkField.inputValue();
 }
 
+// No WebKit mobile, o Playwright rola até o elemento de forma animada e pode clicar com a página
+// ainda em movimento: o pointerup cai fora do botão e o clique se perde. Uma pessoa toca num botão
+// parado; por isso rolamos antes e esperamos a página assentar.
+async function tapWhenSettled(target: Locator): Promise<void> {
+  await target.scrollIntoViewIfNeeded();
+  let previous = '';
+  await expect
+    .poll(
+      async () => {
+        const box = await target.boundingBox();
+        const scroll = await target.page().evaluate(() => window.scrollY);
+        const current = JSON.stringify([box?.x, box?.y, scroll]);
+        const settled = current === previous;
+        previous = current;
+        return settled;
+      },
+      { timeout: 10_000, intervals: [250] },
+    )
+    .toBe(true);
+  await target.click();
+}
+
 async function expectNoHorizontalOverflow(page: Page): Promise<void> {
   const dimensions = await page.evaluate(() => ({
     viewportWidth: window.innerWidth,
@@ -66,10 +91,10 @@ async function expectNoHorizontalOverflow(page: Page): Promise<void> {
 }
 
 async function authenticateAdminApi(request: APIRequestContext): Promise<string> {
-  const sessionResponse = await request.get('/api/auth/session');
+  const sessionResponse = await request.get(`${API}/api/auth/session`);
   expect(sessionResponse.ok()).toBeTruthy();
   const session = (await sessionResponse.json()) as { csrfToken: string };
-  const login = await request.post('/api/auth/login', {
+  const login = await request.post(`${API}/api/auth/login`, {
     data: { email: ADMIN_EMAIL, password: ADMIN_PASSWORD },
     headers: { 'X-XSRF-TOKEN': session.csrfToken },
   });
@@ -82,24 +107,24 @@ async function createInvitationFixture(
   suffix: string,
 ): Promise<InvitationFixture> {
   const csrfToken = await authenticateAdminApi(request);
-  const guest = await request.post('/api/admin/guests', {
+  const guest = await request.post(`${API}/api/admin/guests`, {
     data: { name: `Convidado ${suffix}`, contact: null, active: true },
     headers: { 'X-XSRF-TOKEN': csrfToken },
   });
   expect(guest.ok()).toBeTruthy();
   const guestBody = (await guest.json()) as { id: string };
 
-  const invitation = await request.post('/api/admin/invitations', {
+  const invitation = await request.post(`${API}/api/admin/invitations`, {
     data: { name: `Grupo ${suffix}`, companionLimit: 0, guestIds: [guestBody.id] },
     headers: { 'X-XSRF-TOKEN': csrfToken },
   });
   expect(invitation.ok()).toBeTruthy();
   const invitationBody = (await invitation.json()) as { id: string };
 
-  const activation = await request.post(`/api/admin/invitations/${invitationBody.id}/activate`, {
-    data: {},
-    headers: { 'X-XSRF-TOKEN': csrfToken },
-  });
+  const activation = await request.post(
+    `${API}/api/admin/invitations/${invitationBody.id}/activate`,
+    { data: {}, headers: { 'X-XSRF-TOKEN': csrfToken } },
+  );
   expect(activation.ok()).toBeTruthy();
   const activationBody = (await activation.json()) as { link: string };
   return { id: invitationBody.id, link: activationBody.link };
@@ -113,7 +138,7 @@ for (const viewport of [
     page,
   }, testInfo) => {
     await page.setViewportSize(viewport);
-    const suffix = `E2E ${viewport.width} ${testInfo.retry}`;
+    const suffix = `E2E ${viewport.width} ${testInfo.project.name} ${testInfo.repeatEachIndex}.${testInfo.retry}`;
     const guestName = `Ana ${suffix}`;
     const groupName = `Família ${suffix}`;
 
@@ -138,16 +163,16 @@ for (const viewport of [
     await expect(page.getByRole('heading', { name: groupName })).toBeVisible();
     await expectNoHorizontalOverflow(page);
 
-    const invitationSession = await page.evaluate(async () => {
-      const response = await fetch('/api/rsvp/session', { credentials: 'include' });
+    const invitationSession = await page.evaluate(async (api) => {
+      const response = await fetch(`${api}/api/rsvp/session`, { credentials: 'include' });
       return response.json() as Promise<{
         csrfToken: string;
         invitation: { participants: { id: string }[] };
       }>;
-    });
+    }, API);
     const rejectedLimit = await page.evaluate(
-      async ({ csrfToken, participantId }) => {
-        const response = await fetch('/api/rsvp/responses', {
+      async ({ api, csrfToken, participantId }) => {
+        const response = await fetch(`${api}/api/rsvp/responses`, {
           method: 'POST',
           credentials: 'include',
           headers: { 'Content-Type': 'application/json', 'X-XSRF-TOKEN': csrfToken },
@@ -163,6 +188,7 @@ for (const viewport of [
         return { status: response.status, body: await response.json() };
       },
       {
+        api: API,
         csrfToken: invitationSession.csrfToken,
         participantId: invitationSession.invitation.participants[0]!.id,
       },
@@ -170,30 +196,33 @@ for (const viewport of [
     expect(rejectedLimit.status).toBe(409);
     expect(rejectedLimit.body.code).toBe('RSVP_SUBMISSION_CONFLICT');
 
-    await page.getByRole('button', { name: 'Sim' }).click();
-    await page.getByRole('button', { name: 'Adicionar' }).click();
+    await tapWhenSettled(page.getByRole('button', { name: 'Sim' }));
+    await tapWhenSettled(page.getByRole('button', { name: 'Adicionar' }));
     await page.getByLabel('Nome do acompanhante 1').fill(`Bruno ${suffix}`);
     await expect(page.getByRole('button', { name: 'Adicionar' })).toBeDisabled();
 
     const submissionRequest = page.waitForRequest(
       (request) => request.url().endsWith('/api/rsvp/responses') && request.method() === 'POST',
     );
-    await page.getByRole('button', { name: 'Confirmar e continuar' }).click();
+    await tapWhenSettled(page.getByRole('button', { name: 'Confirmar e continuar' }));
     const submittedBody = (await submissionRequest).postDataJSON();
     await expect(page.locator('#rsvp-save-button')).toContainText('Tudo certo');
 
-    const replay = await page.evaluate(async (body) => {
-      const session = await fetch('/api/rsvp/session', { credentials: 'include' }).then(
-        (response) => response.json(),
-      );
-      const response = await fetch('/api/rsvp/responses', {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json', 'X-XSRF-TOKEN': session.csrfToken },
-        body: JSON.stringify(body),
-      });
-      return { status: response.status, body: await response.json() };
-    }, submittedBody);
+    const replay = await page.evaluate(
+      async ({ api, body }) => {
+        const session = await fetch(`${api}/api/rsvp/session`, { credentials: 'include' }).then(
+          (response) => response.json(),
+        );
+        const response = await fetch(`${api}/api/rsvp/responses`, {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json', 'X-XSRF-TOKEN': session.csrfToken },
+          body: JSON.stringify(body),
+        });
+        return { status: response.status, body: await response.json() };
+      },
+      { api: API, body: submittedBody },
+    );
     expect(replay.status).toBe(200);
     expect(replay.body.replayed).toBe(true);
 
@@ -219,10 +248,13 @@ test('revokes public access when an active invitation is inactivated', async ({
   page,
   request,
 }, testInfo) => {
-  const fixture = await createInvitationFixture(request, `inativo-${testInfo.retry}`);
-  const sessionResponse = await request.get('/api/auth/session');
+  const fixture = await createInvitationFixture(
+    request,
+    `inativo-${testInfo.project.name}-${testInfo.repeatEachIndex}.${testInfo.retry}`,
+  );
+  const sessionResponse = await request.get(`${API}/api/auth/session`);
   const session = (await sessionResponse.json()) as { csrfToken: string };
-  const inactivation = await request.post(`/api/admin/invitations/${fixture.id}/inactivate`, {
+  const inactivation = await request.post(`${API}/api/admin/invitations/${fixture.id}/inactivate`, {
     data: {},
     headers: { 'X-XSRF-TOKEN': session.csrfToken },
   });
