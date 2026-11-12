@@ -1,0 +1,97 @@
+# Produção em uma única EC2 (ADR 0008). Somente o Caddy publica portas.
+# Uso (na EC2, dentro de /opt/wedding):
+#   docker compose --env-file .env.production -f compose.yaml up --detach --wait
+name: wedding-prod
+
+services:
+  postgres:
+    image: postgres:18.4-alpine3.24
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-wedding}
+      POSTGRES_USER: ${POSTGRES_USER:-wedding}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?defina POSTGRES_PASSWORD em .env.production}
+    command:
+      - postgres
+      - -c
+      - shared_buffers=128MB
+      - -c
+      - max_connections=30
+      - -c
+      - work_mem=4MB
+      - -c
+      - effective_cache_size=384MB
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    networks:
+      - backend
+    shm_size: 128mb
+    mem_limit: 512m
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready --username "$${POSTGRES_USER}" --dbname "$${POSTGRES_DB}"
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    stop_grace_period: 30s
+    logging: &logging
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  api:
+    image: ${API_IMAGE:?defina API_IMAGE (imagem com tag do commit)}
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: production
+      DATABASE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-wedding}
+      DATABASE_USERNAME: ${POSTGRES_USER:-wedding}
+      DATABASE_PASSWORD: ${POSTGRES_PASSWORD}
+      SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: "8"
+      AUTH_ALLOWED_ORIGINS: ${AUTH_ALLOWED_ORIGINS:?defina AUTH_ALLOWED_ORIGINS}
+      PUBLIC_SITE_URL: ${PUBLIC_SITE_URL:?defina PUBLIC_SITE_URL}
+      INVITATION_CODE_PEPPER: ${INVITATION_CODE_PEPPER:?defina INVITATION_CODE_PEPPER}
+      INVITATION_CODE_PEPPER_VERSION: ${INVITATION_CODE_PEPPER_VERSION:-1}
+      ADMIN_INITIAL_EMAIL: ${ADMIN_INITIAL_EMAIL:-}
+      ADMIN_INITIAL_PASSWORD: ${ADMIN_INITIAL_PASSWORD:-}
+    networks:
+      - backend
+    mem_limit: 800m
+    stop_grace_period: 30s
+    logging: *logging
+
+  caddy:
+    image: caddy:2.10-alpine
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    environment:
+      API_DOMAIN: ${API_DOMAIN:?defina API_DOMAIN}
+      ACME_EMAIL: ${ACME_EMAIL:?defina ACME_EMAIL}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - backend
+    mem_limit: 128m
+    logging: *logging
+
+volumes:
+  postgres_data:
+  caddy_data:
+  caddy_config:
+
+networks:
+  backend:
+    driver: bridge
