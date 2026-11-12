@@ -32,8 +32,10 @@ ElastiCache nem Secrets Manager. Qualquer outro recurso muda o consumo dos créd
    `wedding-ec2`, **sem par de chaves**. Security group com entrada apenas nas portas `80` (emissão
    e renovação do certificado, redirecionamento) e `443`. Sem SSH.
 8. Elastic IP associado à instância.
-9. DNS no Cloudflare: registro `A` `api.casamentoduda` apontando para o Elastic IP com o proxy
-   **desativado** (nuvem cinza), para o Caddy emitir o certificado e para o IP real chegar à API.
+9. DNS: registro `A` `api.casamentodudatobi` apontando para o Elastic IP. Hoje o DNS de
+   `tobiaskiefer.com.br` está no Registro.br (`a.auto.dns.br`/`b.auto.dns.br`), não no Cloudflare.
+   Se ele for migrado para o Cloudflare, o registro deve ficar **sem proxy** (nuvem cinza), para o
+   Caddy emitir o certificado e para o IP real chegar à API.
 
 ## Primeira instalação
 
@@ -67,12 +69,34 @@ para a imagem anterior se falhar.
 ## Frontend
 
 O build de produção do Angular usa `frontend/src/environments/environment.production.ts`, que aponta
-para `https://api.casamentoduda.tobiaskiefer.com.br`. Frontend e API ficam no mesmo site
+para `https://api.casamentodudatobi.tobiaskiefer.com.br`. Frontend e API ficam no mesmo site
 (`tobiaskiefer.com.br`), então o cookie de sessão `SameSite=Lax` e o CSRF continuam funcionando. O
-backend precisa de `AUTH_ALLOWED_ORIGINS=https://casamentoduda.tobiaskiefer.com.br`.
+backend precisa de `AUTH_ALLOWED_ORIGINS=https://casamentodudatobi.tobiaskiefer.com.br`.
 
 Previews em `*.pages.dev` usam o mesmo build, mas pertencem a outro site e não conseguem autenticar na
 API de produção. Eles servem apenas para revisão visual.
+
+## Ensaio de produção local
+
+Antes de qualquer publicação, rode o ensaio. Ele usa a mesma imagem do backend, o mesmo
+`compose.yaml` e `Caddyfile` de produção, o build de produção do frontend servido pelo Wrangler (o
+emulador oficial do Cloudflare Pages) e os domínios reais resolvidos para o Caddy dentro da rede
+Docker, com HTTPS da CA local do Caddy. Nada é publicado e nenhuma porta é aberta no host.
+
+```bash
+(cd backend && ./mvnw --batch-mode -DskipTests package)
+(cd frontend && npm ci && npm run build)
+infrastructure/production/rehearsal/run-rehearsal.sh
+```
+
+Os testes rodam no Chromium, no WebKit/iPhone e no Chromium/Android: a jornada crítica completa
+(admin, convite, RSVP, acompanhante e painel) com a API em outro subdomínio, e uma verificação de
+"nenhum erro" que abre cada rota diretamente e falha com qualquer exceção JavaScript, erro no
+console, requisição com falha ou resposta HTTP de erro. Argumentos extras vão para o Playwright, por
+exemplo `--project webkit-iphone --repeat-each 10`.
+
+Diferenças em relação à produção: certificados da CA local, limite de tentativas de RSVP elevado
+(todos os navegadores do ensaio saem do mesmo IP) e o Wrangler local no lugar da rede do Cloudflare.
 
 ## Backup e restauração
 
@@ -85,7 +109,7 @@ API de produção. Eles servem apenas para revisão visual.
 ## Monitoramento mínimo
 
 - Configure um monitor externo gratuito (por exemplo UptimeRobot) em
-  `https://api.casamentoduda.tobiaskiefer.com.br/api/public/pix`. O `/actuator` é bloqueado no proxy.
+  `https://api.casamentodudatobi.tobiaskiefer.com.br/api/public/pix`. O `/actuator` é bloqueado no proxy.
 - Acompanhe o saldo de créditos em Billing semanalmente até o casamento.
 - Logs: `docker compose logs --tail 200 api` (rotação de 3 × 10 MB por container).
 

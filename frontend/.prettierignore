@@ -1,3 +1,4 @@
 dist/
 playwright-report/
+playwright-report-rehearsal/
 test-results/

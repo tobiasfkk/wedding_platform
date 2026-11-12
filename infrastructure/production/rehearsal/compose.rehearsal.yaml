@@ -1,0 +1,72 @@
+# Ensaio de produção local. Sobrepõe-se ao compose.yaml de produção:
+#   docker compose --project-directory .. -f ../compose.yaml -f compose.rehearsal.yaml ...
+# Caminhos relativos abaixo partem de infrastructure/production (o --project-directory).
+# Use pelo script run-rehearsal.sh, que gera o .env de teste e limpa tudo ao final.
+services:
+  api:
+    environment:
+      # Todos os navegadores do ensaio saem do mesmo IP; cada rodada faz tentativas inválidas de
+      # propósito. Produção mantém o padrão de 10 por 15 minutos (application.yml).
+      WEDDING_RSVP_ACCESSATTEMPTS_MAXIMUM: "200"
+
+  caddy:
+    environment:
+      SITE_DOMAIN: ${SITE_DOMAIN:?defina SITE_DOMAIN}
+      CADDY_EXTRA_GLOBAL_OPTIONS: local_certs
+    # O ensaio não publica portas no host: só o container de testes acessa o Caddy.
+    ports: !reset []
+    volumes: !override
+      - ./Caddyfile:/etc/caddy/production.Caddyfile:ro
+      - ./rehearsal/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      backend:
+        aliases:
+          - ${SITE_DOMAIN}
+          - ${API_DOMAIN}
+    depends_on:
+      pages:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:2019/config/"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  # Emula o Cloudflare Pages com o mesmo Wrangler usado no deploy (frontend/package.json).
+  pages:
+    build:
+      context: ./rehearsal
+      dockerfile: pages.Dockerfile
+    image: wedding-pages-emulator:4.125.0
+    command: [pages, dev, /site, --ip, 0.0.0.0, --port, "8788"]
+    volumes:
+      - ../../frontend/dist/wedding-frontend/browser:/site:ro
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:8788/').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 5s
+      timeout: 5s
+      retries: 60
+      start_period: 30s
+
+  playwright:
+    image: mcr.microsoft.com/playwright:v1.62.1-noble
+    profiles: [tests]
+    working_dir: /frontend
+    environment:
+      CI: "true"
+      E2E_REDUCED_MOTION: ${E2E_REDUCED_MOTION:-0}
+      E2E_SITE_URL: https://${SITE_DOMAIN}
+      E2E_API_BASE_URL: https://${API_DOMAIN}
+      E2E_ADMIN_EMAIL: ${ADMIN_INITIAL_EMAIL}
+      E2E_ADMIN_PASSWORD: ${ADMIN_INITIAL_PASSWORD}
+    volumes:
+      - ../../frontend:/frontend
+    networks:
+      - backend
+    depends_on:
+      caddy:
+        condition: service_healthy

@@ -1,5 +1,7 @@
 {
 	email {$ACME_EMAIL}
+	# Vazio em produção. O ensaio local usa "local_certs" para emitir certificados pela CA interna.
+	{$CADDY_EXTRA_GLOBAL_OPTIONS}
 }
 
 {$API_DOMAIN} {
