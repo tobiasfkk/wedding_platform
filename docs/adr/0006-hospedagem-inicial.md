@@ -1,10 +1,10 @@
 # ADR 0006 — Cloudflare Pages e serviços gerenciados na AWS
 
-- **Status:** Aceito
+- **Status:** Substituído
 - **Data:** 2026-08-03
 - **Decisor:** Tobias Felipe Kiefer
 - **Substitui:** não se aplica
-- **Substituído por:** ADR 0007 somente quanto ao armazenamento de imagens do site
+- **Substituído por:** [ADR 0008](0008-hospedagem-ec2-unica.md) quanto a API, banco e região; ADR 0007 quanto ao armazenamento de imagens do site
 
 ## Contexto
 
