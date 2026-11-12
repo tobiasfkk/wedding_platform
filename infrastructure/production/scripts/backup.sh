@@ -7,8 +7,11 @@ APP_DIR=${APP_DIR:-/opt/wedding}
 cd "$APP_DIR"
 set -a
 . ./.env.production
+# shellcheck disable=SC1091
+[ -f ./host.conf ] && . ./host.conf
 set +a
 
+mkdir -p "$APP_DIR/backups"
 STAMP=$(date -u +%Y%m%dT%H%M%SZ)
 FILE="$APP_DIR/backups/wedding-$STAMP.dump"
 
@@ -21,7 +24,8 @@ mv "$FILE.partial" "$FILE"
 [ "$(stat -c %s "$FILE")" -gt 1024 ] || { echo "dump suspeito (muito pequeno): $FILE" >&2; exit 1; }
 
 if [ -n "${BACKUP_S3_URI:-}" ]; then
-  aws s3 cp "$FILE" "$BACKUP_S3_URI/$(basename "$FILE")" --only-show-errors
+  ${AWS_CLI:-aws} s3 cp "$FILE" "$BACKUP_S3_URI/$(basename "$FILE")" --only-show-errors \
+    ${AWS_REGION:+--region "$AWS_REGION"}
 fi
 
 find "$APP_DIR/backups" -name 'wedding-*.dump' -mtime +7 -delete

@@ -40,21 +40,27 @@ Adotar a opção 5:
 - uma instância EC2 `t4g.small` (2 GB de RAM) em `sa-east-1`, sempre ligada;
 - Docker Compose com Spring Boot, PostgreSQL e proxy HTTPS (Caddy ou Nginx);
 - PostgreSQL acessível apenas pela rede interna do Compose, sem porta pública;
-- volume EBS gp3 de 20 a 30 GB;
-- backup diário com `pg_dump` para um bucket S3 privado, com retenção curta;
-- acesso administrativo por AWS Systems Manager Session Manager, sem SSH aberto à internet;
+- volume EBS gp3 de 20 GB criptografado;
+- créditos de CPU no modo `standard`, para que a `t4g` nunca gere cobrança extra de CPU;
+- backup diário com `pg_dump` para um bucket S3 privado, com expiração em 30 dias;
+- acesso administrativo por AWS Systems Manager Session Manager, sem SSH nem par de chaves;
 - somente as portas 443 (HTTPS) e 80 (emissão do certificado e redirecionamento) expostas no
   security group;
-- imagens do backend em um repositório ECR privado na mesma região, lidas pela role da instância;
+- imagens `linux/arm64` do backend publicadas no GHCR como pacote público (o repositório é público e
+  a imagem não contém segredos), sem login na instância;
+- segredos (senha do banco, pepper dos convites e senha do admin) gerados uma vez e guardados no
+  AWS SSM Parameter Store padrão, preservados se a EC2 for recriada;
+- infraestrutura em um template CloudFormation e deploy pelo GitHub Actions via OIDC, sem chaves
+  AWS permanentes;
 - Caddy emite o certificado Let's Encrypt; o registro DNS da API aponta direto para a EC2, sem proxy
   intermediário, para que o IP real do cliente chegue ao rate limit de login e RSVP;
-- AWS Budgets com alertas de consumo dos créditos em 50%, 80% e 95%.
+- AWS Budgets sobre o uso bruto (antes dos créditos), com alertas a 50% e 80% e na previsão de 100%.
 
 Não serão criados RDS, Aurora, NAT Gateway, balanceador, ECS, ElastiCache ou outros serviços com
 custo fixo. `t4g.micro` só será considerada se testes de memória mostrarem folga.
 
-A API ficará em `api.casamentodudatobi.tobiaskiefer.com.br`. O domínio e, hoje, o DNS ficam no
-Registro.br. O frontend (`casamentodudatobi.tobiaskiefer.com.br`) chama essa URL, definida no build de
+A API ficará em `api.casamentodudatobi.tobiaskiefer.com.br`. O domínio é registrado no Registro.br e
+o DNS fica no Cloudflare. O frontend (`casamentodudatobi.tobiaskiefer.com.br`) chama essa URL, definida no build de
 produção do Angular. Os dois estão no mesmo site, então o cookie de sessão `SameSite=Lax` e o CSRF por
 cabeçalho continuam válidos; basta liberar a origem do frontend no CORS. Um proxy `/api` no Cloudflare
 foi descartado por acrescentar uma peça e esconder o IP do cliente do rate limit.
@@ -66,10 +72,21 @@ Contas novas podem receber US$ 100 em créditos e obter até mais US$ 100, mas o
 em seis meses ou quando os créditos acabam. Criada em novembro de 2026, a conta cobriria 24/04/2027
 com pouca folga: o plano terminaria por volta de 4 de maio de 2027.
 
-A estimativa em dólares para `t4g.small`, EBS, IPv4 público e S3 em `sa-east-1` deve ser gerada no AWS
-Pricing Calculator antes de criar recursos reais. Ela não está registrada aqui porque ainda não foi
-calculada. Se o consumo previsto não couber nos créditos, avaliar `us-east-1` ou `t4g.micro` antes de
-cadastrar dados reais.
+Estimativa de uso bruto em `sa-east-1`, com preços sob demanda da lista pública da AWS consultados
+em 12/11/2026 (730 horas por mês):
+
+| Item | `t4g.small` (2 GB) | `t4g.micro` (1 GB) |
+|---|---:|---:|
+| Instância (US$ 0,0268/h e US$ 0,0134/h) | US$ 19,56 | US$ 9,78 |
+| IPv4 público (US$ 0,005/h) | US$ 3,65 | US$ 3,65 |
+| gp3 20 GB (aproximado) | US$ 3,00 | US$ 3,00 |
+| S3, logs e tráfego | < US$ 1 | < US$ 1 |
+| **Por mês** | **~US$ 27** | **~US$ 17** |
+
+O preço do disco é aproximado e não foi verificado se a franquia de disco e de IPv4 se aplica ao
+plano Free atual; ambos foram contados como consumo. No ensaio local, a API usou 366–452 MB e o
+PostgreSQL 53–61 MB. Padrão: `t4g.small`, pela folga de memória; `t4g.micro` é um parâmetro do
+template. Com ~3,5 meses de operação, a `small` consome ~US$ 95 e a `micro` ~US$ 61.
 
 ## Consequências
 
