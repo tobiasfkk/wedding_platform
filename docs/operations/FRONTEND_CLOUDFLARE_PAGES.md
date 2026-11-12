@@ -8,7 +8,7 @@ issue #27.
 ## Endereços planejados
 
 - preview inicial: `initial-preview.wedding-platform-24v.pages.dev`;
-- produção planejada: `casamentodudaetobias.tobiaskiefer.com.br`;
+- produção planejada: `casamentodudatobi.tobiaskiefer.com.br`;
 - o DNS do domínio próprio não deve ser alterado antes da validação integrada publicada.
 
 ## Configuração versionada
@@ -43,7 +43,7 @@ administração só poderão ser validados após a publicação do backend e do 
 ## Próximas etapas
 
 1. Provisionar o backend e o PostgreSQL conforme [PRODUCAO_EC2](PRODUCAO_EC2.md).
-2. ~~Encaminhamento de `/api`~~: substituído pela URL da API em `api.casamentodudaetobias.tobiaskiefer.com.br`
+2. ~~Encaminhamento de `/api`~~: substituído pela URL da API em `api.casamentodudatobi.tobiaskiefer.com.br`
    no build de produção ([ADR 0008](../adr/0008-hospedagem-ec2-unica.md)).
 3. Executar a suíte E2E integrada no ambiente publicado.
 4. Configurar o subdomínio próprio e validar TLS.

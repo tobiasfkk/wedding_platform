@@ -32,7 +32,7 @@ ElastiCache nem Secrets Manager. Qualquer outro recurso muda o consumo dos créd
    `wedding-ec2`, **sem par de chaves**. Security group com entrada apenas nas portas `80` (emissão
    e renovação do certificado, redirecionamento) e `443`. Sem SSH.
 8. Elastic IP associado à instância.
-9. DNS: registro `A` `api.casamentodudaetobias` apontando para o Elastic IP. Hoje o DNS de
+9. DNS: registro `A` `api.casamentodudatobi` apontando para o Elastic IP. Hoje o DNS de
    `tobiaskiefer.com.br` está no Registro.br (`a.auto.dns.br`/`b.auto.dns.br`), não no Cloudflare.
    Se ele for migrado para o Cloudflare, o registro deve ficar **sem proxy** (nuvem cinza), para o
    Caddy emitir o certificado e para o IP real chegar à API.
@@ -69,9 +69,9 @@ para a imagem anterior se falhar.
 ## Frontend
 
 O build de produção do Angular usa `frontend/src/environments/environment.production.ts`, que aponta
-para `https://api.casamentodudaetobias.tobiaskiefer.com.br`. Frontend e API ficam no mesmo site
+para `https://api.casamentodudatobi.tobiaskiefer.com.br`. Frontend e API ficam no mesmo site
 (`tobiaskiefer.com.br`), então o cookie de sessão `SameSite=Lax` e o CSRF continuam funcionando. O
-backend precisa de `AUTH_ALLOWED_ORIGINS=https://casamentodudaetobias.tobiaskiefer.com.br`.
+backend precisa de `AUTH_ALLOWED_ORIGINS=https://casamentodudatobi.tobiaskiefer.com.br`.
 
 Previews em `*.pages.dev` usam o mesmo build, mas pertencem a outro site e não conseguem autenticar na
 API de produção. Eles servem apenas para revisão visual.
@@ -109,7 +109,7 @@ Diferenças em relação à produção: certificados da CA local, limite de tent
 ## Monitoramento mínimo
 
 - Configure um monitor externo gratuito (por exemplo UptimeRobot) em
-  `https://api.casamentodudaetobias.tobiaskiefer.com.br/api/public/pix`. O `/actuator` é bloqueado no proxy.
+  `https://api.casamentodudatobi.tobiaskiefer.com.br/api/public/pix`. O `/actuator` é bloqueado no proxy.
 - Acompanhe o saldo de créditos em Billing semanalmente até o casamento.
 - Logs: `docker compose logs --tail 200 api` (rotação de 3 × 10 MB por container).
 

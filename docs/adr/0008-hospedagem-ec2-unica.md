@@ -53,8 +53,8 @@ Adotar a opção 5:
 Não serão criados RDS, Aurora, NAT Gateway, balanceador, ECS, ElastiCache ou outros serviços com
 custo fixo. `t4g.micro` só será considerada se testes de memória mostrarem folga.
 
-A API ficará em `api.casamentodudaetobias.tobiaskiefer.com.br`. O domínio e, hoje, o DNS ficam no
-Registro.br. O frontend (`casamentodudaetobias.tobiaskiefer.com.br`) chama essa URL, definida no build de
+A API ficará em `api.casamentodudatobi.tobiaskiefer.com.br`. O domínio e, hoje, o DNS ficam no
+Registro.br. O frontend (`casamentodudatobi.tobiaskiefer.com.br`) chama essa URL, definida no build de
 produção do Angular. Os dois estão no mesmo site, então o cookie de sessão `SameSite=Lax` e o CSRF por
 cabeçalho continuam válidos; basta liberar a origem do frontend no CORS. Um proxy `/api` no Cloudflare
 foi descartado por acrescentar uma peça e esconder o IP do cliente do rate limit.

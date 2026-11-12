@@ -12,7 +12,7 @@ set -euo pipefail
 
 HERE=$(cd "$(dirname "$0")" && pwd)
 REPO=$(cd "$HERE/../../.." && pwd)
-SITE_DOMAIN=casamentodudaetobias.tobiaskiefer.com.br
+SITE_DOMAIN=casamentodudatobi.tobiaskiefer.com.br
 API_DOMAIN=api.$SITE_DOMAIN
 PROJECT=wedding-rehearsal
 IMAGE=wedding-backend:rehearsal
