@@ -16,15 +16,16 @@ fi
 
 COMPOSE=(docker compose --env-file .env.production -f compose.yaml)
 echo "Convites cadastrados no banco agora:"
+# "< /dev/null": o docker compose exec repassaria a entrada do terminal e engoliria a confirmação.
 "${COMPOSE[@]}" exec -T postgres psql -U wedding -d wedding -At \
-  -c "SELECT name FROM wedding.invitation ORDER BY created_at" | sed 's/^/  - /'
-read -r -p "Isto APAGA todos os dados acima. Digite APAGAR para confirmar: " answer
+  -c "SELECT name FROM wedding.invitation ORDER BY created_at" < /dev/null | sed 's/^/  - /'
+read -r -p "Isto APAGA todos os dados acima. Digite APAGAR para confirmar: " answer || answer=
 [ "$answer" = APAGAR ] || { echo "cancelado"; exit 1; }
 
-"${COMPOSE[@]}" stop api
+"${COMPOSE[@]}" stop api < /dev/null
 "${COMPOSE[@]}" exec -T postgres psql -U wedding -d postgres -v ON_ERROR_STOP=1 \
-  -c "DROP DATABASE wedding WITH (FORCE)" -c "CREATE DATABASE wedding OWNER wedding"
-"${COMPOSE[@]}" up --detach --wait --wait-timeout 300
+  -c "DROP DATABASE wedding WITH (FORCE)" -c "CREATE DATABASE wedding OWNER wedding" < /dev/null
+"${COMPOSE[@]}" up --detach --wait --wait-timeout 300 < /dev/null
 
 date -u +%FT%TZ > "$MARKER"
 chmod 400 "$MARKER"
