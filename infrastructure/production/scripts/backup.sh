@@ -11,6 +11,7 @@ set -a
 [ -f ./host.conf ] && . ./host.conf
 set +a
 
+mkdir -p "$APP_DIR/backups"
 STAMP=$(date -u +%Y%m%dT%H%M%SZ)
 FILE="$APP_DIR/backups/wedding-$STAMP.dump"
 
