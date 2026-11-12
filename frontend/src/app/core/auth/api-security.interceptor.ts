@@ -1,6 +1,7 @@
 import { HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
 
+import { environment } from '../../../environments/environment';
 import { CsrfTokenStore } from './csrf-token.store';
 
 const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
@@ -16,5 +17,11 @@ export const apiSecurityInterceptor: HttpInterceptorFn = (request, next) => {
       ? request.headers.set('X-XSRF-TOKEN', csrfToken)
       : request.headers;
 
-  return next(request.clone({ headers, withCredentials: true }));
+  return next(
+    request.clone({
+      url: `${environment.apiBaseUrl}${request.url}`,
+      headers,
+      withCredentials: true,
+    }),
+  );
 };
