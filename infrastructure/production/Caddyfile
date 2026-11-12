@@ -1,0 +1,26 @@
+{
+	email {$ACME_EMAIL}
+}
+
+{$API_DOMAIN} {
+	encode zstd gzip
+
+	# Só a API pública é exposta. O Actuator fica restrito à rede interna e ao health check do Docker.
+	@actuator path /actuator /actuator/*
+	respond @actuator 404
+
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "no-referrer"
+		-Server
+	}
+
+	# O Caddy substitui qualquer X-Forwarded-For recebido pelo IP real do cliente (sem trusted_proxies),
+	# e o Spring o usa nos limites de tentativas de login e RSVP. Por isso a API não pode ser
+	# acessível sem passar pelo Caddy, nem o DNS pode ficar atrás de outro proxy sem ajuste aqui.
+	reverse_proxy api:8080 {
+		health_uri /actuator/health
+		health_interval 30s
+	}
+}

@@ -20,7 +20,8 @@ Status possíveis: `Proposto`, `Aceito`, `Rejeitado`, `Substituído` e `Obsoleto
 | [0003](0003-codigo-de-convite.md) | Geração, armazenamento e rotação do código de convite | Aceito |
 | [0004](0004-estrutura-do-repositorio.md) | Monorepo para aplicação e infraestrutura | Aceito |
 | [0005](0005-interface-e-testes-e2e.md) | Angular Material e Playwright | Aceito |
-| [0006](0006-hospedagem-inicial.md) | Cloudflare Pages e serviços gerenciados na AWS | Aceito |
+| [0006](0006-hospedagem-inicial.md) | Cloudflare Pages e serviços gerenciados na AWS | Substituído pelo 0008 |
 | [0007](0007-sites-personalizados-em-codigo.md) | Sites personalizados implementados em código | Aceito |
+| [0008](0008-hospedagem-ec2-unica.md) | Backend e PostgreSQL em uma EC2 única | Aceito |
 
 Use o [template](0000-template.md) para novas decisões.

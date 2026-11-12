@@ -388,7 +388,7 @@ Princípios:
 | Frontend | Angular, TypeScript, Reactive Forms e Angular Material/CDK ([ADR 0005](adr/0005-interface-e-testes-e2e.md)) |
 | Testes frontend | Vitest para testes unitários e Playwright para E2E ([ADR 0005](adr/0005-interface-e-testes-e2e.md)) |
 | Ambiente local | Docker e Docker Compose |
-| Entrada em produção | Cloudflare Pages, AWS App Runner e RDS PostgreSQL ([ADR 0006](adr/0006-hospedagem-inicial.md)) |
+| Entrada em produção | Cloudflare Pages e uma EC2 na AWS com Docker Compose, Spring Boot e PostgreSQL ([ADR 0008](adr/0008-hospedagem-ec2-unica.md)) |
 | CI/CD | GitHub Actions |
 | Observabilidade | Actuator, Prometheus, Grafana e solução de logs a decidir |
 | Mensageria futura | RabbitMQ, introduzido primeiro em um caso de uso não crítico |
@@ -411,7 +411,7 @@ Princípios:
 | Código de convite | [ADR 0003 — Token de alta entropia e HMAC](adr/0003-codigo-de-convite.md) |
 | Organização do código | [ADR 0004 — Monorepo](adr/0004-estrutura-do-repositorio.md) |
 | Interface e E2E | [ADR 0005 — Angular Material e Playwright](adr/0005-interface-e-testes-e2e.md) |
-| Hospedagem e evolução | [ADR 0006 — Cloudflare Pages e AWS](adr/0006-hospedagem-inicial.md) |
+| Hospedagem e evolução | [ADR 0008 — EC2 única](adr/0008-hospedagem-ec2-unica.md), que substitui o [ADR 0006](adr/0006-hospedagem-inicial.md) |
 | Site público | [ADR 0007 — Sites personalizados em código](adr/0007-sites-personalizados-em-codigo.md) |
 
 ## 13. Estratégia de qualidade
@@ -611,7 +611,7 @@ O MVP estará pronto para lançamento quando todas as condições forem verdadei
 
 Resolvidas durante a Fase 0:
 
-- Hospedagem e orçamento inicial: [ADR 0006](adr/0006-hospedagem-inicial.md).
+- Hospedagem e orçamento inicial: [ADR 0008](adr/0008-hospedagem-ec2-unica.md), que substitui o [ADR 0006](adr/0006-hospedagem-inicial.md).
 - Biblioteca visual e ferramenta E2E: [ADR 0005](adr/0005-interface-e-testes-e2e.md).
 - Autenticação administrativa, recuperação e papéis: [ADR 0002](adr/0002-autenticacao-administrativa.md).
 - Geração, armazenamento e rotação do código de convite: [ADR 0003](adr/0003-codigo-de-convite.md).
@@ -644,3 +644,4 @@ Permanecem em aberto:
 | 1.1.0 | 03/08/2026 | Referência aos ADRs iniciais e resolução das decisões de autenticação, convite, interface, E2E e hospedagem |
 | 2.0.0 | 11/08/2026 | Substituição da personalização administrativa por sites exclusivos implementados em código |
 | 2.1.0 | 11/08/2026 | Remoção dos dados editoriais do evento e manutenção do prazo operacional no dashboard de RSVP |
+| 2.2.0 | 11/11/2026 | Substituição da hospedagem App Runner e RDS por EC2 única com Docker Compose ([ADR 0008](adr/0008-hospedagem-ec2-unica.md)) |

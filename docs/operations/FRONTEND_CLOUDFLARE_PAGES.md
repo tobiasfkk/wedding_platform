@@ -42,8 +42,9 @@ administração só poderão ser validados após a publicação do backend e do 
 
 ## Próximas etapas
 
-1. Provisionar o backend e o PostgreSQL de homologação.
-2. Implementar o encaminhamento de `/api` sem expor a origem interna.
+1. Provisionar o backend e o PostgreSQL conforme [PRODUCAO_EC2](PRODUCAO_EC2.md).
+2. ~~Encaminhamento de `/api`~~: substituído pela URL da API em `api.casamentoduda.tobiaskiefer.com.br`
+   no build de produção ([ADR 0008](../adr/0008-hospedagem-ec2-unica.md)).
 3. Executar a suíte E2E integrada no ambiente publicado.
 4. Configurar o subdomínio próprio e validar TLS.
 5. Só então habilitar o workflow de produção após a CI da branch `main`.
