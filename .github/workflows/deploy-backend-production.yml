@@ -52,9 +52,11 @@ jobs:
       - name: Require the public image for this commit
         run: |
           # Sem login: confirma também que a imagem está pública para a EC2 baixá-la.
-          docker manifest inspect "$IMAGE_REPOSITORY:$SHA" > manifest.json
-          jq -e '.architecture == "arm64" or ([.manifests[]?.platform.architecture] | index("arm64"))' manifest.json > /dev/null \
-            || { echo "A imagem $IMAGE_REPOSITORY:$SHA não é arm64." >&2; exit 1; }
+          # --verbose traz Descriptor.platform; o manifesto simples (uma plataforma) não informa a
+          # arquitetura. Objeto para imagem de uma plataforma, lista para índice multiplataforma.
+          docker manifest inspect --verbose "$IMAGE_REPOSITORY:$SHA" > manifest.json
+          jq -e '(if type == "array" then . else [.] end) | map(.Descriptor.platform.architecture) | index("arm64") != null' \
+            manifest.json > /dev/null || { echo "A imagem $IMAGE_REPOSITORY:$SHA não é arm64." >&2; exit 1; }
 
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
