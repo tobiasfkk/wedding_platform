@@ -1,9 +1,11 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
 
 import { PublicHome } from './public-home';
+import { TouchPhotoRailDirective } from './touch-photo-rail.directive';
 import { PixConfiguration } from '../../core/pix.service';
 
 describe('PublicHome', () => {
@@ -79,12 +81,21 @@ describe('PublicHome', () => {
     expect(element.textContent).not.toContain(
       'Deslize para o lado e percorra alguns capítulos da nossa história.',
     );
-    expect(element.querySelectorAll('.photo-card')).toHaveLength(7);
+    expect(element.querySelectorAll('.photo-card')).toHaveLength(27);
     expect(element.querySelectorAll('.photo-card figcaption')).toHaveLength(0);
     expect(element.querySelectorAll('.photo-card.is-active')).toHaveLength(1);
+    const images = Array.from(element.querySelectorAll<HTMLImageElement>('.photo-card img'));
+    expect(images.every((image) => image.getAttribute('src')?.endsWith('.webp'))).toBe(true);
+    expect(images.every((image) => image.getAttribute('alt')?.trim())).toBe(true);
+    expect(new Set(images.map((image) => image.getAttribute('src'))).size).toBe(27);
+    // Só as primeiras fotos carregam ao abrir a página; as demais quando a galeria chega nelas.
     expect(
       element.querySelectorAll('.photo-card img[loading="eager"][decoding="sync"]'),
-    ).toHaveLength(7);
+    ).toHaveLength(3);
+    expect(
+      element.querySelectorAll('.photo-card img[loading="lazy"][decoding="async"]'),
+    ).toHaveLength(24);
+    expect(images[0]?.getAttribute('fetchpriority')).toBe('high');
     expect(element.querySelectorAll('.gallery-dot')).toHaveLength(7);
     expect(element.querySelectorAll('.gallery-dot[aria-current="true"]')).toHaveLength(1);
     expect(element.querySelector('.gallery-playback')).toBeNull();
@@ -93,13 +104,43 @@ describe('PublicHome', () => {
     );
   });
 
+  it('slides a window of at most seven navigation dots with the active photo', () => {
+    const fixture = render();
+    const element = fixture.nativeElement as HTMLElement;
+    const rail = fixture.debugElement
+      .query(By.directive(TouchPhotoRailDirective))
+      .injector.get(TouchPhotoRailDirective);
+    const labels = () =>
+      Array.from(element.querySelectorAll('.gallery-dot'), (dot) => dot.getAttribute('aria-label'));
+
+    expect(labels()[0]).toBe('Mostrar foto 1 de 27');
+    expect(labels()[6]).toBe('Mostrar foto 7 de 27');
+
+    rail.activeIndex.set(13);
+    fixture.detectChanges();
+    expect(labels()).toHaveLength(7);
+    expect(labels()[0]).toBe('Mostrar foto 11 de 27');
+    expect(
+      element.querySelector('.gallery-dot[aria-current="true"]')?.getAttribute('aria-label'),
+    ).toBe('Mostrar foto 14 de 27');
+
+    rail.activeIndex.set(26);
+    fixture.detectChanges();
+    expect(labels()).toHaveLength(7);
+    expect(labels()[0]).toBe('Mostrar foto 21 de 27');
+    expect(labels()[6]).toBe('Mostrar foto 27 de 27');
+  });
+
   it('shows the ceremony date, venue, address and map provided by the couple', () => {
     const fixture = render();
     const element = fixture.nativeElement as HTMLElement;
     const ceremony = element.querySelector('.ceremony');
     const map = element.querySelector<HTMLAnchorElement>('.ceremony .map-link');
 
-    expect(ceremony?.textContent).toContain('24-04-2027 | 16h');
+    expect(ceremony?.textContent).toContain('24-04-2027 | 15h30');
+    expect(ceremony?.querySelector('time')?.getAttribute('datetime')).toBe(
+      '2027-04-24T15:30:00-03:00',
+    );
     expect(ceremony?.textContent).toContain('Sweet Home Farm');
     expect(ceremony?.textContent).toContain('Rua Francisco Bueno Franco, 814');
     expect(map?.href).toBe('https://maps.app.goo.gl/2wyfdkJZ5CcvLFsA7');
@@ -109,7 +150,8 @@ describe('PublicHome', () => {
 
   it('counts down to the ceremony every second', () => {
     vi.useFakeTimers();
-    vi.setSystemTime(new Date('2027-04-23T14:57:57-03:00'));
+    // Cerimônia às 15h30: faltam exatamente 1 dia, 1 hora, 2 minutos e 3 segundos.
+    vi.setSystemTime(new Date('2027-04-23T14:27:57-03:00'));
     const fixture = render();
     const element = fixture.nativeElement as HTMLElement;
     const values = () =>
@@ -132,6 +174,9 @@ describe('PublicHome', () => {
 
     expect(element.querySelector('#story-title')?.textContent?.trim()).toBe(
       'Foi Deus quem escreveu cada encontro.',
+    );
+    expect(element.querySelector('.story__heading .section-label')?.textContent?.trim()).toBe(
+      'Nossa história',
     );
     expect(element.querySelector('.story__copy')?.textContent).toContain(
       'Estamos muito felizes em convidar vocês para fazerem parte deste momento tão especial em nossas vidas.',
@@ -164,6 +209,9 @@ describe('PublicHome', () => {
     const element = fixture.nativeElement as HTMLElement;
 
     expect(element.querySelector('#story-title')?.textContent?.trim()).toBe('Família Silva');
+    expect(element.querySelector('.story__heading .section-label')?.textContent?.trim()).toBe(
+      'Com carinho, para',
+    );
   });
 
   it('keeps RSVP in the same page and explains how to use an individual invitation', () => {

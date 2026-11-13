@@ -130,7 +130,7 @@ for (const width of [320, 390, 430]) {
 
     const ceremony = page.locator('.ceremony');
     await ceremony.scrollIntoViewIfNeeded();
-    await expect(ceremony).toContainText('24-04-2027 | 16h');
+    await expect(ceremony).toContainText('24-04-2027 | 15h30');
     await expect(ceremony).toContainText('Sweet Home Farm');
     await expect(page.locator('.ceremony .map-link')).toHaveAttribute(
       'href',
@@ -171,6 +171,43 @@ test('navigates to the exact photo selected by its circle or visible edge', asyn
 
   await rail.locator('.photo-card').nth(1).dispatchEvent('click');
   await expect(dots.nth(1)).toHaveAttribute('aria-current', 'true');
+});
+
+test('downloads later gallery photos only when the visitor swipes to them', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 800 });
+  const requested = new Set<string>();
+  page.on('request', (request) => {
+    const match = request.url().match(/maria-tobias-(\d+)\.webp$/);
+    if (match) requested.add(match[1]!);
+  });
+  await mockAnonymousRsvp(page);
+  await page.goto('/');
+  await page.waitForLoadState('networkidle');
+
+  // As primeiras fotos chegam com a página; a última, não.
+  expect(requested.has('01')).toBe(true);
+  expect(requested.has('27')).toBe(false);
+  expect(requested.size).toBeLessThan(27);
+
+  const rail = page.locator('.photo-rail');
+  await rail.scrollIntoViewIfNeeded();
+  const pagination = page.locator('.gallery-pagination');
+  await expect(page.locator('.gallery-dot')).toHaveCount(7);
+  const paginationBounds = await pagination.boundingBox();
+  expect(paginationBounds!.x).toBeGreaterThanOrEqual(0);
+  expect(paginationBounds!.x + paginationBounds!.width).toBeLessThanOrEqual(320);
+
+  await rail.evaluate((element) => element.scrollTo({ left: element.scrollWidth }));
+  const lastPhoto = rail.locator('img').last();
+  await expect
+    .poll(() => lastPhoto.evaluate((image) => (image as HTMLImageElement).naturalWidth))
+    .toBe(960);
+  expect(requested.has('27')).toBe(true);
+  await expect(page.locator('.gallery-dot').last()).toHaveAttribute(
+    'aria-label',
+    'Mostrar foto 27 de 27',
+  );
+  await expectNoHorizontalOverflow(page);
 });
 
 test('copies the Pix code on local HTTP when Clipboard API is unavailable', async ({ page }) => {

@@ -74,6 +74,9 @@ docker-data/
 volumes/
 .local-data/
 
+# Fotos originais em alta resolução (o site publica só as versões WebP otimizadas)
+.photo-originals/
+
 # Temporary files
 tmp/
 temp/

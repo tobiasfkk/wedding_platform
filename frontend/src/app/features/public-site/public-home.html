@@ -35,8 +35,11 @@
 
   <section class="story section-shell" aria-labelledby="story-title">
     <div class="story__heading">
-      <p class="section-label" appScrollReveal="up">Nossa história</p>
-      <!-- Nome do grupo do convite aberto pelo link individual; sem convite, a frase do casal. -->
+      <!-- Com convite aberto pelo link individual: "Com carinho, para" + nome do grupo ou
+           responsável. Sem convite: o rótulo e a frase do casal. -->
+      <p class="section-label" appScrollReveal="up">
+        {{ invitationGroupName() ? 'Com carinho, para' : 'Nossa história' }}
+      </p>
       <h2 id="story-title" appScrollReveal="up" [revealDelay]="100">
         {{ invitationGroupName() ?? 'Foi Deus quem escreveu cada encontro.' }}
       </h2>
@@ -75,93 +78,24 @@
       role="region"
       aria-label="Galeria de memórias do casal. Deslize horizontalmente para ver mais fotos."
     >
-      <figure class="photo-card">
-        <div class="photo-card__visual">
-          <img
-            src="/images/couple/maria-tobias-01.jpg"
-            alt="Tobias e Maria Eduarda sorrindo com um buquê de flores ao ar livre"
-            width="960"
-            height="1280"
-            loading="eager"
-            decoding="sync"
-          />
-        </div>
-      </figure>
-      <figure class="photo-card">
-        <div class="photo-card__visual">
-          <img
-            src="/images/couple/maria-tobias-02.jpg"
-            alt="Maria Eduarda e Tobias abraçados e sorrindo em um jardim"
-            width="960"
-            height="1280"
-            loading="eager"
-            decoding="sync"
-          />
-        </div>
-      </figure>
-      <figure class="photo-card">
-        <div class="photo-card__visual">
-          <img
-            src="/images/couple/maria-tobias-03.jpg"
-            alt="Maria Eduarda e Tobias olhando um para o outro em um jardim"
-            width="960"
-            height="1280"
-            loading="eager"
-            decoding="sync"
-          />
-        </div>
-      </figure>
-      <figure class="photo-card">
-        <div class="photo-card__visual">
-          <img
-            src="/images/couple/maria-tobias-04.jpg"
-            alt="Maria Eduarda olhando com carinho para Tobias durante uma celebração"
-            width="960"
-            height="1280"
-            loading="eager"
-            decoding="sync"
-          />
-        </div>
-      </figure>
-      <figure class="photo-card">
-        <div class="photo-card__visual">
-          <img
-            src="/images/couple/maria-tobias-05.jpg"
-            alt="Maria Eduarda e Tobias sorrindo juntos em uma celebração ao ar livre"
-            width="960"
-            height="1280"
-            loading="eager"
-            decoding="sync"
-          />
-        </div>
-      </figure>
-      <figure class="photo-card">
-        <div class="photo-card__visual">
-          <img
-            src="/images/couple/maria-tobias-06.jpg"
-            alt="Maria Eduarda e Tobias diante das montanhas ao pôr do sol"
-            width="960"
-            height="1280"
-            loading="eager"
-            decoding="sync"
-          />
-        </div>
-      </figure>
-      <figure class="photo-card">
-        <div class="photo-card__visual">
-          <img
-            src="/images/couple/maria-tobias-07.jpg"
-            alt="Maria Eduarda e Tobias abraçados durante uma caminhada em um dia de neblina"
-            width="960"
-            height="1280"
-            loading="eager"
-            decoding="sync"
-          />
-        </div>
-      </figure>
+      @for (photo of photos; track photo.src; let index = $index) {
+        <figure class="photo-card">
+          <div class="photo-card__visual">
+            <img
+              [src]="photo.src"
+              [alt]="photo.alt"
+              width="960"
+              height="1200"
+              [attr.loading]="index < eagerPhotos ? 'eager' : 'lazy'"
+              [attr.decoding]="index < eagerPhotos ? 'sync' : 'async'"
+              [attr.fetchpriority]="index === 0 ? 'high' : null"
+            />
+          </div>
+        </figure>
+      }
     </div>
     <div class="gallery-pagination" role="group" aria-label="Escolher foto">
-      @for (index of gallery.indexes(); track index) {
+      @for (index of gallery.visibleIndexes(); track index) {
         <button
           class="gallery-dot"
           type="button"
@@ -181,7 +115,7 @@
 
       <div class="ceremony__details" appScrollReveal="up" [revealDelay]="200">
         <div appScrollReveal="up" [revealDelay]="260">
-          <p><time datetime="2027-04-24T16:00:00-03:00">24-04-2027 | 16h</time></p>
+          <p><time datetime="2027-04-24T15:30:00-03:00">24-04-2027 | 15h30</time></p>
         </div>
         <div class="ceremony__countdown" appScrollReveal="up" [revealDelay]="340">
           @if (countdown().complete) {
