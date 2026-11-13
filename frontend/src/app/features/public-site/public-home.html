@@ -36,8 +36,9 @@
   <section class="story section-shell" aria-labelledby="story-title">
     <div class="story__heading">
       <p class="section-label" appScrollReveal="up">Nossa história</p>
+      <!-- Nome do grupo do convite aberto pelo link individual; sem convite, a frase do casal. -->
       <h2 id="story-title" appScrollReveal="up" [revealDelay]="100">
-        Foi Deus quem escreveu cada encontro.
+        {{ invitationGroupName() ?? 'Foi Deus quem escreveu cada encontro.' }}
       </h2>
       <span
         class="section-rule"
@@ -48,8 +49,8 @@
     </div>
     <div class="story__copy">
       <p appScrollReveal="up" [revealDelay]="180">
-        Entre conversas, sonhos compartilhados e a alegria dos dias simples, encontramos um no outro
-        um lugar para chamar de lar.
+        Estamos muito felizes em convidar vocês para fazerem parte deste momento tão especial em
+        nossas vidas.
       </p>
       <p appScrollReveal="up" [revealDelay]="300">
         Agora, diante de Deus, e ao lado das pessoas que amamos, começaremos um novo capítulo. Ter
@@ -84,7 +85,6 @@
             loading="eager"
             decoding="sync"
           />
-          <figcaption>Entre flores e sorrisos.</figcaption>
         </div>
       </figure>
       <figure class="photo-card">
@@ -97,7 +97,6 @@
             loading="eager"
             decoding="sync"
           />
-          <figcaption>A alegria de estarmos juntos.</figcaption>
         </div>
       </figure>
       <figure class="photo-card">
@@ -110,7 +109,6 @@
             loading="eager"
             decoding="sync"
           />
-          <figcaption>Nosso jeito de olhar um para o outro.</figcaption>
         </div>
       </figure>
       <figure class="photo-card">
@@ -123,7 +121,6 @@
             loading="eager"
             decoding="sync"
           />
-          <figcaption>Memórias que guardamos com carinho.</figcaption>
         </div>
       </figure>
       <figure class="photo-card">
@@ -136,7 +133,6 @@
             loading="eager"
             decoding="sync"
           />
-          <figcaption>Cada celebração ao seu lado.</figcaption>
         </div>
       </figure>
       <figure class="photo-card">
@@ -149,7 +145,6 @@
             loading="eager"
             decoding="sync"
           />
-          <figcaption>Todos os caminhos nos trouxeram aqui.</figcaption>
         </div>
       </figure>
       <figure class="photo-card">
@@ -162,7 +157,6 @@
             loading="eager"
             decoding="sync"
           />
-          <figcaption>Nós dois, em qualquer tempo.</figcaption>
         </div>
       </figure>
     </div>
@@ -239,7 +233,11 @@
         </p>
       </div>
       <div class="rsvp-section__flow" appScrollReveal="up" [revealDelay]="100">
-        <app-rsvp-home [embedded]="true" (responsesSaved)="onResponsesSaved()" />
+        <app-rsvp-home
+          [embedded]="true"
+          (responsesSaved)="onResponsesSaved()"
+          (invitationChange)="invitationGroupName.set($event.groupName)"
+        />
       </div>
     </div>
   </section>

@@ -323,30 +323,6 @@ h2 {
   will-change: transform, filter;
 }
 
-.photo-card figcaption {
-  position: absolute;
-  z-index: 1;
-  inset-block-start: 2rem;
-  inset-inline: 2rem;
-  max-width: 16ch;
-  margin: 0;
-  color: var(--paper-light);
-  font-size: clamp(1.25rem, 5.8vw, 1.8rem);
-  font-weight: 700;
-  letter-spacing: -0.025em;
-  line-height: 1.08;
-  opacity: calc(1 - var(--card-distance) * 0.72);
-  text-shadow:
-    0 1px 8px rgb(0 0 0 / 78%),
-    0 3px 22px rgb(0 0 0 / 58%);
-  transform: translate3d(
-    calc(var(--card-progress) * -0.9rem),
-    calc(var(--card-distance) * 0.8rem),
-    0
-  );
-  will-change: opacity, transform;
-}
-
 .ceremony {
   padding-block: clamp(6rem, 22vw, 11rem);
   background: var(--paper-light);
@@ -700,8 +676,7 @@ h2 {
   }
 
   .photo-card__visual,
-  .photo-card__visual img,
-  .photo-card figcaption {
+  .photo-card__visual img {
     filter: none;
     opacity: 1;
     transform: none;

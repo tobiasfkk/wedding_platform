@@ -160,7 +160,11 @@ for (const viewport of [
     );
 
     await page.goto(invitationLink);
-    await expect(page.getByRole('heading', { name: groupName })).toBeVisible();
+    // O nome do grupo aparece no título de boas-vindas e no cartão de RSVP.
+    await expect(page.locator('#story-title')).toHaveText(groupName);
+    await expect(
+      page.locator('.rsvp-section').getByRole('heading', { name: groupName }),
+    ).toBeVisible();
     await expectNoHorizontalOverflow(page);
 
     const invitationSession = await page.evaluate(async (api) => {
