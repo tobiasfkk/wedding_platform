@@ -152,25 +152,37 @@ for (const width of [320, 390, 430]) {
   });
 }
 
-test('navigates to the exact photo selected by its circle or visible edge', async ({ page }) => {
+test('navigates to the exact photo selected by its visible edge', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 800 });
   await mockAnonymousRsvp(page);
   await page.goto('/');
 
   const rail = page.locator('.photo-rail');
-  const dots = page.locator('.gallery-dot');
+  const counter = page.locator('.gallery-counter [aria-hidden="true"]');
   await rail.scrollIntoViewIfNeeded();
-  await expect(dots).toHaveCount(7);
-  await expect(dots.nth(0)).toHaveAttribute('aria-current', 'true');
-
-  await dots.nth(1).click();
-  await expect(dots.nth(1)).toHaveAttribute('aria-current', 'true');
-
-  await rail.locator('.photo-card').nth(0).dispatchEvent('click');
-  await expect(dots.nth(0)).toHaveAttribute('aria-current', 'true');
+  await expect(page.locator('.gallery-dot')).toHaveCount(0);
+  await expect(counter).toHaveText('1 / 27');
+  // Sem a faixa escura no topo das fotos (existia para o contraste das legendas removidas).
+  const overlay = await rail
+    .locator('.photo-card__visual')
+    .first()
+    .evaluate((visual) => getComputedStyle(visual, '::after').content);
+  expect(overlay).toBe('none');
 
   await rail.locator('.photo-card').nth(1).dispatchEvent('click');
-  await expect(dots.nth(1)).toHaveAttribute('aria-current', 'true');
+  await expect(counter).toHaveText('2 / 27');
+  await expect(rail.locator('.photo-card').nth(1)).toHaveClass(/is-active/);
+
+  await rail.locator('.photo-card').nth(0).dispatchEvent('click');
+  await expect(counter).toHaveText('1 / 27');
+
+  // No meio da galeria o contador continua do mesmo tamanho e no mesmo lugar.
+  const before = await page.locator('.gallery-counter').boundingBox();
+  await rail.locator('.photo-card').nth(13).dispatchEvent('click');
+  await expect(counter).toHaveText('14 / 27');
+  await expect(rail.locator('.photo-card').nth(13)).toHaveClass(/is-active/);
+  const after = await page.locator('.gallery-counter').boundingBox();
+  expect(Math.abs(after!.x + after!.width / 2 - (before!.x + before!.width / 2))).toBeLessThan(1);
 });
 
 test('downloads later gallery photos only when the visitor swipes to them', async ({ page }) => {
@@ -191,8 +203,7 @@ test('downloads later gallery photos only when the visitor swipes to them', asyn
 
   const rail = page.locator('.photo-rail');
   await rail.scrollIntoViewIfNeeded();
-  const pagination = page.locator('.gallery-pagination');
-  await expect(page.locator('.gallery-dot')).toHaveCount(7);
+  const pagination = page.locator('.gallery-counter');
   const paginationBounds = await pagination.boundingBox();
   expect(paginationBounds!.x).toBeGreaterThanOrEqual(0);
   expect(paginationBounds!.x + paginationBounds!.width).toBeLessThanOrEqual(320);
@@ -203,10 +214,7 @@ test('downloads later gallery photos only when the visitor swipes to them', asyn
     .poll(() => lastPhoto.evaluate((image) => (image as HTMLImageElement).naturalWidth))
     .toBe(960);
   expect(requested.has('27')).toBe(true);
-  await expect(page.locator('.gallery-dot').last()).toHaveAttribute(
-    'aria-label',
-    'Mostrar foto 27 de 27',
-  );
+  await expect(page.locator('.gallery-counter [aria-hidden="true"]')).toHaveText('27 / 27');
   await expectNoHorizontalOverflow(page);
 });
 

@@ -96,39 +96,32 @@ describe('PublicHome', () => {
       element.querySelectorAll('.photo-card img[loading="lazy"][decoding="async"]'),
     ).toHaveLength(24);
     expect(images[0]?.getAttribute('fetchpriority')).toBe('high');
-    expect(element.querySelectorAll('.gallery-dot')).toHaveLength(7);
-    expect(element.querySelectorAll('.gallery-dot[aria-current="true"]')).toHaveLength(1);
+    expect(element.querySelectorAll('.gallery-dot')).toHaveLength(0);
     expect(element.querySelector('.gallery-playback')).toBeNull();
     expect(element.querySelector('.photo-card img')?.getAttribute('alt')).toContain(
       'Tobias e Maria Eduarda',
     );
   });
 
-  it('slides a window of at most seven navigation dots with the active photo', () => {
+  it('shows a compact counter that follows the active photo', () => {
     const fixture = render();
     const element = fixture.nativeElement as HTMLElement;
     const rail = fixture.debugElement
       .query(By.directive(TouchPhotoRailDirective))
       .injector.get(TouchPhotoRailDirective);
-    const labels = () =>
-      Array.from(element.querySelectorAll('.gallery-dot'), (dot) => dot.getAttribute('aria-label'));
+    const counter = () => element.querySelector('.gallery-counter');
 
-    expect(labels()[0]).toBe('Mostrar foto 1 de 27');
-    expect(labels()[6]).toBe('Mostrar foto 7 de 27');
+    expect(counter()?.querySelector('[aria-hidden="true"]')?.textContent?.trim()).toBe('1 / 27');
+    expect(counter()?.querySelector('.visually-hidden')?.textContent?.trim()).toBe('Foto 1 de 27');
 
     rail.activeIndex.set(13);
     fixture.detectChanges();
-    expect(labels()).toHaveLength(7);
-    expect(labels()[0]).toBe('Mostrar foto 11 de 27');
-    expect(
-      element.querySelector('.gallery-dot[aria-current="true"]')?.getAttribute('aria-label'),
-    ).toBe('Mostrar foto 14 de 27');
+    expect(counter()?.querySelector('[aria-hidden="true"]')?.textContent?.trim()).toBe('14 / 27');
+    expect(counter()?.querySelector('.visually-hidden')?.textContent?.trim()).toBe('Foto 14 de 27');
 
     rail.activeIndex.set(26);
     fixture.detectChanges();
-    expect(labels()).toHaveLength(7);
-    expect(labels()[0]).toBe('Mostrar foto 21 de 27');
-    expect(labels()[6]).toBe('Mostrar foto 27 de 27');
+    expect(counter()?.querySelector('[aria-hidden="true"]')?.textContent?.trim()).toBe('27 / 27');
   });
 
   it('shows the ceremony date, venue, address and map provided by the couple', () => {
