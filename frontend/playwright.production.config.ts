@@ -19,12 +19,17 @@ export default defineConfig({
   workers: 1,
   forbidOnly: true,
   retries: 0,
-  reporter: [['list'], ['html', { open: 'never', outputFolder: 'playwright-report-production' }]],
+  reporter:
+    scope === 'full'
+      ? 'list'
+      : [['list'], ['html', { open: 'never', outputFolder: 'playwright-report-production' }]],
   use: {
     baseURL: process.env['E2E_SITE_URL'] ?? 'https://casamentodudatobi.tobiaskiefer.com.br',
-    screenshot: 'only-on-failure',
-    trace: 'retain-on-failure',
-    video: 'retain-on-failure',
+    // No escopo full a jornada digita a senha real do admin. Trace e vídeo a registrariam em
+    // artefatos que, num repositório público, ficam acessíveis; por isso ficam desligados.
+    screenshot: scope === 'full' ? 'off' : 'only-on-failure',
+    trace: scope === 'full' ? 'off' : 'retain-on-failure',
+    video: scope === 'full' ? 'off' : 'retain-on-failure',
   },
   projects: [
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },

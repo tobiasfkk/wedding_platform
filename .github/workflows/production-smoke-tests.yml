@@ -67,9 +67,10 @@ jobs:
       - name: Load the administrator credentials
         if: inputs.scope == 'full'
         env:
-          ADMIN_EMAIL: ${{ vars.ADMIN_EMAIL }}
+          # Secret, não variável: o repositório é público e os logs também; secrets são mascarados.
+          ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
         run: |
-          [ -n "$ADMIN_EMAIL" ] || { echo "Defina a variável ADMIN_EMAIL no environment production." >&2; exit 1; }
+          [ -n "$ADMIN_EMAIL" ] || { echo "Defina o secret ADMIN_EMAIL no environment production." >&2; exit 1; }
           password=$(aws ssm get-parameter --name /wedding/production/admin-password --with-decryption \
             --query Parameter.Value --output text)
           echo "::add-mask::$password"
@@ -94,8 +95,10 @@ jobs:
       - name: Run smoke tests against production
         run: npx playwright test --config playwright.production.config.ts
 
+      # Só no escopo readonly: o relatório do escopo full contém os passos com a senha real do admin,
+      # e artefatos não passam pelo mascaramento de secrets dos logs.
       - name: Preserve diagnostics
-        if: failure()
+        if: failure() && inputs.scope == 'readonly'
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: production-smoke-diagnostics

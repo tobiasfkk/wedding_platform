@@ -48,7 +48,8 @@ comandos `aws`.
 ## 3. GitHub e DNS da API
 
 - [ ] **[agente]** Criar/atualizar o environment `production` com as variáveis `AWS_REGION`,
-  `AWS_INSTANCE_ID`, `AWS_DEPLOY_ROLE_ARN` e `ADMIN_EMAIL`.
+  `AWS_INSTANCE_ID` e `AWS_DEPLOY_ROLE_ARN` e o secret `ADMIN_EMAIL` (secret porque os logs do
+  repositório público são públicos).
 - [ ] **[você]** Cloudflare > `tobiaskiefer.com.br` > DNS > Add record:
   tipo `A`, nome `api.casamentodudatobi`, IPv4 = `PublicIp`, **Proxy status: DNS only** (nuvem
   cinza). Nenhum registro para `casamentodudatobi` ainda.
