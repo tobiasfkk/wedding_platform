@@ -63,10 +63,8 @@ Se falhar aqui, nada está público. Corrigir e repetir.
 
 ## 5. Site no ar
 
-- [ ] **[agente]** Rodar "Deploy frontend". Ele substitui o deploy de produção antigo do Pages
-  (`5e6bc3a6`, que publicava a raiz do repositório) pelo build testado.
-- [ ] **[você]** Cloudflare > Workers & Pages > `wedding-platform` > Deployments: apagar o deploy
-  `5e6bc3a6` (agora inativo).
+- [ ] **[agente]** Rodar "Deploy frontend" de novo se a `main` mudou depois de 13/11/2026 (o deploy
+  de produção em `wedding-platform-24v.pages.dev` já foi feito e validado nessa data).
 - [ ] **[você]** `wedding-platform` > Custom domains > Set up a custom domain:
   `casamentodudatobi.tobiaskiefer.com.br`. O Cloudflare cria o registro DNS e o certificado; aguarde
   o status **Active**.
