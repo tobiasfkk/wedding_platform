@@ -34,14 +34,17 @@ Parameters:
     Type: String
     Default: main
     Description: Versão dos scripts usada na preparação inicial do host.
+  GitHubOidcSubjectPrefix:
+    Type: String
+    # Formato imutável do GitHub (IDs do dono e do repositório), ativo neste repositório:
+    #   gh api repos/<dono>/<repo>/actions/oidc/customization/sub  -> sub_claim_prefix
+    Default: repo:tobiasfkk@78160146/wedding_platform@1316696942
+    Description: Prefixo do claim "sub" do token OIDC do GitHub (sem ":environment:...").
   CreateGitHubOidcProvider:
     Type: String
     Default: "true"
     AllowedValues: ["true", "false"]
     Description: Use "false" se a conta já tiver o provedor token.actions.githubusercontent.com.
-  ImageId:
-    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
-    Default: /aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-arm64
 
 Conditions:
   CreateOidcProvider: !Equals [!Ref CreateGitHubOidcProvider, "true"]
@@ -139,7 +142,10 @@ Resources:
     Type: AWS::EC2::Instance
     Properties:
       InstanceType: !Ref InstanceType
-      ImageId: !Ref ImageId
+      # Referência dinâmica: resolvida na criação e não reavaliada em atualizações que não mudem esta
+      # linha. Um parâmetro do tipo SSM seria reavaliado a cada update e, com uma AMI nova, tentaria
+      # substituir a instância (e o banco). Antes de qualquer update, revise o change set.
+      ImageId: "{{resolve:ssm:/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-arm64}}"
       IamInstanceProfile: !Ref InstanceProfile
       SecurityGroupIds: [!GetAtt WebSecurityGroup.GroupId]
       DisableApiTermination: true
@@ -211,7 +217,7 @@ Resources:
             Condition:
               StringEquals:
                 token.actions.githubusercontent.com:aud: sts.amazonaws.com
-                token.actions.githubusercontent.com:sub: !Sub "repo:${GitHubRepository}:environment:production"
+                token.actions.githubusercontent.com:sub: !Sub "${GitHubOidcSubjectPrefix}:environment:production"
       Policies:
         - PolicyName: wedding-deploy
           PolicyDocument:

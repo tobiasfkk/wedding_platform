@@ -48,6 +48,27 @@ instância é regenerado a cada deploy e nunca deve ser editado à mão.
   health check e reverte para a anterior se falhar.
 - **Acesso administrativo:** EC2 > Connect > Session Manager. Não há SSH nem par de chaves.
 
+## Atualizar a stack
+
+A stack em produção foi criada em 13/11/2026. A regra de confiança da role do GitHub foi ajustada
+diretamente pelo IAM para o formato imutável do claim `sub`
+(`repo:tobiasfkk@78160146/wedding_platform@1316696942:environment:production`). O template da
+`main` já contém essa regra, portanto uma atualização não a desfaz.
+
+Nunca aplique uma atualização às cegas. Gere e revise o change set antes:
+
+```bash
+aws cloudformation deploy --stack-name wedding-production --template-file wedding-stack.yaml \
+  --capabilities CAPABILITY_IAM --no-execute-changeset
+aws cloudformation describe-change-set --stack-name wedding-production \
+  --change-set-name <nome impresso acima> --query 'Changes[].ResourceChange.[LogicalResourceId,Action,Replacement]' \
+  --output table --no-cli-pager
+```
+
+Se `Instance` aparecer com `Replacement` `True`, **não execute**: a substituição recriaria o
+servidor e o banco. A proteção contra exclusão faz uma substituição falhar e reverter, mas o change
+set deixa isso claro antes.
+
 ## Frontend
 
 O build de produção do Angular usa `frontend/src/environments/environment.production.ts`, que aponta
