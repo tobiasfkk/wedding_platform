@@ -1,5 +1,16 @@
 import { DOCUMENT } from '@angular/common';
-import { AfterViewInit, Directive, ElementRef, OnDestroy, inject, signal } from '@angular/core';
+import {
+  AfterViewInit,
+  Directive,
+  ElementRef,
+  OnDestroy,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
+
+/** Quantidade máxima de pontos de navegação exibidos ao mesmo tempo. */
+const VISIBLE_DOTS = 7;
 
 @Directive({
   selector: '[appTouchPhotoRail]',
@@ -19,6 +30,19 @@ export class TouchPhotoRailDirective implements AfterViewInit, OnDestroy {
   private ignoreNextClick = false;
   readonly activeIndex = signal(0);
   readonly indexes = signal<number[]>([]);
+  /**
+   * Janela de pontos centrada na foto ativa: com muitas fotos, todos os pontos não caberiam numa
+   * tela de celular. A janela desliza junto com a galeria e nunca passa das pontas.
+   */
+  readonly visibleIndexes = computed(() => {
+    const indexes = this.indexes();
+    if (indexes.length <= VISIBLE_DOTS) return indexes;
+    const start = Math.min(
+      Math.max(this.activeIndex() - Math.floor(VISIBLE_DOTS / 2), 0),
+      indexes.length - VISIBLE_DOTS,
+    );
+    return indexes.slice(start, start + VISIBLE_DOTS);
+  });
 
   ngAfterViewInit(): void {
     const view = this.document.defaultView;
