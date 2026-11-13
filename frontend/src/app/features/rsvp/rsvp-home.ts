@@ -587,6 +587,8 @@ export class RsvpHome {
   private readonly document = inject(DOCUMENT);
   readonly embedded = input(false);
   readonly responsesSaved = output<void>();
+  // Avisa a página pública quando um convite é aberto ou atualizado (ex.: nome do grupo no título).
+  readonly invitationChange = output<RsvpInvitation>();
   readonly state = signal<AccessState>('loading');
   readonly invitation = signal<RsvpInvitation | null>(null);
   readonly submissionState = signal<SubmissionState>('idle');
@@ -730,6 +732,7 @@ export class RsvpHome {
 
   private applyInvitation(invitation: RsvpInvitation): void {
     this.invitation.set(invitation);
+    this.invitationChange.emit(invitation);
     this.draft.set(
       Object.fromEntries(
         invitation.participants.map((participant) => [participant.id, participant.status]),

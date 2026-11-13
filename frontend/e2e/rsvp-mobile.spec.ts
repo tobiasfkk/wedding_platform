@@ -58,7 +58,9 @@ test('opens an individual invitation inside the single-page wedding journey', as
   await expect(page).toHaveURL('/');
   await expect(page.locator('.app-header')).toHaveCount(0);
   await expect(page.getByRole('heading', { level: 1 })).toContainText('Maria Eduarda');
-  const group = page.getByRole('heading', { name: invitation.groupName });
+  // O nome do grupo aparece no título de boas-vindas e no cartão de RSVP.
+  await expect(page.locator('#story-title')).toHaveText(invitation.groupName);
+  const group = page.locator('.rsvp-section').getByRole('heading', { name: invitation.groupName });
   await group.scrollIntoViewIfNeeded();
   await expect(group).toBeVisible();
   await expect(page.locator('.rsvp-section')).toContainText(

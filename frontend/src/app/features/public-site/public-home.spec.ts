@@ -80,7 +80,7 @@ describe('PublicHome', () => {
       'Deslize para o lado e percorra alguns capítulos da nossa história.',
     );
     expect(element.querySelectorAll('.photo-card')).toHaveLength(7);
-    expect(element.querySelectorAll('.photo-card__visual > figcaption')).toHaveLength(7);
+    expect(element.querySelectorAll('.photo-card figcaption')).toHaveLength(0);
     expect(element.querySelectorAll('.photo-card.is-active')).toHaveLength(1);
     expect(
       element.querySelectorAll('.photo-card img[loading="eager"][decoding="sync"]'),
@@ -124,6 +124,46 @@ describe('PublicHome', () => {
     expect(element.querySelector('[role="timer"]')?.getAttribute('aria-label')).toBe(
       'Faltam 1 dia, 1 hora, 2 minutos e 2 segundos para a cerimônia.',
     );
+  });
+
+  it('greets visitors without an invitation with the couple message', () => {
+    const fixture = render();
+    const element = fixture.nativeElement as HTMLElement;
+
+    expect(element.querySelector('#story-title')?.textContent?.trim()).toBe(
+      'Foi Deus quem escreveu cada encontro.',
+    );
+    expect(element.querySelector('.story__copy')?.textContent).toContain(
+      'Estamos muito felizes em convidar vocês para fazerem parte deste momento tão especial em nossas vidas.',
+    );
+    expect(element.textContent).not.toContain('um lugar para chamar de lar');
+  });
+
+  it('greets the invited group by name when the invitation is identified', () => {
+    const fixture = TestBed.createComponent(PublicHome);
+    fixture.detectChanges();
+    http.expectOne('/api/public/pix').flush({
+      configured: false,
+      key: null,
+      payload: null,
+      recipientName: null,
+    });
+    http.expectOne('/api/rsvp/session').flush({
+      identified: true,
+      invitation: {
+        groupName: 'Família Silva',
+        companionLimit: 0,
+        editable: true,
+        rsvpDeadline: null,
+        participants: [{ id: 'guest-1', name: 'Ana Silva', status: 'PENDING' }],
+        companions: [],
+      },
+      csrfToken: 'rsvp-csrf',
+    });
+    fixture.detectChanges();
+    const element = fixture.nativeElement as HTMLElement;
+
+    expect(element.querySelector('#story-title')?.textContent?.trim()).toBe('Família Silva');
   });
 
   it('keeps RSVP in the same page and explains how to use an individual invitation', () => {

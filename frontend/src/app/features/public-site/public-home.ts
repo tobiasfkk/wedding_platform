@@ -29,6 +29,7 @@ export class PublicHome {
   private pageScrollFrame?: number;
   private countdownTimer?: number;
   private previousScrollBehavior?: string;
+  readonly invitationGroupName = signal<string | null>(null);
   readonly pix = signal<PixConfiguration | null>(null);
   readonly pixQrCode = signal<string | null>(null);
   readonly pixQrError = signal(false);

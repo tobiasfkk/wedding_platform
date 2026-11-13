@@ -80,16 +80,10 @@ for (const width of [320, 390, 430]) {
     await expect(firstCard).toHaveCSS('scroll-snap-stop', 'always');
     await expect(firstCard.locator('.photo-card__visual')).toHaveCSS('border-radius', '24px');
     await expect(firstCard.locator('.photo-card__visual')).toHaveCSS('box-shadow', 'none');
-    const caption = firstCard.locator('figcaption');
-    await expect(caption).toHaveCSS('position', 'absolute');
-    await expect(caption).toHaveCSS('font-weight', '700');
-    await expect(caption).not.toHaveCSS('text-shadow', 'none');
-    await expect(caption).toHaveCSS('opacity', '1');
-    await expect(caption).toHaveCSS('transition-duration', '0s');
+    await expect(firstCard.locator('figcaption')).toHaveCount(0);
     await expect(firstCard).toHaveClass(/is-active/);
     const touchLinkedMotion = await photoRail.evaluate(async (element) => {
       const card = element.querySelector<HTMLElement>('.photo-card')!;
-      const cardCaption = card.querySelector<HTMLElement>('figcaption')!;
       const image = card.querySelector<HTMLElement>('img')!;
       const originalSnapType = element.style.scrollSnapType;
       element.style.scrollSnapType = 'none';
@@ -100,8 +94,6 @@ for (const width of [320, 390, 430]) {
       const result = {
         progress: Number.parseFloat(card.style.getPropertyValue('--card-progress')),
         distance: Number.parseFloat(card.style.getPropertyValue('--card-distance')),
-        captionOpacity: Number.parseFloat(getComputedStyle(cardCaption).opacity),
-        captionTransform: getComputedStyle(cardCaption).transform,
         imageTransform: getComputedStyle(image).transform,
       };
       element.scrollLeft = 0;
@@ -110,8 +102,6 @@ for (const width of [320, 390, 430]) {
     });
     expect(touchLinkedMotion.progress).toBeLessThan(0);
     expect(touchLinkedMotion.distance).toBeGreaterThan(0);
-    expect(touchLinkedMotion.captionOpacity).toBeLessThan(1);
-    expect(touchLinkedMotion.captionTransform).not.toBe('none');
     expect(touchLinkedMotion.imageTransform).not.toBe('none');
     await photoRail.evaluate((element) => element.scrollTo({ left: 230, behavior: 'smooth' }));
     await expect
@@ -129,18 +119,9 @@ for (const width of [320, 390, 430]) {
       .toBeLessThan(1);
     const secondCard = photoRail.locator('.photo-card').nth(1);
     await expect(secondCard).toHaveClass(/is-active/);
-    await expect(secondCard.locator('figcaption')).toHaveCSS('opacity', '1');
     await photoRail.evaluate((element) => element.scrollTo({ left: 0, behavior: 'smooth' }));
     await expect.poll(() => photoRail.evaluate((element) => element.scrollLeft)).toBeLessThan(1);
-    await expect(firstCard.locator('figcaption')).toHaveCSS('transition-duration', '0s');
-    await expect(firstCard.locator('figcaption')).toHaveCSS('opacity', '1');
     await expect(firstCard).toHaveClass(/is-active/);
-    const returnedCaptionInset = await firstCard.evaluate((card) => {
-      const cardBounds = card.getBoundingClientRect();
-      const captionBounds = card.querySelector('figcaption')!.getBoundingClientRect();
-      return captionBounds.left - cardBounds.left;
-    });
-    expect(returnedCaptionInset).toBeGreaterThan(28);
     await photoRail.evaluate((element) => element.scrollTo({ left: element.scrollWidth }));
     const lastPhoto = photoRail.locator('img').last();
     await expect
