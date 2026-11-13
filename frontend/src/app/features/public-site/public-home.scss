@@ -297,21 +297,6 @@ h2 {
   will-change: transform;
 }
 
-.photo-card__visual::after {
-  position: absolute;
-  z-index: 0;
-  inset: 0;
-  background: linear-gradient(
-    180deg,
-    rgb(15 22 17 / 48%) 0%,
-    transparent 48%,
-    rgb(15 22 17 / 10%) 100%
-  );
-  content: '';
-  opacity: calc(1 - var(--card-distance) * 0.22);
-  pointer-events: none;
-}
-
 .photo-card__visual img {
   display: block;
   width: 100%;

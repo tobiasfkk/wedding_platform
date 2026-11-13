@@ -94,18 +94,15 @@
         </figure>
       }
     </div>
-    <div class="gallery-pagination" role="group" aria-label="Escolher foto">
-      @for (index of gallery.visibleIndexes(); track index) {
-        <button
-          class="gallery-dot"
-          type="button"
-          [class.is-active]="gallery.activeIndex() === index"
-          [attr.aria-current]="gallery.activeIndex() === index ? 'true' : null"
-          [attr.aria-label]="'Mostrar foto ' + (index + 1) + ' de ' + gallery.indexes().length"
-          (click)="gallery.goTo(index)"
-        ></button>
-      }
-    </div>
+    <!-- Contador em vez de pontos: com muitas fotos, os pontos não cabem nem acompanham bem. -->
+    <p class="gallery-pagination gallery-counter">
+      <span aria-hidden="true"
+        >{{ gallery.activeIndex() + 1 }} / {{ gallery.indexes().length }}</span
+      >
+      <span class="visually-hidden"
+        >Foto {{ gallery.activeIndex() + 1 }} de {{ gallery.indexes().length }}</span
+      >
+    </p>
   </section>
 
   <section class="ceremony" aria-labelledby="ceremony-title">
