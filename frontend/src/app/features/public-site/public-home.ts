@@ -20,38 +20,43 @@ export interface GalleryPhoto {
 }
 
 // WebP 960x1200 (recorte 4:5 exibido pela galeria). Originais em frontend/.photo-originals (fora do git).
-const GALLERY_PHOTOS: readonly GalleryPhoto[] = [
-  'Tobias e Maria Eduarda sorrindo com um buquê de flores ao ar livre',
-  'Maria Eduarda e Tobias abraçados e sorrindo em um jardim',
-  'Maria Eduarda e Tobias olhando um para o outro em um jardim',
-  'Maria Eduarda olhando com carinho para Tobias durante uma celebração',
-  'Maria Eduarda e Tobias sorrindo juntos em uma celebração ao ar livre',
-  'Maria Eduarda e Tobias diante das montanhas ao pôr do sol',
-  'Maria Eduarda e Tobias abraçados durante uma caminhada em um dia de neblina',
-  'Tobias inclinando Maria Eduarda para um beijo em um gramado diante das árvores',
-  'Maria Eduarda e Tobias sorrindo um para o outro em um campo, com a mão dele no rosto dela',
-  'Tobias beijando a testa de Maria Eduarda em um campo',
-  'Maria Eduarda e Tobias de mãos dadas no meio de um campo aberto',
-  'Maria Eduarda e Tobias de mãos dadas, sorrindo um para o outro em um campo',
-  'Maria Eduarda e Tobias deitados na grama, olhando um para o outro',
-  'Mãos do casal se tocando, com o anel de noivado em destaque',
-  'Detalhe das mãos dadas do casal em meio a flores do campo',
-  'Maria Eduarda abraçando Tobias e sorrindo em um campo florido',
-  'Maria Eduarda e Tobias abraçados, de costas, olhando a paisagem do campo',
-  'Foto em preto e branco de Maria Eduarda e Tobias tomando café juntos em uma cozinha',
-  'Maria Eduarda e Tobias brindando com xícaras de café em uma cozinha de madeira',
-  'Foto em preto e branco do casal sorrindo e tomando café à mesa',
-  'Maria Eduarda e Tobias tomando café à mesa do café da manhã',
-  'Foto em preto e branco de Tobias beijando Maria Eduarda enquanto seguram xícaras de café',
-  'Maria Eduarda e Tobias sob uma grande árvore no campo',
-  'Tobias carregando Maria Eduarda nas costas em um campo florido',
-  'Maria Eduarda e Tobias de mãos dadas caminhando por uma colina com neblina',
-  'Foto em preto e branco de Tobias erguendo Maria Eduarda em um abraço no campo',
-  'Maria Eduarda abraçando Tobias, os dois sorrindo para a câmera',
-].map((alt, index) => ({
-  src: `/images/couple/maria-tobias-${String(index + 1).padStart(2, '0')}.webp`,
-  alt,
-}));
+// Par [arquivo, descrição]. Para remover uma foto, apague a linha e o arquivo maria-tobias-NN.webp.
+const GALLERY_PHOTOS: readonly GalleryPhoto[] = (
+  [
+    ['02', 'Maria Eduarda e Tobias abraçados e sorrindo em um jardim'],
+    ['03', 'Maria Eduarda e Tobias olhando um para o outro em um jardim'],
+    ['04', 'Maria Eduarda olhando com carinho para Tobias durante uma celebração'],
+    ['05', 'Maria Eduarda e Tobias sorrindo juntos em uma celebração ao ar livre'],
+    ['06', 'Maria Eduarda e Tobias diante das montanhas ao pôr do sol'],
+    ['07', 'Maria Eduarda e Tobias abraçados durante uma caminhada em um dia de neblina'],
+    ['08', 'Tobias inclinando Maria Eduarda para um beijo em um gramado diante das árvores'],
+    [
+      '09',
+      'Maria Eduarda e Tobias sorrindo um para o outro em um campo, com a mão dele no rosto dela',
+    ],
+    ['10', 'Tobias beijando a testa de Maria Eduarda em um campo'],
+    ['11', 'Maria Eduarda e Tobias de mãos dadas no meio de um campo aberto'],
+    ['12', 'Maria Eduarda e Tobias de mãos dadas, sorrindo um para o outro em um campo'],
+    ['13', 'Maria Eduarda e Tobias deitados na grama, olhando um para o outro'],
+    ['14', 'Mãos do casal se tocando, com o anel de noivado em destaque'],
+    ['15', 'Detalhe das mãos dadas do casal em meio a flores do campo'],
+    ['16', 'Maria Eduarda abraçando Tobias e sorrindo em um campo florido'],
+    ['17', 'Maria Eduarda e Tobias abraçados, de costas, olhando a paisagem do campo'],
+    ['18', 'Foto em preto e branco de Maria Eduarda e Tobias tomando café juntos em uma cozinha'],
+    ['19', 'Maria Eduarda e Tobias brindando com xícaras de café em uma cozinha de madeira'],
+    ['20', 'Foto em preto e branco do casal sorrindo e tomando café à mesa'],
+    ['21', 'Maria Eduarda e Tobias tomando café à mesa do café da manhã'],
+    [
+      '22',
+      'Foto em preto e branco de Tobias beijando Maria Eduarda enquanto seguram xícaras de café',
+    ],
+    ['23', 'Maria Eduarda e Tobias sob uma grande árvore no campo'],
+    ['24', 'Tobias carregando Maria Eduarda nas costas em um campo florido'],
+    ['25', 'Maria Eduarda e Tobias de mãos dadas caminhando por uma colina com neblina'],
+    ['26', 'Foto em preto e branco de Tobias erguendo Maria Eduarda em um abraço no campo'],
+    ['27', 'Maria Eduarda abraçando Tobias, os dois sorrindo para a câmera'],
+  ] as const
+).map(([file, alt]) => ({ src: `/images/couple/maria-tobias-${file}.webp`, alt }));
 
 /** Fotos baixadas ao abrir a página; as demais só quando a galeria se aproxima delas. */
 export const EAGER_GALLERY_PHOTOS = 3;

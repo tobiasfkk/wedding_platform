@@ -81,25 +81,25 @@ describe('PublicHome', () => {
     expect(element.textContent).not.toContain(
       'Deslize para o lado e percorra alguns capítulos da nossa história.',
     );
-    expect(element.querySelectorAll('.photo-card')).toHaveLength(27);
+    expect(element.querySelectorAll('.photo-card')).toHaveLength(26);
     expect(element.querySelectorAll('.photo-card figcaption')).toHaveLength(0);
     expect(element.querySelectorAll('.photo-card.is-active')).toHaveLength(1);
     const images = Array.from(element.querySelectorAll<HTMLImageElement>('.photo-card img'));
     expect(images.every((image) => image.getAttribute('src')?.endsWith('.webp'))).toBe(true);
     expect(images.every((image) => image.getAttribute('alt')?.trim())).toBe(true);
-    expect(new Set(images.map((image) => image.getAttribute('src'))).size).toBe(27);
+    expect(new Set(images.map((image) => image.getAttribute('src'))).size).toBe(26);
     // Só as primeiras fotos carregam ao abrir a página; as demais quando a galeria chega nelas.
     expect(
       element.querySelectorAll('.photo-card img[loading="eager"][decoding="sync"]'),
     ).toHaveLength(3);
     expect(
       element.querySelectorAll('.photo-card img[loading="lazy"][decoding="async"]'),
-    ).toHaveLength(24);
+    ).toHaveLength(23);
     expect(images[0]?.getAttribute('fetchpriority')).toBe('high');
     expect(element.querySelectorAll('.gallery-dot')).toHaveLength(0);
     expect(element.querySelector('.gallery-playback')).toBeNull();
     expect(element.querySelector('.photo-card img')?.getAttribute('alt')).toContain(
-      'Tobias e Maria Eduarda',
+      'Maria Eduarda e Tobias',
     );
   });
 
@@ -111,17 +111,17 @@ describe('PublicHome', () => {
       .injector.get(TouchPhotoRailDirective);
     const counter = () => element.querySelector('.gallery-counter');
 
-    expect(counter()?.querySelector('[aria-hidden="true"]')?.textContent?.trim()).toBe('1 / 27');
-    expect(counter()?.querySelector('.visually-hidden')?.textContent?.trim()).toBe('Foto 1 de 27');
+    expect(counter()?.querySelector('[aria-hidden="true"]')?.textContent?.trim()).toBe('1 / 26');
+    expect(counter()?.querySelector('.visually-hidden')?.textContent?.trim()).toBe('Foto 1 de 26');
 
     rail.activeIndex.set(13);
     fixture.detectChanges();
-    expect(counter()?.querySelector('[aria-hidden="true"]')?.textContent?.trim()).toBe('14 / 27');
-    expect(counter()?.querySelector('.visually-hidden')?.textContent?.trim()).toBe('Foto 14 de 27');
+    expect(counter()?.querySelector('[aria-hidden="true"]')?.textContent?.trim()).toBe('14 / 26');
+    expect(counter()?.querySelector('.visually-hidden')?.textContent?.trim()).toBe('Foto 14 de 26');
 
-    rail.activeIndex.set(26);
+    rail.activeIndex.set(25);
     fixture.detectChanges();
-    expect(counter()?.querySelector('[aria-hidden="true"]')?.textContent?.trim()).toBe('27 / 27');
+    expect(counter()?.querySelector('[aria-hidden="true"]')?.textContent?.trim()).toBe('26 / 26');
   });
 
   it('shows the ceremony date, venue, address and map provided by the couple', () => {
