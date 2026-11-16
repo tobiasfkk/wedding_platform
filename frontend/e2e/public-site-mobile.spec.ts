@@ -161,7 +161,7 @@ test('navigates to the exact photo selected by its visible edge', async ({ page 
   const counter = page.locator('.gallery-counter [aria-hidden="true"]');
   await rail.scrollIntoViewIfNeeded();
   await expect(page.locator('.gallery-dot')).toHaveCount(0);
-  await expect(counter).toHaveText('1 / 27');
+  await expect(counter).toHaveText('1 / 26');
   // Sem a faixa escura no topo das fotos (existia para o contraste das legendas removidas).
   const overlay = await rail
     .locator('.photo-card__visual')
@@ -170,16 +170,16 @@ test('navigates to the exact photo selected by its visible edge', async ({ page 
   expect(overlay).toBe('none');
 
   await rail.locator('.photo-card').nth(1).dispatchEvent('click');
-  await expect(counter).toHaveText('2 / 27');
+  await expect(counter).toHaveText('2 / 26');
   await expect(rail.locator('.photo-card').nth(1)).toHaveClass(/is-active/);
 
   await rail.locator('.photo-card').nth(0).dispatchEvent('click');
-  await expect(counter).toHaveText('1 / 27');
+  await expect(counter).toHaveText('1 / 26');
 
   // No meio da galeria o contador continua do mesmo tamanho e no mesmo lugar.
   const before = await page.locator('.gallery-counter').boundingBox();
   await rail.locator('.photo-card').nth(13).dispatchEvent('click');
-  await expect(counter).toHaveText('14 / 27');
+  await expect(counter).toHaveText('14 / 26');
   await expect(rail.locator('.photo-card').nth(13)).toHaveClass(/is-active/);
   const after = await page.locator('.gallery-counter').boundingBox();
   expect(Math.abs(after!.x + after!.width / 2 - (before!.x + before!.width / 2))).toBeLessThan(1);
@@ -197,9 +197,9 @@ test('downloads later gallery photos only when the visitor swipes to them', asyn
   await page.waitForLoadState('networkidle');
 
   // As primeiras fotos chegam com a página; a última, não.
-  expect(requested.has('01')).toBe(true);
+  expect(requested.has('02')).toBe(true);
   expect(requested.has('27')).toBe(false);
-  expect(requested.size).toBeLessThan(27);
+  expect(requested.size).toBeLessThan(26);
 
   const rail = page.locator('.photo-rail');
   await rail.scrollIntoViewIfNeeded();
@@ -214,7 +214,7 @@ test('downloads later gallery photos only when the visitor swipes to them', asyn
     .poll(() => lastPhoto.evaluate((image) => (image as HTMLImageElement).naturalWidth))
     .toBe(960);
   expect(requested.has('27')).toBe(true);
-  await expect(page.locator('.gallery-counter [aria-hidden="true"]')).toHaveText('27 / 27');
+  await expect(page.locator('.gallery-counter [aria-hidden="true"]')).toHaveText('26 / 26');
   await expectNoHorizontalOverflow(page);
 });
 
