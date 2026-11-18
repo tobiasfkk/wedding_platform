@@ -50,16 +50,18 @@ instância é regenerado a cada deploy e nunca deve ser editado à mão.
 
 ## Atualizar a stack
 
-A stack em produção foi criada em 13/11/2026. A regra de confiança da role do GitHub foi ajustada
-diretamente pelo IAM para o formato imutável do claim `sub`
-(`repo:tobiasfkk@78160146/wedding_platform@1316696942:environment:production`). O template da
-`main` já contém essa regra, portanto uma atualização não a desfaz.
+A stack atual foi criada em 18/11/2026 como `t4g.micro`, já com a regra OIDC do template (claim
+`sub` imutável `repo:tobiasfkk@78160146/wedding_platform@1316696942:environment:production`).
+O `aws cloudformation deploy` mantém o valor anterior dos parâmetros omitidos, mas repita
+`InstanceType=t4g.micro` explicitamente para não depender disso; o change set mostra qualquer troca
+de tipo antes de aplicar.
 
 Nunca aplique uma atualização às cegas. Gere e revise o change set antes:
 
 ```bash
 aws cloudformation deploy --stack-name wedding-production --template-file wedding-stack.yaml \
-  --capabilities CAPABILITY_IAM --no-execute-changeset
+  --capabilities CAPABILITY_IAM --no-execute-changeset \
+  --parameter-overrides AlertEmail=<e-mail> AdminEmail=<e-mail> InstanceType=t4g.micro
 aws cloudformation describe-change-set --stack-name wedding-production \
   --change-set-name <nome impresso acima> --query 'Changes[].ResourceChange.[LogicalResourceId,Action,Replacement]' \
   --output table --no-cli-pager
@@ -68,6 +70,27 @@ aws cloudformation describe-change-set --stack-name wedding-production \
 Se `Instance` aparecer com `Replacement` `True`, **não execute**: a substituição recriaria o
 servidor e o banco. A proteção contra exclusão faz uma substituição falhar e reverter, mas o change
 set deixa isso claro antes.
+
+## Migrar para outra conta AWS
+
+Feito em 18/11/2026: a primeira conta não tinha créditos (o mesmo CPF já os havia usado). A
+migração preservou dados, links enviados e senha do admin, com ~15 minutos de RSVP indisponível.
+
+1. **Conta nova:** confirmar crédito em Billing > Credits antes de qualquer outra coisa.
+2. **Segredos:** no CloudShell da conta antiga, exportar os 3 parâmetros `/wedding/production/*`
+   para um arquivo; no CloudShell da nova, recriá-los como SecureString **antes** da stack. O
+   `configure-env.sh` lê os existentes em vez de gerar novos; o pepper é o que mantém os links.
+3. **Stack:** criar `wedding-production` na conta nova e atualizar no GitHub (environment
+   `production`) as variáveis `AWS_INSTANCE_ID` e `AWS_DEPLOY_ROLE_ARN`.
+4. **Congelar a antiga:** parar a API e só então rodar `backup.sh`, para nenhuma resposta ficar de
+   fora.
+5. **Copiar o dump:** baixar do S3 antigo pelo CloudShell e enviar ao bucket novo (`migracao/`).
+6. **DNS:** trocar o IP do registro `api.casamentodudatobi` (sem proxy) e rodar "Deploy backend";
+   o Caddy emite o certificado no servidor novo.
+7. **Restaurar:** `restore.sh <dump> --replace-live`, criar `/opt/wedding/.launched` e rodar
+   "Production smoke tests" (readonly).
+8. **Encerrar a antiga:** desligar a proteção contra exclusão, excluir a stack, esvaziar e excluir o
+   bucket de backup e apagar os parâmetros (bucket e parâmetros sobrevivem à exclusão da stack).
 
 ## Frontend
 

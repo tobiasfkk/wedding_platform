@@ -85,8 +85,12 @@ em 12/11/2026 (730 horas por mês):
 
 O preço do disco é aproximado e não foi verificado se a franquia de disco e de IPv4 se aplica ao
 plano Free atual; ambos foram contados como consumo. No ensaio local, a API usou 366–452 MB e o
-PostgreSQL 53–61 MB. Padrão: `t4g.small`, pela folga de memória; `t4g.micro` é um parâmetro do
-template. Com ~3,5 meses de operação, a `small` consome ~US$ 95 e a `micro` ~US$ 61.
+PostgreSQL 53–61 MB. Padrão do template: `t4g.small`; `t4g.micro` é um parâmetro.
+
+**Atualização em 18/11/2026:** produção passou a rodar em `t4g.micro`. Na `small`, o uso real
+medido foi ~730 MiB (API 386 MiB, PostgreSQL 59 MiB, Caddy 14 MiB), sem uso de swap e com CPU perto
+de 0%; a `micro` com 2 GB de swap comporta esse volume, e a economia (~US$ 17/mês contra ~US$ 27)
+faz o período até o casamento caber nos créditos de US$ 100 da conta.
 
 ## Consequências
 
