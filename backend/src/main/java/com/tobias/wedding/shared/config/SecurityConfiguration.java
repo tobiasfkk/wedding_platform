@@ -33,6 +33,8 @@ public class SecurityConfiguration {
                         .requestMatchers(HttpMethod.GET, "/api/auth/session").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/public/pix").permitAll()
+                        // HEAD é o GET sem corpo; monitores de disponibilidade usam este endereço.
+                        .requestMatchers(HttpMethod.HEAD, "/api/public/pix").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/rsvp/session").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/rsvp/access").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/rsvp/responses").permitAll()
