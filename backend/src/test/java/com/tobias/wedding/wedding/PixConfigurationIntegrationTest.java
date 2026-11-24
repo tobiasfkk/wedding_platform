@@ -2,6 +2,7 @@ package com.tobias.wedding.wedding;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.head;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -53,6 +54,13 @@ class PixConfigurationIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(validRequest()))
                 .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void answersHeadRequestsOnThePublicReadForUptimeMonitors() throws Exception {
+        // Monitores de disponibilidade (ex.: UptimeRobot no plano grátis) só usam HEAD.
+        mockMvc.perform(head("/api/public/pix")).andExpect(status().isOk());
+        mockMvc.perform(head("/api/admin/pix")).andExpect(status().isUnauthorized());
     }
 
     @Test
